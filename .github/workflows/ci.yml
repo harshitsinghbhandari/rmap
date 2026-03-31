@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/task-2]
   pull_request:
-    branches: [main]
+    branches: [main, feat/task-2]
 
 jobs:
   test:
@@ -32,11 +32,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run linting
+      - name: Type check with TypeScript
         run: pnpm lint
 
-      - name: Build
+      - name: Build project
         run: pnpm build
 
-      - name: Run tests
+      - name: Run unit tests
         run: pnpm test
