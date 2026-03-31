@@ -175,9 +175,10 @@ function validateRawAnnotation(data: unknown): RawAnnotation {
     throw new AnnotationValidationError('Field "purpose" must be a non-empty string');
   }
 
-  if (obj.purpose.length > 200) {
+  let purpose = obj.purpose;
+  if (purpose.length > 200) {
     console.warn('Warning: Purpose is longer than 200 chars, truncating');
-    obj.purpose = obj.purpose.slice(0, 197) + '...';
+    purpose = purpose.slice(0, 197) + '...';
   }
 
   // Validate tags
@@ -212,10 +213,10 @@ function validateRawAnnotation(data: unknown): RawAnnotation {
   }
 
   return {
-    purpose: obj.purpose,
-    tags: obj.tags,
-    exports: obj.exports,
-    imports: obj.imports,
+    purpose,
+    tags: obj.tags as string[],
+    exports: obj.exports as string[],
+    imports: obj.imports as string[],
   };
 }
 
