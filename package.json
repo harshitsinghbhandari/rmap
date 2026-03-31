@@ -31,6 +31,14 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshitsinghbhandari/rmap.git"
+  },
+  "bugs": {
+    "url": "https://github.com/harshitsinghbhandari/rmap/issues"
+  },
+  "homepage": "https://github.com/harshitsinghbhandari/rmap#readme",
   "engines": {
     "node": ">=20.0.0"
   },
