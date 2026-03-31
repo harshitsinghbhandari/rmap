@@ -145,11 +145,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   tracker.completeLevel('Level 4: Consistency Validator');
 
   // Extract validation data
-  const validation: ValidationJson = {
-    issues: validatorResult.issues,
-    auto_fixed: validatorResult.autoFixedCount,
-    requires_attention: validatorResult.errorCount + validatorResult.warningCount,
-  };
+  const validation = validatorResult.validation;
 
   // Use fixed annotations and graph if autofix was applied
   const finalAnnotations = validatorResult.annotations;

@@ -19,8 +19,8 @@ import type {
   TagsJson,
   StatsJson,
   ValidationJson,
-  Tag,
 } from '../core/types.js';
+import type { Tag } from '../core/constants.js';
 import { TAG_TAXONOMY, TAG_ALIASES, SCHEMA_VERSION } from '../core/constants.js';
 
 /**
