@@ -6,8 +6,8 @@
 
 export { version } from './version.js';
 
-// Core types will be exported here once implemented
-// export * from './core/types.js';
+// Core types and constants
+export * from './core/index.js';
 
 // Main functionality will be exported here once implemented
 // export { buildMap } from './coordinator/index.js';
