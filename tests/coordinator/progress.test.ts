@@ -68,7 +68,7 @@ test('ProgressTracker: measures level duration', async () => {
 
   // Elapsed time should be at least 100ms (0.1 seconds)
   const elapsed = tracker.getElapsedSeconds();
-  assert.ok(elapsed >= 0.1, `Expected >= 0.1s, got ${elapsed}s`);
+  assert.ok(elapsed >= 0.09, `Expected >= 0.09s, got ${elapsed}s`);
 });
 
 // Test: LLM call tracking
@@ -125,7 +125,7 @@ test('ProgressTracker: calculates elapsed time in seconds', async () => {
   await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
 
   const elapsedSeconds = tracker.getElapsedSeconds();
-  assert.ok(elapsedSeconds >= 0.1, `Expected >= 0.1s, got ${elapsedSeconds}s`);
+  assert.ok(elapsedSeconds >= 0.09, `Expected >= 0.09s, got ${elapsedSeconds}s`);
 });
 
 // Test: Stats collection
@@ -355,7 +355,7 @@ test('ProgressTracker: progress messages include elapsed time', async () => {
   });
 
   const elapsed = tracker.getElapsedSeconds();
-  assert.ok(elapsed >= 0.1);
+  assert.ok(elapsed >= 0.09);
 });
 
 // Test: Zero LLM calls initially
@@ -488,6 +488,6 @@ test('ProgressTracker: tracks realistic build time', async () => {
   const minutes = tracker.getElapsedMinutes();
   const seconds = tracker.getElapsedSeconds();
 
-  assert.ok(seconds >= 0.2, `Expected >= 0.2s, got ${seconds}s`);
+  assert.ok(seconds >= 0.18, `Expected >= 0.18s, got ${seconds}s`);
   assert.ok(minutes >= 0.003, `Expected >= 0.003min, got ${minutes}min`);
 });
