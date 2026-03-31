@@ -283,3 +283,34 @@ export interface Level0Output {
   /** Total size of all files in bytes */
   total_size_bytes: number;
 }
+
+/**
+ * Output from Level 1 structure detector
+ *
+ * Contains high-level repository structure and conventions identified by LLM
+ */
+export interface Level1Output {
+  /** Repository name extracted from package.json or directory name */
+  repo_name: string;
+
+  /** One-line description of what this repository is */
+  purpose: string;
+
+  /** Primary technology stack (e.g., "TypeScript, Node.js") */
+  stack: string;
+
+  /** Programming languages detected in the repo */
+  languages: string[];
+
+  /** Main entry points of the application */
+  entrypoints: string[];
+
+  /** Top-level modules/directories with descriptions */
+  modules: Module[];
+
+  /** Important configuration files */
+  config_files: string[];
+
+  /** Project-specific conventions and rules */
+  conventions: string[];
+}
