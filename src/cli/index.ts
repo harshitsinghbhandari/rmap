@@ -6,40 +6,46 @@
 
 import { Command } from 'commander';
 import { version } from '../version.js';
+import { mapCommand, getContextCommand } from './commands/index.js';
 
 const program = new Command();
 
+// Configure main program
 program
   .name('rmap')
   .description('A semantic repository map builder for coding agents')
   .version(version);
 
-// Commands will be added here once implemented
-// program.addCommand(mapCommand);
-// program.addCommand(getContextCommand);
+// Register commands
+program.addCommand(mapCommand);
+program.addCommand(getContextCommand);
 
-// Placeholder commands for initial setup
-program
-  .command('map')
-  .description('Build or update repository map')
-  .option('--full', 'Force full rebuild')
-  .option('--status', 'Show map status')
-  .option('--update', 'Update based on git changes')
-  .action((options) => {
-    console.log('Map command not yet implemented');
-    console.log('Options:', options);
-  });
+// Global error handling
+process.on('uncaughtException', (error: Error) => {
+  console.error('Fatal error:', error.message);
+  if (process.env.DEBUG) {
+    console.error(error.stack);
+  }
+  process.exit(1);
+});
 
-program
-  .command('get-context')
-  .description('Query repository context')
-  .argument('[tags...]', 'Tags to search for')
-  .option('--file <path>', 'Query by file path')
-  .option('--path <dir>', 'Query by directory')
-  .action((tags, options) => {
-    console.log('Get-context command not yet implemented');
-    console.log('Tags:', tags);
-    console.log('Options:', options);
-  });
+process.on('unhandledRejection', (reason: unknown) => {
+  const message = reason instanceof Error ? reason.message : String(reason);
+  console.error('Unhandled promise rejection:', message);
+  if (process.env.DEBUG && reason instanceof Error) {
+    console.error(reason.stack);
+  }
+  process.exit(1);
+});
 
-program.parse();
+// Parse command line arguments
+try {
+  await program.parseAsync(process.argv);
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  console.error(`Error: ${message}`);
+  if (process.env.DEBUG && error instanceof Error) {
+    console.error(error.stack);
+  }
+  process.exit(1);
+}
