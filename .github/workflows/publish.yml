@@ -1,0 +1,52 @@
+name: Publish to NPM
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for npm provenance
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Type check
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: Publish to NPM
+        run: pnpm publish --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create release summary
+        run: |
+          echo "# 🚀 Published to NPM" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Package:** rmap" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ github.event.release.tag_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**NPM:** https://www.npmjs.com/package/rmap" >> $GITHUB_STEP_SUMMARY
