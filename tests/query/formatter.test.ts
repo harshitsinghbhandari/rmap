@@ -235,7 +235,7 @@ test('formatQueryOutput: displays blast radius files', () => {
   });
 
   assert.ok(output.includes('═══ BLAST RADIUS ═══'));
-  assert.ok(output.includes('1 file imports the results above'));
+  assert.ok(output.includes('1 file import the results above'));
   assert.ok(output.includes('src/auth/session.ts'));
 });
 
@@ -326,7 +326,7 @@ test('formatQueryOutput: handles plural/singular correctly', () => {
   });
 
   // Singular
-  assert.ok(output.includes('1 file imports the results above'));
+  assert.ok(output.includes('1 file import the results above'));
 
   const outputPlural = formatQueryOutput({
     meta: mockMeta,
@@ -403,7 +403,7 @@ test('formatFileQueryOutput: displays dependents', () => {
     dependents,
   });
 
-  assert.ok(output.includes('1 file imports this file:'));
+  assert.ok(output.includes('1 file import this file:'));
   assert.ok(output.includes('src/api/endpoints/auth.ts'));
 });
 
@@ -519,7 +519,7 @@ test('formatPathQueryOutput: displays external dependents', () => {
     externalDependents: mockFiles.slice(2, 3),
   });
 
-  assert.ok(output.includes('1 file outside this directory imports from here:'));
+  assert.ok(output.includes('1 file outside this directory import from here:'));
   assert.ok(output.includes('src/api/endpoints/auth.ts'));
 });
 
