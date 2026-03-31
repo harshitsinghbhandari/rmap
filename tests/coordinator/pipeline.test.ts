@@ -100,7 +100,7 @@ const mockAnnotations: FileAnnotation[] = [
     language: 'TypeScript',
     size_bytes: 512,
     purpose: 'Utility functions',
-    tags: ['utilities', 'helpers'],
+    tags: ['utility', 'helper'],
     exports: ['format', 'validate'],
     imports: [],
   },

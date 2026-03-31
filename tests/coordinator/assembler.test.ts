@@ -58,7 +58,7 @@ const mockAnnotations: FileAnnotation[] = [
     language: 'TypeScript',
     size_bytes: 512,
     purpose: 'Utility functions',
-    tags: ['utilities', 'helpers'],
+    tags: ['utility', 'helper'],
     exports: ['format', 'validate'],
     imports: [],
   },
@@ -229,7 +229,7 @@ test('assembleMap: creates valid tags.json', () => {
 
     // Check that tags from annotations are in the index
     assert.ok(tags.index['authentication'].includes('src/auth.ts'));
-    assert.ok(tags.index['utilities'].includes('src/utils.ts'));
+    assert.ok(tags.index['utility'].includes('src/utils.ts'));
   } finally {
     cleanupTempDir(tempDir);
   }
@@ -606,7 +606,7 @@ test('assembleMap: handles large annotation sets efficiently', () => {
     language: 'TypeScript',
     size_bytes: 512,
     purpose: `File ${i}`,
-    tags: ['utilities'],
+    tags: ['utility'],
     exports: [`func${i}`],
     imports: [],
   }));

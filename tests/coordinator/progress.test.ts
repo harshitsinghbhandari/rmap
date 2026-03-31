@@ -232,7 +232,9 @@ test('ProgressTracker: tracks multiple LLM calls in batch', () => {
   const tracker = new ProgressTracker();
 
   // Simulate parallel task execution with multiple LLM calls
-  tracker.trackLLMCall(5); // 5 parallel tasks
+  for (let i = 0; i < 5; i++) {
+    tracker.trackLLMCall();
+  }
 
   const stats = tracker.getStats();
   assert.strictEqual(stats.llmCallCount, 5);
@@ -468,7 +470,9 @@ test('ProgressTracker: tracks batch LLM calls correctly', () => {
 
   // Simulate Level 3 with multiple parallel tasks
   const taskCount = 8;
-  tracker.trackLLMCall(taskCount);
+  for (let i = 0; i < taskCount; i++) {
+    tracker.trackLLMCall();
+  }
 
   const stats = tracker.getStats();
   assert.strictEqual(stats.llmCallCount, taskCount);
