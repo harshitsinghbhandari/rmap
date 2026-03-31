@@ -257,4 +257,29 @@ export interface RawFileMetadata {
 
   /** Programming language (if detected) */
   language?: string;
+
+  /** Raw import/require/from statements extracted via regex */
+  raw_imports: string[];
+}
+
+/**
+ * Output from Level 0 metadata harvester
+ *
+ * Contains the complete result of the harvesting process
+ */
+export interface Level0Output {
+  /** Array of file metadata for all files in the repository */
+  files: RawFileMetadata[];
+
+  /** Git commit hash at the time of harvesting */
+  git_commit: string;
+
+  /** ISO 8601 timestamp when harvesting was performed */
+  timestamp: string;
+
+  /** Total number of files processed */
+  total_files: number;
+
+  /** Total size of all files in bytes */
+  total_size_bytes: number;
 }
