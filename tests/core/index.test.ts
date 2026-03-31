@@ -29,16 +29,17 @@ describe('Core module exports', () => {
     assert.ok(core.TAG_TAXONOMY.length > 0, 'TAG_TAXONOMY should not be empty');
   });
 
-  it('should export TAG_ALIASES as a Map', () => {
-    assert.ok(core.TAG_ALIASES instanceof Map);
-    assert.ok(core.TAG_ALIASES.size > 0, 'TAG_ALIASES should not be empty');
+  it('should export TAG_ALIASES as an object', () => {
+    assert.strictEqual(typeof core.TAG_ALIASES, 'object');
+    assert.ok(Object.keys(core.TAG_ALIASES).length > 0, 'TAG_ALIASES should not be empty');
   });
 
-  it('should export UPDATE_THRESHOLDS with delta and full_rebuild properties', () => {
+  it('should export UPDATE_THRESHOLDS with correct properties', () => {
     assert.ok(core.UPDATE_THRESHOLDS);
-    assert.ok(typeof core.UPDATE_THRESHOLDS.delta === 'number');
-    assert.ok(typeof core.UPDATE_THRESHOLDS.full_rebuild === 'number');
-    assert.ok(core.UPDATE_THRESHOLDS.delta < core.UPDATE_THRESHOLDS.full_rebuild);
+    assert.strictEqual(typeof core.UPDATE_THRESHOLDS.DELTA_ONLY, 'number');
+    assert.strictEqual(typeof core.UPDATE_THRESHOLDS.DELTA_WITH_VALIDATION, 'number');
+    assert.strictEqual(typeof core.UPDATE_THRESHOLDS.FULL_REBUILD, 'number');
+    assert.ok(core.UPDATE_THRESHOLDS.DELTA_ONLY < core.UPDATE_THRESHOLDS.FULL_REBUILD);
   });
 
   it('should export valid MAX_TAGS_PER_FILE and MAX_FILES_PER_TASK', () => {
@@ -56,7 +57,7 @@ describe('Core module exports', () => {
   });
 
   it('should have TAG_ALIASES that map to arrays of TAG_TAXONOMY tags', () => {
-    for (const [alias, tags] of core.TAG_ALIASES.entries()) {
+    for (const [alias, tags] of Object.entries(core.TAG_ALIASES)) {
       assert.ok(Array.isArray(tags), `Alias ${alias} should map to an array`);
       assert.ok(tags.length > 0, `Alias ${alias} should have at least one tag`);
 
