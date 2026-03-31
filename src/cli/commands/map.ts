@@ -8,6 +8,13 @@ import { Command } from 'commander';
 import * as path from 'node:path';
 import { buildMap } from '../../coordinator/index.js';
 import { readExistingMeta } from '../../coordinator/assembler.js';
+import {
+  detectChanges,
+  getCurrentCommit,
+  getCommitAge,
+  getCommitCount,
+} from '../../coordinator/delta.js';
+import { formatVersionString } from '../../coordinator/versioning.js';
 
 export const mapCommand = new Command('map')
   .description('Build or update repository map')
@@ -42,15 +49,72 @@ async function showMapStatus(): Promise<void> {
   console.log('║       Repository Map Status           ║');
   console.log('╚═══════════════════════════════════════╝');
   console.log();
-  console.log('Map version: [not yet implemented]');
-  console.log('Schema: [not yet implemented]');
-  console.log('Built from: [not yet implemented]');
-  console.log('Current HEAD: [not yet implemented]');
-  console.log('Files changed since map: [not yet implemented]');
-  console.log('Verdict: [not yet implemented]');
+
+  const repoRoot = process.cwd();
+
+  // Read existing map
+  const existingMeta = readExistingMeta(repoRoot);
+
+  if (!existingMeta) {
+    console.log('❌ No map found');
+    console.log();
+    console.log('Run `rmap map` to create a new map.');
+    return;
+  }
+
+  // Get current commit
+  let currentCommit: string;
+  try {
+    currentCommit = getCurrentCommit(repoRoot);
+  } catch (error) {
+    console.log('❌ Error: Not a git repository');
+    return;
+  }
+
+  // Detect changes
+  const changes = detectChanges(repoRoot, existingMeta);
+
+  // Display status
+  console.log(`Map version: ${formatVersionString(existingMeta)}`);
+  console.log(`Schema: ${existingMeta.schema_version}`);
+
+  // Show build commit info
+  const commitAge = getCommitAge(repoRoot, existingMeta.git_commit);
+  const commitShort = existingMeta.git_commit.substring(0, 7);
+  console.log(`Built from: ${commitShort} (${commitAge} days ago)`);
+
+  // Show current HEAD info
+  const currentShort = currentCommit.substring(0, 7);
+  const commitsBehind = getCommitCount(repoRoot, existingMeta.git_commit, currentCommit);
+  console.log(`Current HEAD: ${currentShort} (${commitsBehind} commits ahead)`);
+
+  // Show changes
+  console.log(`Files changed since map: ${changes.totalChanges}`);
+
+  if (changes.totalChanges > 0) {
+    console.log(`  • Added/Modified: ${changes.changedFiles.length}`);
+    console.log(`  • Deleted: ${changes.deletedFiles.length}`);
+  }
+
+  // Determine verdict
   console.log();
-  console.log('Note: Map status checking is not yet implemented.');
-  console.log('This will show map version, last commit, and staleness analysis.');
+  if (changes.totalChanges === 0) {
+    console.log('Verdict: ✅ MAP IS UP TO DATE');
+  } else if (changes.updateStrategy === 'full-rebuild') {
+    console.log('Verdict: 🔴 FULL REBUILD RECOMMENDED');
+    console.log(`Reason: ${changes.reason}`);
+  } else if (changes.updateStrategy === 'delta-with-validation') {
+    console.log('Verdict: 🟡 UPDATE RECOMMENDED (with validation)');
+    console.log(`Reason: ${changes.reason}`);
+  } else {
+    console.log('Verdict: 🟢 UPDATE RECOMMENDED');
+    console.log(`Reason: ${changes.reason}`);
+  }
+
+  console.log();
+  if (changes.totalChanges > 0) {
+    console.log('Run `rmap map` to update the map.');
+  }
 }
 
 /**
@@ -88,14 +152,46 @@ async function updateMap(): Promise<void> {
   console.log('║       Updating Repository Map         ║');
   console.log('╚═══════════════════════════════════════╝');
   console.log();
-  console.log('Starting delta update...');
+
+  const repoRoot = process.cwd();
+
+  // Check if map exists
+  const existingMeta = readExistingMeta(repoRoot);
+
+  if (!existingMeta) {
+    console.log('❌ No existing map found. Use `rmap map` to create one.');
+    process.exit(1);
+  }
+
+  // Detect changes
+  const changes = detectChanges(repoRoot, existingMeta);
+
+  if (changes.totalChanges === 0) {
+    console.log('✅ Map is already up to date!');
+    return;
+  }
+
+  console.log(`📊 Detected ${changes.totalChanges} changed files`);
+  console.log(`Strategy: ${changes.updateStrategy}`);
+  console.log(`Reason: ${changes.reason}`);
   console.log();
-  console.log('Note: Delta update is not yet implemented.');
-  console.log('This will:');
-  console.log('  • Detect changed files via git diff');
-  console.log('  • Re-annotate only changed files');
-  console.log('  • Repair dependency graph');
-  console.log('  • Update map version');
+
+  // Perform the appropriate update
+  if (changes.updateStrategy === 'full-rebuild') {
+    console.log('⚠️  Large changes detected, performing full rebuild...');
+    console.log();
+    await buildFullMap();
+  } else {
+    console.log('🔄 Performing delta update...');
+    console.log('   This feature requires integration with the pipeline.');
+    console.log('   For now, use `rmap map --full` for a full rebuild.');
+    console.log();
+    console.log('Delta update will:');
+    console.log(`  • Re-annotate ${changes.changedFiles.length} changed files`);
+    console.log(`  • Remove ${changes.deletedFiles.length} deleted files`);
+    console.log('  • Repair dependency graph');
+    console.log('  • Update map version');
+  }
 }
 
 /**
@@ -113,9 +209,25 @@ async function buildOrUpdateMap(): Promise<void> {
   const existingMeta = readExistingMeta(repoRoot);
 
   if (existingMeta) {
-    console.log(`Found existing map (version ${existingMeta.map_version})`);
-    console.log('Note: Delta update logic not yet implemented, doing full rebuild');
+    console.log(`Found existing map (${formatVersionString(existingMeta)})`);
+
+    // Detect changes
+    const changes = detectChanges(repoRoot, existingMeta);
+
+    if (changes.totalChanges === 0) {
+      console.log('✅ Map is already up to date!');
+      return;
+    }
+
+    console.log(`Detected ${changes.totalChanges} changed files`);
+    console.log(`Strategy: ${changes.updateStrategy}`);
     console.log();
+
+    if (changes.updateStrategy !== 'full-rebuild') {
+      console.log('Note: Delta update logic ready but requires pipeline integration');
+      console.log('Performing full rebuild for now...');
+      console.log();
+    }
   } else {
     console.log('No existing map found, building from scratch...');
     console.log();
