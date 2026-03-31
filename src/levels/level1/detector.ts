@@ -9,6 +9,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import type { Level0Output, Level1Output, Module } from '../../core/types.js';
+import { validateLevel1Output, ValidationError } from './validation.js';
 
 /**
  * Build a file tree structure for the LLM prompt
@@ -128,6 +129,97 @@ Respond with valid JSON in this exact structure:
 }
 
 /**
+ * Sleep for specified milliseconds
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Call Claude API with retry logic for rate limits
+ */
+async function callClaudeWithRetry(
+  client: Anthropic,
+  prompt: string,
+  maxRetries: number = 3
+): Promise<string> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await client.messages.create({
+        model: 'claude-haiku-4-20250318',
+        max_tokens: 2000,
+        temperature: 0,
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+      });
+
+      // Extract text from response
+      const content = response.content[0];
+      if (content.type !== 'text') {
+        throw new Error('Unexpected response type from Claude');
+      }
+
+      return content.text;
+    } catch (error) {
+      lastError = error as Error;
+
+      // Check if it's a rate limit error
+      if (error instanceof Anthropic.RateLimitError) {
+        if (attempt < maxRetries) {
+          const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
+          console.log(`Rate limit hit. Retrying in ${waitTime / 1000}s... (attempt ${attempt}/${maxRetries})`);
+          await sleep(waitTime);
+          continue;
+        }
+      }
+
+      // For other API errors, don't retry
+      if (error instanceof Anthropic.APIError) {
+        throw new Error(`Claude API error: ${error.message}`);
+      }
+
+      // For non-API errors, throw immediately
+      throw error;
+    }
+  }
+
+  throw new Error(`Failed after ${maxRetries} retries: ${lastError?.message}`);
+}
+
+/**
+ * Parse and validate JSON response from LLM
+ */
+function parseAndValidateResponse(responseText: string): Level1Output {
+  // Remove markdown code blocks if present
+  let jsonText = responseText.trim();
+
+  if (jsonText.startsWith('```json')) {
+    jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  } else if (jsonText.startsWith('```')) {
+    jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+  }
+
+  // Parse JSON
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch (error) {
+    throw new ValidationError(
+      `Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+
+  // Validate structure
+  return validateLevel1Output(parsed);
+}
+
+/**
  * Detect repository structure using Claude Haiku
  *
  * @param level0 - Output from Level 0 metadata harvester
@@ -153,52 +245,17 @@ export async function detectStructure(
   // Build prompt
   const prompt = buildPrompt(level0, repoRoot);
 
-  try {
-    // Call Claude Haiku
-    const response = await client.messages.create({
-      model: 'claude-haiku-4-20250318',
-      max_tokens: 2000,
-      temperature: 0,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    });
+  // Call Claude with retry logic
+  const responseText = await callClaudeWithRetry(client, prompt);
 
-    // Extract text from response
-    const content = response.content[0];
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude');
-    }
+  // Parse and validate response
+  const result = parseAndValidateResponse(responseText);
 
-    const responseText = content.text;
+  console.log('✓ Structure detection complete');
+  console.log(`  Repository: ${result.repo_name}`);
+  console.log(`  Stack: ${result.stack}`);
+  console.log(`  Entry points: ${result.entrypoints.length}`);
+  console.log(`  Modules: ${result.modules.length}`);
 
-    // Parse JSON from response
-    // The model might wrap JSON in markdown code blocks, so extract it
-    let jsonText = responseText.trim();
-
-    // Remove markdown code blocks if present
-    if (jsonText.startsWith('```json')) {
-      jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-
-    const result = JSON.parse(jsonText);
-
-    console.log('✓ Structure detection complete');
-    console.log(`  Repository: ${result.repo_name}`);
-    console.log(`  Stack: ${result.stack}`);
-    console.log(`  Entry points: ${result.entrypoints.length}`);
-    console.log(`  Modules: ${result.modules.length}`);
-
-    return result as Level1Output;
-  } catch (error) {
-    if (error instanceof Anthropic.APIError) {
-      throw new Error(`Claude API error: ${error.message}`);
-    }
-    throw error;
-  }
+  return result;
 }
