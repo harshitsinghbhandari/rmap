@@ -5,6 +5,9 @@
  */
 
 import { Command } from 'commander';
+import * as path from 'node:path';
+import { buildMap } from '../../coordinator/index.js';
+import { readExistingMeta } from '../../coordinator/assembler.js';
 
 export const mapCommand = new Command('map')
   .description('Build or update repository map')
@@ -58,15 +61,23 @@ async function buildFullMap(): Promise<void> {
   console.log('║       Building Repository Map         ║');
   console.log('╚═══════════════════════════════════════╝');
   console.log();
-  console.log('Starting full map rebuild...');
-  console.log();
-  console.log('Note: Full map building is not yet implemented.');
-  console.log('This will run the complete Level 0-4 pipeline:');
-  console.log('  • Level 0: Harvest file metadata');
-  console.log('  • Level 1: Detect structure and conventions');
-  console.log('  • Level 2: Divide work for parallel processing');
-  console.log('  • Level 3: Deep file annotation with LLM');
-  console.log('  • Level 4: Validate and ensure consistency');
+
+  const repoRoot = process.cwd();
+
+  const result = await buildMap({
+    repoRoot,
+    forceFullRebuild: true,
+    autofix: true,
+    parallel: true,
+  });
+
+  console.log('\n✨ Map build complete!');
+  console.log(`📁 Output: ${result.outputPath}`);
+  console.log(`📊 Stats:`);
+  console.log(`   - Files: ${result.stats.filesAnnotated}`);
+  console.log(`   - Time: ${result.stats.buildTimeMinutes.toFixed(1)} minutes`);
+  console.log(`   - Agents: ${result.stats.agentsUsed}`);
+  console.log(`   - Issues: ${result.stats.validationIssues}`);
 }
 
 /**
@@ -95,11 +106,33 @@ async function buildOrUpdateMap(): Promise<void> {
   console.log('║       Repository Map Builder          ║');
   console.log('╚═══════════════════════════════════════╝');
   console.log();
-  console.log('Checking for existing map...');
-  console.log();
-  console.log('Note: Intelligent build/update is not yet implemented.');
-  console.log('This will automatically choose between:');
-  console.log('  • Delta update (if map exists and < 20 files changed)');
-  console.log('  • Full rebuild (if no map or > 100 files changed)');
-  console.log('  • Delta + validation (if 20-100 files changed)');
+
+  const repoRoot = process.cwd();
+
+  // Check if map exists
+  const existingMeta = readExistingMeta(repoRoot);
+
+  if (existingMeta) {
+    console.log(`Found existing map (version ${existingMeta.map_version})`);
+    console.log('Note: Delta update logic not yet implemented, doing full rebuild');
+    console.log();
+  } else {
+    console.log('No existing map found, building from scratch...');
+    console.log();
+  }
+
+  const result = await buildMap({
+    repoRoot,
+    forceFullRebuild: false, // Will do delta if possible (when implemented)
+    autofix: true,
+    parallel: true,
+  });
+
+  console.log('\n✨ Map build complete!');
+  console.log(`📁 Output: ${result.outputPath}`);
+  console.log(`📊 Stats:`);
+  console.log(`   - Files: ${result.stats.filesAnnotated}`);
+  console.log(`   - Time: ${result.stats.buildTimeMinutes.toFixed(1)} minutes`);
+  console.log(`   - Agents: ${result.stats.agentsUsed}`);
+  console.log(`   - Issues: ${result.stats.validationIssues}`);
 }
