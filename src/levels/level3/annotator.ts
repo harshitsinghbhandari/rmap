@@ -12,7 +12,14 @@ import type { FileAnnotation, RawFileMetadata, DelegationTask } from '../../core
 import { ConcurrencyPool } from '../../core/concurrency.js';
 import { buildAnnotationPrompt } from './prompt.js';
 import { parseAnnotationResponse, AnnotationValidationError } from './parser.js';
-import { ANNOTATION_MODEL_MAP, CONCURRENCY_CONFIG } from '../../config/models.js';
+import {
+  ANNOTATION_MODEL_MAP,
+  CONCURRENCY_CONFIG,
+  FILE,
+  TOKEN,
+  RETRY,
+  OUTPUT,
+} from '../../config/index.js';
 import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
@@ -22,9 +29,9 @@ import { LLMClient, MetricsCollector } from '../../core/index.js';
  */
 function isBinaryFile(filePath: string): boolean {
   try {
-    const buffer = Buffer.alloc(8192);
+    const buffer = Buffer.alloc(FILE.BINARY_DETECTION_BUFFER_SIZE);
     const fd = fs.openSync(filePath, 'r');
-    const bytesRead = fs.readSync(fd, buffer, 0, 8192, 0);
+    const bytesRead = fs.readSync(fd, buffer, 0, FILE.BINARY_DETECTION_BUFFER_SIZE, 0);
     fs.closeSync(fd);
 
     // Check for null bytes in the first 8KB
@@ -95,7 +102,7 @@ async function annotateFile(
     // Call LLM with retry
     const response = await llmClient.sendMessage(prompt, {
       model,
-      maxTokens: 2000,
+      maxTokens: TOKEN.MAX_TOKENS_LEVEL3,
     });
 
     // Record metrics if collector provided
@@ -126,8 +133,8 @@ async function annotateFile(
 
         const retryResponse = await llmClient.sendMessage(retryPrompt, {
           model,
-          maxTokens: 2000,
-          retryConfig: { maxRetries: 1 },
+          maxTokens: TOKEN.MAX_TOKENS_LEVEL3,
+          retryConfig: { maxRetries: RETRY.VALIDATION_ERROR_RETRIES },
         });
 
         // Record retry metrics
@@ -224,7 +231,7 @@ export async function annotateFiles(
       const annotation = await annotateFile(absolutePath, metadata, llmClient, model, repoRoot, metrics);
 
       completedCount++;
-      if (completedCount % 10 === 0 || completedCount === totalCount) {
+      if (completedCount % OUTPUT.PROGRESS_UPDATE_INTERVAL_L3 === 0 || completedCount === totalCount) {
         console.log(`Progress: ${completedCount}/${totalCount} files processed`);
       }
 

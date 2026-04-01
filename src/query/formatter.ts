@@ -6,6 +6,7 @@
 
 import type { FileAnnotation, MetaJson } from '../core/types.js';
 import type { FileScore } from './ranking.js';
+import { OUTPUT } from '../config/index.js';
 
 /**
  * Format options for output
@@ -28,10 +29,10 @@ export interface FormatOptions {
  * Default format options
  */
 const DEFAULT_OPTIONS: Required<FormatOptions> = {
-  maxFiles: 10,
-  maxExports: 5,
+  maxFiles: OUTPUT.MAX_FILES_PER_SECTION,
+  maxExports: OUTPUT.MAX_EXPORTS_PER_FILE,
   fullPaths: true,
-  maxConventions: 5,
+  maxConventions: OUTPUT.MAX_CONVENTIONS,
 };
 
 /**
