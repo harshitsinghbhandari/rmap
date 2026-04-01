@@ -17,6 +17,14 @@ export interface MapBuildResult {
     agentsUsed: number;
     validationIssues: number;
   };
+  /** Information about the build context for display purposes */
+  context?: {
+    operation: 'full-build' | 'build-or-update';
+    checkpointCleared?: boolean;
+    existingMapVersion?: string;
+    changes?: ChangeDetectionSummary;
+    wasAlreadyUpToDate?: boolean;
+  };
 }
 
 /**
@@ -50,13 +58,16 @@ export interface MapMetadata {
   commitAge: number;
   currentCommit: string;
   currentCommitShort: string;
-  commitsBehind: number;
+  commitsAhead: number;
 }
 
 /**
- * Change detection result
+ * Change detection summary (CLI-facing)
+ *
+ * Note: This is distinct from coordinator/delta.ts's ChangeDetectionResult
+ * which has a different shape (deletedFiles is string[] there vs number here).
  */
-export interface ChangeDetectionResult {
+export interface ChangeDetectionSummary {
   totalChanges: number;
   changedFiles: string[];
   deletedFiles: number;
@@ -77,7 +88,7 @@ export interface MapStatusResult {
   hasCheckpoint: boolean;
   checkpoint?: CheckpointInfo;
   metadata?: MapMetadata;
-  changes?: ChangeDetectionResult;
+  changes?: ChangeDetectionSummary;
   verdict?: MapVerdict;
 }
 
@@ -86,7 +97,7 @@ export interface MapStatusResult {
  */
 export interface MapUpdateResult {
   success: boolean;
-  changes: ChangeDetectionResult;
+  changes: ChangeDetectionSummary;
   action: 'no-changes' | 'delta-update' | 'full-rebuild';
   buildResult?: MapBuildResult;
 }

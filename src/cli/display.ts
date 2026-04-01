@@ -14,7 +14,7 @@ import type {
   ErrorResult,
   CheckpointInfo,
   MapMetadata,
-  ChangeDetectionResult,
+  ChangeDetectionSummary,
 } from './types.js';
 
 const UI = getUI();
@@ -70,11 +70,11 @@ function displayCheckpoint(checkpoint: CheckpointInfo): void {
 /**
  * Display map metadata and changes
  */
-function displayMapInfo(metadata: MapMetadata, changes: ChangeDetectionResult): void {
+function displayMapInfo(metadata: MapMetadata, changes: ChangeDetectionSummary): void {
   console.log(`Map version: ${metadata.version}`);
   console.log(`Schema: ${metadata.schema}`);
   console.log(`Built from: ${metadata.buildCommitShort} (${metadata.commitAge} days ago)`);
-  console.log(`Current HEAD: ${metadata.currentCommitShort} (${metadata.commitsBehind} commits ahead)`);
+  console.log(`Current HEAD: ${metadata.currentCommitShort} (${metadata.commitsAhead} commits ahead)`);
   console.log(`Files changed since map: ${changes.totalChanges}`);
 
   if (changes.totalChanges > 0) {
@@ -88,7 +88,7 @@ function displayMapInfo(metadata: MapMetadata, changes: ChangeDetectionResult): 
  */
 function displayVerdict(
   verdict: 'up-to-date' | 'update-recommended' | 'full-rebuild-recommended',
-  changes?: ChangeDetectionResult
+  changes?: ChangeDetectionSummary
 ): void {
   console.log();
 
@@ -259,7 +259,7 @@ export function displayExistingMapFound(version: string): void {
 /**
  * Display changes detected message
  */
-export function displayChangesDetected(changes: ChangeDetectionResult): void {
+export function displayChangesDetected(changes: ChangeDetectionSummary): void {
   console.log(`Detected ${changes.totalChanges} changed files`);
   console.log(`Strategy: ${changes.updateStrategy}`);
   console.log();

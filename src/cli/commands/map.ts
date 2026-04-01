@@ -19,7 +19,6 @@ import {
   loadCheckpoint,
   clearCheckpoint,
   validateCheckpoint,
-  getCheckpointSummary,
 } from '../../coordinator/checkpoint.js';
 import { getUI } from '../ui-constants.js';
 import {
@@ -40,7 +39,7 @@ import type {
   MapUpdateResult,
   CheckpointInfo,
   MapMetadata,
-  ChangeDetectionResult,
+  ChangeDetectionSummary,
   MapVerdict,
 } from '../types.js';
 
@@ -67,19 +66,43 @@ export const mapCommand = new Command('map')
         const result = await computeMapStatus();
         displayMapStatus(result);
       } else if (options.full) {
+        displayOperationHeader('Building Repository Map');
         const result = await computeFullMapBuild(options);
+        if (result.context?.checkpointCleared) {
+          displayCheckpointClearing();
+        }
         displayMapBuildResult(result);
       } else if (options.update) {
         const result = await computeMapUpdate();
         displayMapUpdateResult(result);
       } else {
         // Default: delta update if map exists, otherwise full build
+        displayOperationHeader('Repository Map Builder');
         const result = await computeBuildOrUpdate(options);
-        // Only display build result if files were actually processed
-        if (result.stats.filesAnnotated > 0) {
-          displayMapBuildResult(result);
-        } else {
+
+        // Display context-specific messages
+        if (result.context?.checkpointCleared) {
+          displayCheckpointClearing();
+        }
+
+        if (result.context?.existingMapVersion) {
+          displayExistingMapFound(result.context.existingMapVersion);
+        } else if (!result.context?.wasAlreadyUpToDate) {
+          displayNoMapFound();
+        }
+
+        if (result.context?.changes) {
+          displayChangesDetected(result.context.changes);
+          if (result.context.changes.updateStrategy !== 'full-rebuild') {
+            displayDeltaUpdateNote();
+          }
+        }
+
+        // Display final result
+        if (result.context?.wasAlreadyUpToDate) {
           console.log(`${UI.EMOJI.CHECK} Map is already up to date!`);
+        } else {
+          displayMapBuildResult(result);
         }
       }
     } catch (error) {
@@ -162,7 +185,7 @@ export async function computeMapStatus(): Promise<MapStatusResult> {
 
   // Prepare metadata
   const commitAge = getCommitAge(repoRoot, existingMeta.git_commit);
-  const commitsBehind = getCommitCount(repoRoot, existingMeta.git_commit, currentCommit);
+  const commitsAhead = getCommitCount(repoRoot, existingMeta.git_commit, currentCommit);
 
   const metadata: MapMetadata = {
     version: formatVersionString(existingMeta),
@@ -172,10 +195,10 @@ export async function computeMapStatus(): Promise<MapStatusResult> {
     commitAge,
     currentCommit,
     currentCommitShort: currentCommit.substring(0, 7),
-    commitsBehind,
+    commitsAhead,
   };
 
-  const changeInfo: ChangeDetectionResult = {
+  const changeInfo: ChangeDetectionSummary = {
     totalChanges: changes.totalChanges,
     changedFiles: changes.changedFiles,
     deletedFiles: changes.deletedFiles.length,
@@ -207,12 +230,11 @@ export async function computeMapStatus(): Promise<MapStatusResult> {
  * Compute full map build (pure business logic)
  */
 export async function computeFullMapBuild(options: { resume?: boolean }): Promise<MapBuildResult> {
-  displayOperationHeader('Building Repository Map');
-
   const repoRoot = process.cwd();
 
   // Handle resume flag logic
   let resumeOption = true; // default
+  let checkpointCleared = false;
 
   if (options.resume === true) {
     // Explicit --resume: error if no checkpoint exists
@@ -233,9 +255,9 @@ export async function computeFullMapBuild(options: { resume?: boolean }): Promis
     resumeOption = true;
   } else if (options.resume === false) {
     // --no-resume: clear checkpoint and start fresh
-    displayCheckpointClearing();
     clearCheckpoint(repoRoot);
     resumeOption = false;
+    checkpointCleared = true;
   }
 
   const result = await buildMap({
@@ -254,6 +276,10 @@ export async function computeFullMapBuild(options: { resume?: boolean }): Promis
       buildTimeMinutes: result.stats.buildTimeMinutes,
       agentsUsed: result.stats.agentsUsed,
       validationIssues: result.stats.validationIssues,
+    },
+    context: {
+      operation: 'full-build',
+      checkpointCleared,
     },
   };
 }
@@ -274,7 +300,7 @@ export async function computeMapUpdate(): Promise<MapUpdateResult> {
   // Detect changes
   const changes = detectChanges(repoRoot, existingMeta);
 
-  const changeInfo: ChangeDetectionResult = {
+  const changeInfo: ChangeDetectionSummary = {
     totalChanges: changes.totalChanges,
     changedFiles: changes.changedFiles,
     deletedFiles: changes.deletedFiles.length,
@@ -313,12 +339,11 @@ export async function computeMapUpdate(): Promise<MapUpdateResult> {
  * Compute build or update (default behavior)
  */
 export async function computeBuildOrUpdate(options: { resume?: boolean }): Promise<MapBuildResult> {
-  displayOperationHeader('Repository Map Builder');
-
   const repoRoot = process.cwd();
 
   // Handle resume flag logic
   let resumeOption = true; // default
+  let checkpointCleared = false;
 
   if (options.resume === true) {
     // Explicit --resume: error if no checkpoint exists
@@ -339,23 +364,25 @@ export async function computeBuildOrUpdate(options: { resume?: boolean }): Promi
     resumeOption = true;
   } else if (options.resume === false) {
     // --no-resume: clear checkpoint and start fresh
-    displayCheckpointClearing();
     clearCheckpoint(repoRoot);
     resumeOption = false;
+    checkpointCleared = true;
   }
 
   // Check if map exists
   const existingMeta = readExistingMeta(repoRoot);
+  let existingMapVersion: string | undefined;
+  let changeInfo: ChangeDetectionSummary | undefined;
+  let wasAlreadyUpToDate = false;
 
   if (existingMeta) {
-    displayExistingMapFound(formatVersionString(existingMeta));
+    existingMapVersion = formatVersionString(existingMeta);
 
     // Detect changes
     const changes = detectChanges(repoRoot, existingMeta);
 
     if (changes.totalChanges === 0) {
       // Map is up to date, return early (no build needed)
-      // We need to get the existing map info to return
       const repoMapPath = path.join(repoRoot, '.rmap', 'meta.json');
       return {
         success: true,
@@ -366,24 +393,22 @@ export async function computeBuildOrUpdate(options: { resume?: boolean }): Promi
           agentsUsed: 0,
           validationIssues: 0,
         },
+        context: {
+          operation: 'build-or-update',
+          checkpointCleared,
+          existingMapVersion,
+          wasAlreadyUpToDate: true,
+        },
       };
     }
 
-    const changeInfo: ChangeDetectionResult = {
+    changeInfo = {
       totalChanges: changes.totalChanges,
       changedFiles: changes.changedFiles,
       deletedFiles: changes.deletedFiles.length,
       updateStrategy: changes.updateStrategy as 'delta' | 'delta-with-validation' | 'full-rebuild',
       reason: changes.reason,
     };
-
-    displayChangesDetected(changeInfo);
-
-    if (changes.updateStrategy !== 'full-rebuild') {
-      displayDeltaUpdateNote();
-    }
-  } else {
-    displayNoMapFound();
   }
 
   const result = await buildMap({
@@ -402,6 +427,13 @@ export async function computeBuildOrUpdate(options: { resume?: boolean }): Promi
       buildTimeMinutes: result.stats.buildTimeMinutes,
       agentsUsed: result.stats.agentsUsed,
       validationIssues: result.stats.validationIssues,
+    },
+    context: {
+      operation: 'build-or-update',
+      checkpointCleared,
+      existingMapVersion,
+      changes: changeInfo,
+      wasAlreadyUpToDate,
     },
   };
 }
