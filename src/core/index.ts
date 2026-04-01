@@ -41,3 +41,6 @@ export {
 
 // Export Tag type
 export type { Tag } from './constants.js';
+
+// Export model configuration types
+export type { AgentSize } from '../config/models.js';
