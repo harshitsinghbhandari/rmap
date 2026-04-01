@@ -10,6 +10,7 @@ import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 import type { RawFileMetadata, Level0Output } from '../../core/types.js';
 import { FILE, OUTPUT } from '../../config/index.js';
+import { extractImports } from './parsers/index.js';
 
 /**
  * Directories to always skip
@@ -108,66 +109,10 @@ const LANGUAGE_MAP: Record<string, string> = {
 };
 
 /**
- * Import statement regex patterns for different languages
+ * NOTE: Import extraction logic has been moved to src/levels/level0/parsers/
+ * for better maintainability and accuracy. The new implementation uses AST-based
+ * parsing for JavaScript/TypeScript (via Babel) with regex fallback for other languages.
  */
-const IMPORT_PATTERNS = {
-  // JavaScript/TypeScript: import, require, export from
-  javascript: [
-    /import\s+(?:(?:\*\s+as\s+\w+)|(?:\{[^}]*\})|(?:\w+))\s+from\s+['"]([^'"]+)['"]/g,
-    /import\s+['"]([^'"]+)['"]/g,
-    /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-    /export\s+(?:\*|\{[^}]*\})\s+from\s+['"]([^'"]+)['"]/g,
-  ],
-  // Python: import, from ... import
-  python: [
-    /from\s+([\w.]+)\s+import/g,
-    /import\s+([\w.]+)/g,
-  ],
-  // Go: import
-  go: [
-    /import\s+['"]([^'"]+)['"]/g,
-    /import\s+\w+\s+['"]([^'"]+)['"]/g,
-  ],
-  // Rust: use
-  rust: [
-    /use\s+([\w:]+)/g,
-  ],
-};
-
-/**
- * Extract import statements from file content using regex
- */
-function extractImports(content: string, language: string): string[] {
-  const imports: string[] = [];
-  let patterns: RegExp[] = [];
-
-  // Select appropriate patterns based on language
-  if (
-    language === 'JavaScript' ||
-    language === 'TypeScript'
-  ) {
-    patterns = IMPORT_PATTERNS.javascript;
-  } else if (language === 'Python') {
-    patterns = IMPORT_PATTERNS.python;
-  } else if (language === 'Go') {
-    patterns = IMPORT_PATTERNS.go;
-  } else if (language === 'Rust') {
-    patterns = IMPORT_PATTERNS.rust;
-  }
-
-  // Extract imports using each pattern
-  for (const pattern of patterns) {
-    let match;
-    const regex = new RegExp(pattern);
-    while ((match = regex.exec(content)) !== null) {
-      if (match[1]) {
-        imports.push(match[1]);
-      }
-    }
-  }
-
-  return [...new Set(imports)]; // Remove duplicates
-}
 
 /**
  * Check if a file is likely binary
@@ -254,7 +199,9 @@ function processFile(
     const language = LANGUAGE_MAP[extension.toLowerCase()];
 
     // Extract imports if we can detect the language
-    const raw_imports = language ? extractImports(content, language) : [];
+    const raw_imports = language
+      ? extractImports(content, language, relativePath)
+      : [];
 
     return {
       name,
