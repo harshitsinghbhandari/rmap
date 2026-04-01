@@ -1,8 +1,6 @@
 .claude/
 agent-orchestrator.yaml
 idea.md
-codebase/
-next-agent.md
 
 # Dependencies
 node_modules/
@@ -43,6 +41,3 @@ pnpm-debug.log*
 tmp/
 temp/
 *.tmp
-
-# Agent handoff notes
-next-agent.md
