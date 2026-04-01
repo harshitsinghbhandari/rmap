@@ -41,3 +41,36 @@ export {
   TOKEN,
   FILE,
 } from './env.js';
+
+// Import for validation
+import { CONFIG } from './env.js';
+import { validateConfig, validateAll } from '../core/validation.js';
+
+/**
+ * Validate configuration on import
+ *
+ * Runs validation checks on the loaded configuration.
+ * Logs warnings but doesn't crash to allow graceful degradation.
+ */
+function validateConfigOnLoad(): void {
+  try {
+    validateConfig(CONFIG);
+    validateAll();
+  } catch (error) {
+    // Log validation errors but don't crash - allow runtime to handle
+    if (error instanceof Error) {
+      // In test/development, log full error for debugging
+      if (process.env.NODE_ENV === 'test' || process.env.DEBUG) {
+        console.error(`Configuration validation warning:`, error);
+      } else {
+        console.error(`Configuration validation warning: ${error.message}`);
+      }
+    }
+  }
+}
+
+// Run validation on module load only if not in test mode
+// Tests will explicitly call validation functions
+if (process.env.NODE_ENV !== 'test') {
+  validateConfigOnLoad();
+}
