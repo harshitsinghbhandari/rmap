@@ -7,6 +7,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { RETRY_CONFIG } from '../config/models.js';
+import { globalRateLimiter, estimateTokens } from './rate-limiter.js';
 
 /**
  * Configuration for retry behavior
@@ -134,6 +135,10 @@ export class LLMClient {
 
     for (let attempt = 1; attempt <= config.maxRetries; attempt++) {
       try {
+        // Acquire rate limit capacity before making the API call
+        const estimatedTokens = estimateTokens(prompt);
+        await globalRateLimiter.acquire(estimatedTokens);
+
         const response = await this.client.messages.create({
           model: options.model,
           max_tokens: options.maxTokens,
