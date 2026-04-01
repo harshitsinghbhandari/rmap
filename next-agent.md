@@ -1,4 +1,228 @@
-# Checkpoint Integration - Task 3 Complete
+# Checkpoint Integration - Task 4 Complete
+
+## What I Built
+
+Implemented graceful shutdown handling for the checkpoint system in `src/coordinator/pipeline.ts`. The pipeline now catches SIGINT (Ctrl+C) and SIGTERM signals, saves checkpoint state, and exits cleanly.
+
+### Changes to `pipeline.ts`
+
+**1. Hoisted annotations variable** (line 286):
+- Moved `annotations` declaration to function scope so signal handlers can access it
+- Initialized as empty array at the top level
+
+**2. Added signal handlers** (lines 242-273):
+- Created `handleShutdown(signal)` function that:
+  - Guards against multiple signals with `isShuttingDown` flag
+  - Logs the received signal
+  - Marks current level as 'interrupted' using `markLevelInterrupted()`
+  - Saves Level 3 partial progress if applicable
+  - Exits with code 0
+- Registered SIGINT and SIGTERM handlers with stored function references
+
+**3. Level 3 progress saving** (lines 259-263):
+- When interrupted during Level 3, saves all completed annotations
+- Logs count of partial annotations saved
+- Works for both sequential and parallel execution modes
+
+**4. Handler cleanup** (lines 453-456):
+- Removes signal handlers when pipeline completes normally
+- Prevents memory leaks and interference between runs
+- Uses stored handler references (`sigintHandler`, `sigtermHandler`)
+
+## Design Decisions
+
+### 1. Guard flag for multiple signals
+**Why**: User might spam Ctrl+C or send multiple signals. The `isShuttingDown` flag ensures we only handle the first signal and ignore subsequent ones during shutdown.
+
+### 2. Signal handler function references
+**Why**: Node.js requires exact function reference to remove listeners. We store `sigintHandler` and `sigtermHandler` so we can properly clean them up.
+
+### 3. Only save Level 3 progress when annotations exist
+**Why**: If annotations array is empty, there's nothing to checkpoint. This handles edge cases where Level 3 hasn't started yet or has no work to do.
+
+### 4. Exit with code 0 (success)
+**Why**: Graceful shutdown after checkpoint save is not an error—it's intentional. Exit code 0 allows scripts to distinguish between crashes and intentional interruption.
+
+### 5. Mark all levels as interrupted (not just Level 3)
+**Why**: Consistent checkpoint state. If interrupted during Levels 0-2, we still mark them as interrupted so resume logic knows what happened.
+
+## Gotchas
+
+### 1. **Parallel mode doesn't checkpoint mid-Promise.all**
+If interrupted during parallel execution of Level 3 tasks, only previously completed tasks are saved. Work-in-progress tasks are lost. This is documented limitation—trade-off for simplicity.
+
+**Workaround for future**: Could refactor to use `Promise.allSettled` with manual tracking and periodic checkpointing, but adds complexity.
+
+### 2. **Signal handlers are synchronous**
+`markLevelInterrupted` and `saveLevel3Progress` are synchronous file I/O. This is fine because:
+- Atomic writes use temp files (no corruption risk)
+- Node.js flushes buffers before process.exit()
+- Fast enough that user won't notice delay
+
+### 3. **Handler cleanup happens on normal completion only**
+If process crashes (segfault, unhandled exception), handlers aren't cleaned up. This is acceptable because the process is dying anyway.
+
+### 4. **Checkpoint state mutates in place**
+The `markLevelInterrupted` function mutates the `checkpoint` object directly. No need to reassign the result.
+
+### 5. **Current level tracking**
+Signal handler uses `checkpoint.current_level` which is updated as pipeline progresses. Always reflects the level being executed when interrupt occurs.
+
+## Testing
+
+Tested scenarios:
+1. ✅ Ctrl+C during Level 0 - marks as interrupted, no partial progress
+2. ✅ Ctrl+C during Level 3 sequential - saves completed tasks
+3. ✅ Ctrl+C during Level 3 parallel - saves whatever completed before interrupt
+4. ✅ Normal completion - handlers cleaned up, no interference
+5. ✅ Multiple signals (spam Ctrl+C) - only first signal handled
+
+## For the Next Agent (Task 5: CLI Integration)
+
+### What's Left to Do
+
+The checkpoint system now works end-to-end with graceful shutdown. The next step is to expose checkpoint functionality through CLI commands.
+
+**Task 5** is to add CLI commands for checkpoint management:
+1. `rmap map --resume` - Resume from checkpoint (default behavior)
+2. `rmap map --no-resume` - Ignore checkpoint, start fresh
+3. `rmap checkpoint status` - Show checkpoint state
+4. `rmap checkpoint clear` - Delete checkpoint and start over
+
+### Where to Hook In
+
+You'll need to modify:
+
+1. **`src/cli/commands/map.ts`** - Add flags:
+```typescript
+.option('--resume', 'Resume from checkpoint if available (default: true)')
+.option('--no-resume', 'Ignore checkpoint and start fresh')
+```
+
+The pipeline already accepts `resume` option in `PipelineOptions`, so just wire it through:
+```typescript
+await runPipeline({
+  repoRoot,
+  forceFullRebuild: options.full,
+  parallel: options.parallel,
+  resume: options.resume, // ← add this
+});
+```
+
+2. **Create `src/cli/commands/checkpoint.ts`** - New command:
+```typescript
+export const checkpointCommand = (program: Command) => {
+  const checkpoint = program
+    .command('checkpoint')
+    .description('Manage pipeline checkpoints');
+
+  checkpoint
+    .command('status')
+    .description('Show checkpoint state')
+    .action(async () => {
+      const checkpoint = loadCheckpoint(process.cwd());
+      if (!checkpoint) {
+        console.log('No checkpoint found.');
+        return;
+      }
+      console.log(getCheckpointSummary(checkpoint));
+    });
+
+  checkpoint
+    .command('clear')
+    .description('Delete checkpoint and start fresh')
+    .action(async () => {
+      clearCheckpoint(process.cwd());
+      console.log('✓ Checkpoint cleared.');
+    });
+};
+```
+
+3. **`src/cli/index.ts`** - Register new command:
+```typescript
+import { checkpointCommand } from './commands/checkpoint.js';
+
+// ...
+checkpointCommand(program);
+```
+
+### Files to Study
+
+- `src/cli/commands/map.ts` - existing map command to extend
+- `src/cli/index.ts` - CLI entry point
+- `src/coordinator/checkpoint.ts` - checkpoint functions to expose
+- Commander.js docs: https://github.com/tj/commander.js
+
+### Expected Behavior
+
+**Resume flow** (user runs `rmap map` after Ctrl+C):
+```
+🗺️  Starting rmap pipeline...
+Repository: /Users/foo/myrepo
+Mode: AUTO
+📋 Found valid checkpoint, resuming from last completed level...
+  ✓ Level 0 already completed
+  ✓ Level 1 already completed
+  ✓ Level 2 already completed
+  ⏸️  Level 3 partially completed: 5 tasks done
+
+⏩ Level 3: Deep File Annotator
+Resuming Level 3: 3 tasks remaining (5 already completed)
+Running 3 tasks sequentially...
+...
+```
+
+**Status command**:
+```bash
+$ rmap checkpoint status
+Checkpoint at level 3 (in_progress). Completed: [0, 1, 2]
+Started: 2024-01-15T10:30:00.000Z
+Git commit: a1b2c3d
+
+Level 3: Deep File Annotator
+  Status: interrupted
+  Tasks completed: 5/8
+  Started: 2024-01-15T10:32:15.000Z
+```
+
+**Clear command**:
+```bash
+$ rmap checkpoint clear
+✓ Checkpoint cleared.
+
+$ rmap checkpoint status
+No checkpoint found.
+```
+
+### Things to Watch Out For
+
+- **Default value for --resume**: Commander handles `--no-resume` automatically if you use `.option('--resume', ..., true)` with default value
+- **Error handling**: `rmap checkpoint status` should gracefully handle missing .repo_map directory
+- **Path resolution**: Use `process.cwd()` to get current directory, or accept `--path` flag
+- **Validation**: `checkpoint status` should validate checkpoint and show why it's invalid if applicable
+- **Colors**: Consider using chalk or similar for colored output (warnings in yellow, errors in red, success in green)
+
+### Suggested Implementation Steps
+
+1. **Add flags to map command**: Wire `--resume` and `--no-resume` through to `runPipeline`
+2. **Test resume behavior**: Interrupt pipeline, verify resume works, verify `--no-resume` starts fresh
+3. **Create checkpoint command**: Implement `status` and `clear` subcommands
+4. **Add output formatting**: Make `status` output human-readable and informative
+5. **Write CLI tests**: Test all new commands and flags
+6. **Update README**: Document checkpoint commands in usage section
+
+### Optional Enhancements
+
+- Add `rmap checkpoint repair` to fix broken checkpoints
+- Add `--checkpoint-path` flag to specify custom checkpoint location
+- Show estimated time remaining based on checkpoint progress
+- Add progress bars for long-running operations
+
+Good luck! The checkpoint system is solid and ready for CLI integration.
+
+---
+
+# Checkpoint Integration - Task 3 Complete (Previous)
 
 ## What I Built
 
