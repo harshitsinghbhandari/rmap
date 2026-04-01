@@ -314,3 +314,54 @@ export interface Level1Output {
   /** Project-specific conventions and rules */
   conventions: string[];
 }
+
+/**
+ * Status of a level in the checkpoint
+ */
+export type LevelStatus = 'pending' | 'in_progress' | 'completed' | 'interrupted';
+
+/**
+ * Checkpoint state for a single level
+ */
+export interface LevelCheckpoint {
+  /** Current status of this level */
+  status: LevelStatus;
+
+  /** ISO 8601 timestamp when level started */
+  started_at?: string;
+
+  /** ISO 8601 timestamp when level completed */
+  completed_at?: string;
+
+  /** Path to saved output file (relative to checkpoint dir) */
+  output_file?: string;
+
+  /** Total number of tasks (Level 3 only) */
+  tasks_total?: number;
+
+  /** Number of completed tasks (Level 3 only) */
+  tasks_completed?: number;
+
+  /** IDs of completed tasks (Level 3 only) */
+  completed_task_ids?: string[];
+}
+
+/**
+ * Complete checkpoint state for pipeline resume
+ */
+export interface CheckpointState {
+  /** Checkpoint format version */
+  version: string;
+
+  /** ISO 8601 timestamp when pipeline started */
+  started_at: string;
+
+  /** Git commit hash when pipeline started */
+  git_commit: string;
+
+  /** Current level being processed (0-4) */
+  current_level: number;
+
+  /** Checkpoint state for each level */
+  levels: Record<number, LevelCheckpoint>;
+}
