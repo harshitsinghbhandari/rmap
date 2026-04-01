@@ -5,7 +5,7 @@
  * All commit hashes and references are validated before being passed to shell commands.
  */
 
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
 /**
  * Validates a git commit hash or reference
@@ -57,11 +57,11 @@ export function validateGitRef(ref: string): void {
     );
   }
 
-  // Reject references that contain shell metacharacters or command separators
+  // Reject references that contain shell metacharacters, command separators, or unsafe sequences
   const dangerousPatterns = [
     /[;&|`$(){}[\]<>'"\\!*?]/,  // Shell metacharacters
-    /\.\./,                       // Path traversal (except in valid git refs like HEAD~..)
-    /^-/,                         // Starts with dash (could be interpreted as flag)
+    /\.\./,                     // Disallow '..' to prevent path traversal and rev-range syntax
+    /^-/,                       // Starts with dash (could be interpreted as flag)
   ];
 
   for (const pattern of dangerousPatterns) {
@@ -86,31 +86,33 @@ export function validateGitRef(ref: string): void {
 /**
  * Safely execute a git command with validated arguments
  *
- * Uses array-based command execution to prevent shell injection.
- * All git references are validated before execution.
+ * Uses execFileSync to pass arguments directly to the git process without shell
+ * interpretation, preventing command injection. Callers are responsible for
+ * validating any git references before passing them in.
  *
  * @param args - Git command arguments (e.g., ['diff', '--name-status', commit1, commit2])
  * @param cwd - Working directory
  * @param options - Additional exec options
  * @returns Command output
  */
-export function safeGitExec(
+function safeGitExec(
   args: string[],
   cwd: string,
   options: { encoding?: BufferEncoding; stdio?: any } = {}
 ): string {
-  // Validate that we're actually running git
   if (!args || args.length === 0) {
     throw new Error('Git command arguments cannot be empty');
   }
 
-  // Build command with proper escaping using array syntax
-  // Note: execSync doesn't support array syntax directly, but we can validate
-  // and build a safe command string with proper quoting
-  const command = ['git', ...args].join(' ');
+  // Reject --upload-pack which can be used to execute arbitrary commands via git
+  for (const arg of args) {
+    if (arg.startsWith('--upload-pack')) {
+      throw new Error(`Disallowed git argument: ${JSON.stringify(arg)}`);
+    }
+  }
 
   try {
-    return execSync(command, {
+    return execFileSync('git', args, {
       cwd,
       encoding: options.encoding || 'utf8',
       stdio: options.stdio || ['pipe', 'pipe', 'pipe'],
