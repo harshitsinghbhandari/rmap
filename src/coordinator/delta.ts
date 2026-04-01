@@ -16,7 +16,7 @@ import {
   getCommitTimestampSafe,
   getCommitCountSafe,
 } from '../core/git-utils.js';
-import { UPDATE_THRESHOLDS } from '../core/constants.js';
+import { DELTA } from '../config/index.js';
 
 /**
  * Result of change detection analysis
@@ -100,15 +100,15 @@ export function detectChanges(
   if (hasNewTopLevelDir) {
     updateStrategy = 'full-rebuild';
     reason = 'New top-level directory detected';
-  } else if (totalChanges > UPDATE_THRESHOLDS.MAX_DELTA_UPDATE) {
+  } else if (totalChanges > DELTA.MAX_DELTA_UPDATE) {
     updateStrategy = 'full-rebuild';
-    reason = `${totalChanges} files changed (>${UPDATE_THRESHOLDS.MAX_DELTA_UPDATE})`;
-  } else if (totalChanges >= UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION) {
+    reason = `${totalChanges} files changed (>${DELTA.MAX_DELTA_UPDATE})`;
+  } else if (totalChanges >= DELTA.MIN_DELTA_WITH_VALIDATION) {
     updateStrategy = 'delta-with-validation';
-    reason = `${totalChanges} files changed (${UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION}-${UPDATE_THRESHOLDS.MAX_DELTA_UPDATE})`;
+    reason = `${totalChanges} files changed (${DELTA.MIN_DELTA_WITH_VALIDATION}-${DELTA.MAX_DELTA_UPDATE})`;
   } else {
     updateStrategy = 'delta';
-    reason = `${totalChanges} files changed (<${UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION})`;
+    reason = `${totalChanges} files changed (<${DELTA.MIN_DELTA_WITH_VALIDATION})`;
   }
 
   return {
