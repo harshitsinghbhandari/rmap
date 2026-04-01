@@ -19,6 +19,11 @@ export type {
   DelegationTask,
   TaskDelegation,
   RawFileMetadata,
+  CheckpointState,
+  LevelCheckpoint,
+  LevelStatus,
+  Level0Output,
+  Level1Output,
 } from './types.js';
 
 // Export all constants
@@ -29,7 +34,13 @@ export {
   UPDATE_THRESHOLDS,
   MAX_TAGS_PER_FILE,
   MAX_FILES_PER_TASK,
+  CHECKPOINT_DIR,
+  CHECKPOINT_VERSION,
+  CHECKPOINT_FILES,
 } from './constants.js';
 
 // Export Tag type
 export type { Tag } from './constants.js';
+
+// Export model configuration types
+export type { AgentSize } from '../config/models.js';
