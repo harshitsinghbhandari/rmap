@@ -17,6 +17,8 @@ export { runPipeline, type PipelineOptions } from './pipeline.js';
 export { assembleMap, readExistingMeta, type AssemblerOptions } from './assembler.js';
 export { buildGraph, updateGraph, getGraphStats } from './graph.js';
 export { ProgressTracker } from './progress.js';
+export { CheckpointOrchestrator } from './checkpoint-orchestrator.js';
+export { GracefulShutdownHandler, type CleanupCallback } from './shutdown-handler.js';
 
 /**
  * Options for building the map
