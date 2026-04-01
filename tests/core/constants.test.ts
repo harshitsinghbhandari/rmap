@@ -67,6 +67,13 @@ test('UPDATE_THRESHOLDS has correct values', () => {
   assert.ok(UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION < UPDATE_THRESHOLDS.MAX_DELTA_UPDATE);
 });
 
+test('UPDATE_THRESHOLDS has backward-compatible deprecated aliases', () => {
+  // @deprecated aliases map to the same values as the canonical names
+  assert.strictEqual(UPDATE_THRESHOLDS.DELTA_WITH_VALIDATION, UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION);
+  assert.strictEqual(UPDATE_THRESHOLDS.FULL_REBUILD, UPDATE_THRESHOLDS.MAX_DELTA_UPDATE);
+  assert.strictEqual(UPDATE_THRESHOLDS.DELTA_ONLY, 0);
+});
+
 test('MAX_TAGS_PER_FILE is correct', () => {
   assert.strictEqual(MAX_TAGS_PER_FILE, 5);
 });

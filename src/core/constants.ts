@@ -141,6 +141,23 @@ export const UPDATE_THRESHOLDS = {
   MIN_DELTA_WITH_VALIDATION: 20,
   /** Maximum files for delta update (full rebuild if above this) */
   MAX_DELTA_UPDATE: 100,
+
+  /**
+   * @deprecated Use MIN_DELTA_WITH_VALIDATION instead.
+   * Kept for backward compatibility with earlier UPDATE_THRESHOLDS API.
+   */
+  DELTA_WITH_VALIDATION: 20,
+  /**
+   * @deprecated Use MAX_DELTA_UPDATE instead.
+   * Kept for backward compatibility with earlier UPDATE_THRESHOLDS API.
+   */
+  FULL_REBUILD: 100,
+  /**
+   * @deprecated No direct equivalent; use MIN_DELTA_WITH_VALIDATION to
+   * calculate delta-only thresholds. Kept for backward compatibility
+   * with earlier UPDATE_THRESHOLDS API.
+   */
+  DELTA_ONLY: 0,
 } as const;
 
 /**
