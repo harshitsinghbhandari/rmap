@@ -347,6 +347,20 @@ export function validateThresholds(
 }
 
 /**
+ * Configuration shape for validation (allows both literal and number types)
+ */
+type ValidatableConfig = {
+  delta?: Partial<Record<keyof typeof DELTA_CONFIG, number>>;
+  validation?: Partial<Record<keyof typeof VALIDATION_CONFIG, number>>;
+  retry?: Partial<Record<keyof typeof RETRY_CONFIG, number>>;
+  concurrency?: Partial<Record<keyof typeof CONCURRENCY_CONFIG, number>>;
+  scoring?: Partial<Record<keyof typeof SCORING_CONFIG, number>>;
+  output?: Partial<Record<keyof typeof OUTPUT_CONFIG, number>>;
+  token?: Partial<Record<keyof typeof TOKEN_CONFIG, number>>;
+  file?: Partial<Record<keyof typeof FILE_CONFIG, number>>;
+};
+
+/**
  * Validate complete configuration consistency
  *
  * Runs all config validators and ensures cross-config consistency.
@@ -354,16 +368,7 @@ export function validateThresholds(
  * @param config - Configuration object to validate
  * @throws {ConfigValidationError} If validation fails
  */
-export function validateConfig(config: {
-  delta?: typeof DELTA_CONFIG;
-  validation?: typeof VALIDATION_CONFIG;
-  retry?: typeof RETRY_CONFIG;
-  concurrency?: typeof CONCURRENCY_CONFIG;
-  scoring?: typeof SCORING_CONFIG;
-  output?: typeof OUTPUT_CONFIG;
-  token?: typeof TOKEN_CONFIG;
-  file?: typeof FILE_CONFIG;
-} = {}): void {
+export function validateConfig(config: ValidatableConfig = {}): void {
   const {
     delta = DELTA_CONFIG,
     validation = VALIDATION_CONFIG,
