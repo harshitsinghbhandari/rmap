@@ -43,7 +43,9 @@ test('TokenBucket: starts with full capacity', () => {
 test('TokenBucket: allows acquiring tokens when available', async () => {
   const bucket = new TokenBucket(10, 60);
   await bucket.acquire(5);
-  assert.strictEqual(bucket.getCurrentTokens(), 5);
+  // Allow for small floating point variance due to continuous refill
+  const remaining = bucket.getCurrentTokens();
+  assert.ok(remaining >= 5 && remaining < 5.1, `Expected ~5 tokens, got ${remaining}`);
 });
 
 test('TokenBucket: allows multiple acquisitions up to capacity', async () => {
