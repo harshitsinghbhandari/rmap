@@ -9,6 +9,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 import type { RawFileMetadata, Level0Output } from '../../core/types.js';
+import { FILE, OUTPUT } from '../../config/index.js';
 
 /**
  * Directories to always skip
@@ -245,7 +246,7 @@ function processFile(
     const line_count = countLines(content);
 
     // Warn about very large files
-    if (line_count > 10000) {
+    if (line_count > FILE.MAX_LINE_COUNT) {
       console.warn(`Warning: Large file detected (${line_count} lines): ${relativePath}`);
     }
 
@@ -351,8 +352,8 @@ export async function harvest(repoRoot: string): Promise<Level0Output> {
       totalSizeBytes += metadata.size_bytes;
       processedCount++;
 
-      // Progress indicator every 100 files
-      if (processedCount % 100 === 0) {
+      // Progress indicator every N files
+      if (processedCount % OUTPUT.PROGRESS_UPDATE_INTERVAL_FILES === 0) {
         process.stdout.write(`\rProcessed ${processedCount} files...`);
       }
     }

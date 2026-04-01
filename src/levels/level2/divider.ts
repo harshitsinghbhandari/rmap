@@ -7,9 +7,9 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { Level0Output, Level1Output, TaskDelegation, DelegationTask } from '../../core/types.js';
-import { MAX_FILES_PER_TASK } from '../../core/constants.js';
 import { buildWorkDivisionPrompt } from './prompt.js';
-import { DIVISION_MODEL, RETRY_CONFIG } from '../../config/models.js';
+import { DIVISION_MODEL, FILE, TOKEN } from '../../config/index.js';
+import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
  * Validation error for task delegation
@@ -21,69 +21,6 @@ export class DivisionValidationError extends Error {
   }
 }
 
-/**
- * Sleep for specified milliseconds
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Call Claude API with retry logic for rate limits
- */
-async function callClaudeWithRetry(
-  client: Anthropic,
-  prompt: string,
-  maxRetries: number = RETRY_CONFIG.MAX_RETRIES
-): Promise<string> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await client.messages.create({
-        model: DIVISION_MODEL,
-        max_tokens: 4000,
-        temperature: 0,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      });
-
-      // Extract text from response
-      const content = response.content[0];
-      if (content.type !== 'text') {
-        throw new Error('Unexpected response type from Claude');
-      }
-
-      return content.text;
-    } catch (error) {
-      lastError = error as Error;
-
-      // Check if it's a rate limit error
-      if (error instanceof Anthropic.RateLimitError) {
-        if (attempt < maxRetries) {
-          const waitTime = Math.pow(2, attempt) * RETRY_CONFIG.BASE_BACKOFF_MS;
-          console.log(`Rate limit hit. Retrying in ${waitTime / 1000}s... (attempt ${attempt}/${maxRetries})`);
-          await sleep(waitTime);
-          continue;
-        }
-      }
-
-      // For other API errors, don't retry
-      if (error instanceof Anthropic.APIError) {
-        throw new Error(`Claude API error: ${error.message}`);
-      }
-
-      // For non-API errors, throw immediately
-      throw error;
-    }
-  }
-
-  throw new Error(`Failed after ${maxRetries} retries: ${lastError?.message}`);
-}
 
 /**
  * Validate a single delegation task
@@ -112,9 +49,9 @@ function validateDelegationTask(task: unknown): DelegationTask {
     throw new DivisionValidationError('Task estimated_files must be a positive number');
   }
 
-  if (obj.estimated_files > MAX_FILES_PER_TASK) {
+  if (obj.estimated_files > FILE.MAX_FILES_PER_TASK) {
     throw new DivisionValidationError(
-      `Task estimated_files (${obj.estimated_files}) exceeds maximum (${MAX_FILES_PER_TASK})`
+      `Task estimated_files (${obj.estimated_files}) exceeds maximum (${FILE.MAX_FILES_PER_TASK})`
     );
   }
 
@@ -206,11 +143,13 @@ function parseAndValidateResponse(responseText: string, totalFiles: number): Tas
  *
  * @param level0 - Output from Level 0 metadata harvester
  * @param level1 - Output from Level 1 structure detector
+ * @param metrics - Optional metrics collector for tracking token usage
  * @returns TaskDelegation plan for Level 3 agents
  */
 export async function divideWork(
   level0: Level0Output,
-  level1: Level1Output
+  level1: Level1Output,
+  metrics?: MetricsCollector
 ): Promise<TaskDelegation> {
   // Check for API key
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -219,7 +158,8 @@ export async function divideWork(
   }
 
   // Initialize Anthropic client
-  const client = new Anthropic({ apiKey });
+  const anthropicClient = new Anthropic({ apiKey });
+  const llmClient = new LLMClient(anthropicClient);
 
   console.log('Starting Level 2 work division...');
   console.log('Using Claude Sonnet for intelligent task planning');
@@ -229,10 +169,22 @@ export async function divideWork(
   const prompt = buildWorkDivisionPrompt(level0, level1);
 
   // Call Claude with retry logic
-  const responseText = await callClaudeWithRetry(client, prompt);
+  const response = await llmClient.sendMessage(prompt, {
+    model: DIVISION_MODEL,
+    maxTokens: TOKEN.MAX_TOKENS_LEVEL2,
+  });
+
+  // Record metrics if collector provided
+  if (metrics) {
+    metrics.recordLLMCall({
+      model: response.model,
+      inputTokens: response.inputTokens,
+      outputTokens: response.outputTokens,
+    });
+  }
 
   // Parse and validate response
-  const delegation = parseAndValidateResponse(responseText, level0.total_files);
+  const delegation = parseAndValidateResponse(response.text, level0.total_files);
 
   console.log('✓ Work division complete');
   console.log(`  Tasks created: ${delegation.tasks.length}`);

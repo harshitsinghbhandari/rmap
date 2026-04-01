@@ -21,8 +21,9 @@ export {
 export {
   rankFilesByRelevance,
   getTopFiles,
-  getBlastRadius,
+  getDependents,
   getDependencies,
+  getBlastRadius, // @deprecated - use getDependents instead
 } from './ranking.js';
 export type { FileScore } from './ranking.js';
 

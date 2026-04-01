@@ -12,14 +12,15 @@ import type { FileAnnotation, RawFileMetadata, DelegationTask } from '../../core
 import { ConcurrencyPool } from '../../core/concurrency.js';
 import { buildAnnotationPrompt } from './prompt.js';
 import { parseAnnotationResponse, AnnotationValidationError } from './parser.js';
-import { ANNOTATION_MODEL_MAP, RETRY_CONFIG, CONCURRENCY_CONFIG } from '../../config/models.js';
-
-/**
- * Sleep for specified milliseconds
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import {
+  ANNOTATION_MODEL_MAP,
+  CONCURRENCY_CONFIG,
+  FILE,
+  TOKEN,
+  RETRY,
+  OUTPUT,
+} from '../../config/index.js';
+import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
  * Check if a file is binary
@@ -28,9 +29,9 @@ function sleep(ms: number): Promise<void> {
  */
 function isBinaryFile(filePath: string): boolean {
   try {
-    const buffer = Buffer.alloc(8192);
+    const buffer = Buffer.alloc(FILE.BINARY_DETECTION_BUFFER_SIZE);
     const fd = fs.openSync(filePath, 'r');
-    const bytesRead = fs.readSync(fd, buffer, 0, 8192, 0);
+    const bytesRead = fs.readSync(fd, buffer, 0, FILE.BINARY_DETECTION_BUFFER_SIZE, 0);
     fs.closeSync(fd);
 
     // Check for null bytes in the first 8KB
@@ -70,79 +71,23 @@ function readFileContent(filePath: string): string | null {
 }
 
 /**
- * Call Claude API with retry logic
- */
-async function callClaudeWithRetry(
-  client: Anthropic,
-  prompt: string,
-  model: string,
-  maxRetries: number = RETRY_CONFIG.MAX_RETRIES
-): Promise<string> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await client.messages.create({
-        model,
-        max_tokens: 2000,
-        temperature: 0,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      });
-
-      // Extract text from response
-      const content = response.content[0];
-      if (content.type !== 'text') {
-        throw new Error('Unexpected response type from Claude');
-      }
-
-      return content.text;
-    } catch (error) {
-      lastError = error as Error;
-
-      // Check if it's a rate limit error
-      if (error instanceof Anthropic.RateLimitError) {
-        if (attempt < maxRetries) {
-          const waitTime = Math.pow(2, attempt) * RETRY_CONFIG.BASE_BACKOFF_MS;
-          console.log(`Rate limit hit. Retrying in ${waitTime / 1000}s... (attempt ${attempt}/${maxRetries})`);
-          await sleep(waitTime);
-          continue;
-        }
-      }
-
-      // For other API errors, don't retry
-      if (error instanceof Anthropic.APIError) {
-        throw new Error(`Claude API error: ${error.message}`);
-      }
-
-      // For non-API errors, throw immediately
-      throw error;
-    }
-  }
-
-  throw new Error(`Failed after ${maxRetries} retries: ${lastError?.message}`);
-}
-
-/**
  * Annotate a single file
  *
  * @param filePath - Absolute path to the file
  * @param metadata - File metadata from Level 0
- * @param client - Anthropic client
+ * @param llmClient - LLM client with retry logic
  * @param model - Claude model to use
  * @param repoRoot - Repository root path
+ * @param metrics - Optional metrics collector for tracking token usage
  * @returns FileAnnotation or null if file cannot be annotated
  */
 async function annotateFile(
   filePath: string,
   metadata: RawFileMetadata,
-  client: Anthropic,
+  llmClient: LLMClient,
   model: string,
-  repoRoot: string
+  repoRoot: string,
+  metrics?: MetricsCollector
 ): Promise<FileAnnotation | null> {
   // Read file content
   const content = readFileContent(filePath);
@@ -155,10 +100,22 @@ async function annotateFile(
     const prompt = buildAnnotationPrompt(metadata.path, content, metadata);
 
     // Call LLM with retry
-    const responseText = await callClaudeWithRetry(client, prompt, model);
+    const response = await llmClient.sendMessage(prompt, {
+      model,
+      maxTokens: TOKEN.MAX_TOKENS_LEVEL3,
+    });
+
+    // Record metrics if collector provided
+    if (metrics) {
+      metrics.recordLLMCall({
+        model: response.model,
+        inputTokens: response.inputTokens,
+        outputTokens: response.outputTokens,
+      });
+    }
 
     // Parse and validate response
-    const annotation = parseAnnotationResponse(responseText, metadata, repoRoot);
+    const annotation = parseAnnotationResponse(response.text, metadata, repoRoot);
 
     return annotation;
   } catch (error) {
@@ -174,8 +131,22 @@ async function annotateFile(
         const prompt = buildAnnotationPrompt(metadata.path, content, metadata);
         const retryPrompt = prompt + '\n\nIMPORTANT: Your previous response was malformed. Please respond with valid JSON only.';
 
-        const responseText = await callClaudeWithRetry(client, retryPrompt, model, 1);
-        const annotation = parseAnnotationResponse(responseText, metadata, repoRoot);
+        const retryResponse = await llmClient.sendMessage(retryPrompt, {
+          model,
+          maxTokens: TOKEN.MAX_TOKENS_LEVEL3,
+          retryConfig: { maxRetries: RETRY.VALIDATION_ERROR_RETRIES },
+        });
+
+        // Record retry metrics
+        if (metrics) {
+          metrics.recordLLMCall({
+            model: retryResponse.model,
+            inputTokens: retryResponse.inputTokens,
+            outputTokens: retryResponse.outputTokens,
+          });
+        }
+
+        const annotation = parseAnnotationResponse(retryResponse.text, metadata, repoRoot);
 
         console.log(`✓ Retry successful for ${metadata.path}`);
         return annotation;
@@ -200,8 +171,11 @@ export interface AnnotationOptions {
   /** Repository root path */
   repoRoot: string;
 
-  /** Anthropic API client (optional, will be created if not provided) */
-  client?: Anthropic;
+  /** LLM client (optional, will be created if not provided) */
+  llmClient?: LLMClient;
+
+  /** Metrics collector (optional, for tracking token usage) */
+  metrics?: MetricsCollector;
 }
 
 /**
@@ -215,16 +189,17 @@ export async function annotateFiles(
   files: RawFileMetadata[],
   options: AnnotationOptions
 ): Promise<FileAnnotation[]> {
-  const { agentSize, repoRoot, client: providedClient } = options;
+  const { agentSize, repoRoot, llmClient: providedLLMClient, metrics } = options;
 
   // Initialize client if not provided
-  let client = providedClient;
-  if (!client) {
+  let llmClient = providedLLMClient;
+  if (!llmClient) {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       throw new Error('ANTHROPIC_API_KEY environment variable is not set');
     }
-    client = new Anthropic({ apiKey });
+    const anthropicClient = new Anthropic({ apiKey });
+    llmClient = new LLMClient(anthropicClient);
   }
 
   // Select model
@@ -253,10 +228,10 @@ export async function annotateFiles(
     async (metadata, index): Promise<FileAnnotation> => {
       const absolutePath = path.join(repoRoot, metadata.path);
 
-      const annotation = await annotateFile(absolutePath, metadata, client, model, repoRoot);
+      const annotation = await annotateFile(absolutePath, metadata, llmClient, model, repoRoot, metrics);
 
       completedCount++;
-      if (completedCount % 10 === 0 || completedCount === totalCount) {
+      if (completedCount % OUTPUT.PROGRESS_UPDATE_INTERVAL_L3 === 0 || completedCount === totalCount) {
         console.log(`Progress: ${completedCount}/${totalCount} files processed`);
       }
 
@@ -283,12 +258,14 @@ export async function annotateFiles(
  * @param task - Delegation task from Level 2
  * @param allFiles - All file metadata from Level 0
  * @param repoRoot - Repository root path
+ * @param metrics - Optional metrics collector for tracking token usage
  * @returns Array of FileAnnotation
  */
 export async function annotateTask(
   task: DelegationTask,
   allFiles: RawFileMetadata[],
-  repoRoot: string
+  repoRoot: string,
+  metrics?: MetricsCollector
 ): Promise<FileAnnotation[]> {
   console.log(`\nProcessing task: ${task.scope}`);
   console.log(`Agent size: ${task.agent_size}`);
@@ -315,5 +292,6 @@ export async function annotateTask(
   return annotateFiles(scopeFiles, {
     agentSize: task.agent_size,
     repoRoot,
+    metrics,
   });
 }

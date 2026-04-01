@@ -12,12 +12,21 @@ import {
   hasRepoMap,
 } from '../../query/index.js';
 
+interface GetContextOptions {
+  file?: string;
+  path?: string;
+  json?: boolean;
+  limit?: string;
+}
+
 export const getContextCommand = new Command('get-context')
   .description('Query repository context by tags, file, or path')
   .argument('[tags...]', 'Tags to search for (e.g., auth middleware)')
   .option('--file <path>', 'Query context for a specific file')
   .option('--path <dir>', 'Query context for a directory')
-  .action(async (tags: string[], options) => {
+  .option('--json', 'Output results in JSON format for machine consumption')
+  .option('--limit <n>', 'Maximum number of results to return (default: 10)')
+  .action(async (tags: string[], options: GetContextOptions) => {
     try {
       // Check if repository map exists
       if (!(await hasRepoMap())) {
@@ -38,15 +47,37 @@ export const getContextCommand = new Command('get-context')
         process.exit(1);
       }
 
+      // Parse limit option
+      const limit = options.limit ? parseInt(options.limit, 10) : 10;
+      if (isNaN(limit) || limit <= 0) {
+        console.error('Error: --limit must be a positive number');
+        process.exit(1);
+      }
+
       // Determine query type and execute
       let output: string;
 
       if (options.file) {
-        output = await queryByFileEngine(options.file);
+        output = await queryByFileEngine(options.file, {
+          formatOptions: {
+            maxFiles: limit,
+            outputFormat: options.json ? 'json' : 'text',
+          },
+        });
       } else if (options.path) {
-        output = await queryByPathEngine(options.path);
+        output = await queryByPathEngine(options.path, {
+          formatOptions: {
+            maxFiles: limit,
+            outputFormat: options.json ? 'json' : 'text',
+          },
+        });
       } else {
-        output = await queryByTagsEngine(tags);
+        output = await queryByTagsEngine(tags, {
+          formatOptions: {
+            maxFiles: limit,
+            outputFormat: options.json ? 'json' : 'text',
+          },
+        });
       }
 
       // Print the formatted output

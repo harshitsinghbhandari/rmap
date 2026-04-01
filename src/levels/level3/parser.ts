@@ -5,7 +5,8 @@
  */
 
 import type { FileAnnotation, RawFileMetadata } from '../../core/types.js';
-import { TAG_TAXONOMY, MAX_TAGS_PER_FILE, type Tag } from '../../core/constants.js';
+import { TAG_TAXONOMY, type Tag } from '../../core/constants.js';
+import { FILE } from '../../config/index.js';
 import * as path from 'node:path';
 
 /**
@@ -72,7 +73,7 @@ function validateTag(tag: string): Tag | null {
  * Filter and validate tags from LLM response
  *
  * - Removes tags not in taxonomy
- * - Limits to MAX_TAGS_PER_FILE
+ * - Limits to FILE.MAX_TAGS_PER_FILE
  * - Warns about dropped tags
  */
 function validateTags(tags: string[], filePath: string): Tag[] {
@@ -92,11 +93,11 @@ function validateTags(tags: string[], filePath: string): Tag[] {
   }
 
   // Limit to max tags
-  if (validTags.length > MAX_TAGS_PER_FILE) {
+  if (validTags.length > FILE.MAX_TAGS_PER_FILE) {
     console.warn(
-      `Warning: File ${filePath} has ${validTags.length} tags, limiting to ${MAX_TAGS_PER_FILE}`
+      `Warning: File ${filePath} has ${validTags.length} tags, limiting to ${FILE.MAX_TAGS_PER_FILE}`
     );
-    return validTags.slice(0, MAX_TAGS_PER_FILE);
+    return validTags.slice(0, FILE.MAX_TAGS_PER_FILE);
   }
 
   return validTags;

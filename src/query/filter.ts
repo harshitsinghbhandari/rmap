@@ -36,14 +36,17 @@ export function expandTagAliases(queryTags: string[]): Tag[] {
     else if (TAG_TAXONOMY.includes(normalizedTag as Tag)) {
       expandedTags.add(normalizedTag as Tag);
     }
-    // Otherwise, add it anyway (best-effort matching)
+    // Otherwise, try prefix matching (fallback)
     else {
-      // Try to find partial matches in taxonomy
+      // Try to find prefix matches in taxonomy
       const matches = TAG_TAXONOMY.filter((tag) =>
-        tag.includes(normalizedTag) || normalizedTag.includes(tag)
+        tag.startsWith(normalizedTag)
       );
       if (matches.length > 0) {
         matches.forEach((tag) => expandedTags.add(tag));
+      } else {
+        // Warn when no matches found
+        console.warn(`Warning: No tags found matching "${queryTag}". Check spelling or use a valid tag from the taxonomy.`);
       }
     }
   }

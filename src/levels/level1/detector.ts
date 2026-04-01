@@ -10,7 +10,8 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import type { Level0Output, Level1Output, Module } from '../../core/types.js';
 import { validateLevel1Output, ValidationError } from './validation.js';
-import { DETECTION_MODEL, RETRY_CONFIG } from '../../config/models.js';
+import { DETECTION_MODEL, TOKEN } from '../../config/index.js';
+import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
  * Build a file tree structure for the LLM prompt
@@ -129,69 +130,6 @@ Respond with valid JSON in this exact structure:
 }`;
 }
 
-/**
- * Sleep for specified milliseconds
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Call Claude API with retry logic for rate limits
- */
-async function callClaudeWithRetry(
-  client: Anthropic,
-  prompt: string,
-  maxRetries: number = RETRY_CONFIG.MAX_RETRIES
-): Promise<string> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await client.messages.create({
-        model: DETECTION_MODEL,
-        max_tokens: 2000,
-        temperature: 0,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      });
-
-      // Extract text from response
-      const content = response.content[0];
-      if (content.type !== 'text') {
-        throw new Error('Unexpected response type from Claude');
-      }
-
-      return content.text;
-    } catch (error) {
-      lastError = error as Error;
-
-      // Check if it's a rate limit error
-      if (error instanceof Anthropic.RateLimitError) {
-        if (attempt < maxRetries) {
-          const waitTime = Math.pow(2, attempt) * RETRY_CONFIG.BASE_BACKOFF_MS;
-          console.log(`Rate limit hit. Retrying in ${waitTime / 1000}s... (attempt ${attempt}/${maxRetries})`);
-          await sleep(waitTime);
-          continue;
-        }
-      }
-
-      // For other API errors, don't retry
-      if (error instanceof Anthropic.APIError) {
-        throw new Error(`Claude API error: ${error.message}`);
-      }
-
-      // For non-API errors, throw immediately
-      throw error;
-    }
-  }
-
-  throw new Error(`Failed after ${maxRetries} retries: ${lastError?.message}`);
-}
 
 /**
  * Parse and validate JSON response from LLM
@@ -225,11 +163,13 @@ function parseAndValidateResponse(responseText: string): Level1Output {
  *
  * @param level0 - Output from Level 0 metadata harvester
  * @param repoRoot - Absolute path to repository root
+ * @param metrics - Optional metrics collector for tracking token usage
  * @returns Level1Output with structure and conventions
  */
 export async function detectStructure(
   level0: Level0Output,
-  repoRoot: string
+  repoRoot: string,
+  metrics?: MetricsCollector
 ): Promise<Level1Output> {
   // Check for API key
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -238,7 +178,8 @@ export async function detectStructure(
   }
 
   // Initialize Anthropic client
-  const client = new Anthropic({ apiKey });
+  const anthropicClient = new Anthropic({ apiKey });
+  const llmClient = new LLMClient(anthropicClient);
 
   console.log('Starting Level 1 structure detection...');
   console.log('Using Claude Haiku for fast analysis');
@@ -247,10 +188,22 @@ export async function detectStructure(
   const prompt = buildPrompt(level0, repoRoot);
 
   // Call Claude with retry logic
-  const responseText = await callClaudeWithRetry(client, prompt);
+  const response = await llmClient.sendMessage(prompt, {
+    model: DETECTION_MODEL,
+    maxTokens: TOKEN.MAX_TOKENS_LEVEL1,
+  });
+
+  // Record metrics if collector provided
+  if (metrics) {
+    metrics.recordLLMCall({
+      model: response.model,
+      inputTokens: response.inputTokens,
+      outputTokens: response.outputTokens,
+    });
+  }
 
   // Parse and validate response
-  const result = parseAndValidateResponse(responseText);
+  const result = parseAndValidateResponse(response.text);
 
   console.log('✓ Structure detection complete');
   console.log(`  Repository: ${result.repo_name}`);

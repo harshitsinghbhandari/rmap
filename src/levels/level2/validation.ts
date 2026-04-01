@@ -5,7 +5,7 @@
  */
 
 import type { Level0Output, TaskDelegation } from '../../core/types.js';
-import { MAX_FILES_PER_TASK } from '../../core/constants.js';
+import { FILE, VALIDATION } from '../../config/index.js';
 
 /**
  * Validation error for division rules
@@ -34,9 +34,9 @@ export function validateDivisionRules(
 
   // Rule 1: Check max files per task
   for (const task of tasks) {
-    if (task.estimated_files > MAX_FILES_PER_TASK) {
+    if (task.estimated_files > FILE.MAX_FILES_PER_TASK) {
       throw new DivisionRuleError(
-        `Task "${task.scope}" exceeds max files per task (${task.estimated_files} > ${MAX_FILES_PER_TASK})`
+        `Task "${task.scope}" exceeds max files per task (${task.estimated_files} > ${FILE.MAX_FILES_PER_TASK})`
       );
     }
 
@@ -53,7 +53,7 @@ export function validateDivisionRules(
   const deviation = Math.abs(totalEstimated - actualFiles);
   const deviationPercent = (deviation / actualFiles) * 100;
 
-  if (deviationPercent > 15) {
+  if (deviationPercent > VALIDATION.MAX_DEVIATION_PERCENT) {
     throw new DivisionRuleError(
       `Total estimated files (${totalEstimated}) deviates too much from actual (${actualFiles}): ${deviationPercent.toFixed(1)}%`
     );
@@ -84,7 +84,7 @@ export function validateDivisionRules(
 
   // Warn if time estimate seems unrealistic
   const avgMinutesPerFile = estimated_total_minutes / actualFiles;
-  if (avgMinutesPerFile > 5) {
+  if (avgMinutesPerFile > VALIDATION.MAX_MINUTES_PER_FILE_WARNING) {
     console.warn(
       `Warning: Estimated time seems high (${avgMinutesPerFile.toFixed(2)} minutes per file)`
     );
@@ -112,7 +112,9 @@ export function applyDivisionHeuristics(
   // Heuristic 1: Check task balance
   const avgFilesPerTask = totalFiles / tasks.length;
   const imbalancedTasks = tasks.filter(
-    (t) => t.estimated_files > avgFilesPerTask * 1.5 || t.estimated_files < avgFilesPerTask * 0.5
+    (t) =>
+      t.estimated_files > avgFilesPerTask * VALIDATION.TASK_IMBALANCE_HIGH_MULTIPLIER ||
+      t.estimated_files < avgFilesPerTask * VALIDATION.TASK_IMBALANCE_LOW_MULTIPLIER
   );
 
   if (imbalancedTasks.length > tasks.length / 2) {
@@ -129,7 +131,10 @@ export function applyDivisionHeuristics(
   }
 
   // Heuristic 3: Check task granularity
-  if (tasks.length < 3 && totalFiles > 100) {
+  if (
+    tasks.length < VALIDATION.MIN_TASK_COUNT_THRESHOLD &&
+    totalFiles > VALIDATION.LARGE_REPO_FILE_THRESHOLD
+  ) {
     suggestions.push(
       `Only ${tasks.length} tasks for ${totalFiles} files. Consider more granular division for better parallelism`
     );
@@ -146,7 +151,7 @@ export function applyDivisionHeuristics(
   const mediumCount = tasks.filter((t) => t.agent_size === 'medium').length;
   const largeCount = tasks.filter((t) => t.agent_size === 'large').length;
 
-  if (smallCount === 0 && totalFiles > 50) {
+  if (smallCount === 0 && totalFiles > VALIDATION.SMALL_TASK_SUGGESTION_THRESHOLD) {
     suggestions.push(
       'All tasks use medium/large agents. Consider using small agents for simpler files to reduce cost'
     );
