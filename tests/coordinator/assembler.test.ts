@@ -39,6 +39,7 @@ const mockAnnotations: FileAnnotation[] = [
     path: 'src/index.ts',
     language: 'TypeScript',
     size_bytes: 1024,
+    line_count: 50,
     purpose: 'Main entry point',
     tags: ['entrypoint', 'initialization'],
     exports: ['main'],
@@ -48,6 +49,7 @@ const mockAnnotations: FileAnnotation[] = [
     path: 'src/auth.ts',
     language: 'TypeScript',
     size_bytes: 2048,
+    line_count: 80,
     purpose: 'Authentication logic',
     tags: ['authentication', 'security'],
     exports: ['login', 'logout'],
@@ -57,6 +59,7 @@ const mockAnnotations: FileAnnotation[] = [
     path: 'src/utils.ts',
     language: 'TypeScript',
     size_bytes: 512,
+    line_count: 30,
     purpose: 'Utility functions',
     tags: ['utility', 'helper'],
     exports: ['format', 'validate'],
@@ -66,6 +69,7 @@ const mockAnnotations: FileAnnotation[] = [
     path: 'tests/auth.test.ts',
     language: 'TypeScript',
     size_bytes: 1024,
+    line_count: 40,
     purpose: 'Auth tests',
     tags: ['testing'],
     exports: [],
@@ -260,6 +264,40 @@ test('assembleMap: creates valid stats.json', () => {
   }
 });
 
+// Test: annotations.json creation
+test('assembleMap: creates valid annotations.json', () => {
+  const tempDir = createTempDir();
+
+  try {
+    assembleMap(mockAnnotations, mockGraph, mockMeta, mockStats, mockValidation, {
+      repoRoot: tempDir,
+    });
+
+    const annotationsPath = path.join(tempDir, '.repo_map', 'annotations.json');
+    assert.ok(fs.existsSync(annotationsPath));
+
+    const content = fs.readFileSync(annotationsPath, 'utf8');
+    const annotations = JSON.parse(content) as FileAnnotation[];
+
+    // Validate structure
+    assert.ok(Array.isArray(annotations));
+    assert.strictEqual(annotations.length, mockAnnotations.length);
+
+    // Check first annotation
+    const firstAnnotation = annotations.find(a => a.path === 'src/index.ts');
+    assert.ok(firstAnnotation);
+    assert.strictEqual(firstAnnotation.language, 'TypeScript');
+    assert.strictEqual(firstAnnotation.purpose, 'Main entry point');
+    assert.strictEqual(typeof firstAnnotation.line_count, 'number');
+    assert.strictEqual(typeof firstAnnotation.size_bytes, 'number');
+    assert.ok(Array.isArray(firstAnnotation.tags));
+    assert.ok(Array.isArray(firstAnnotation.exports));
+    assert.ok(Array.isArray(firstAnnotation.imports));
+  } finally {
+    cleanupTempDir(tempDir);
+  }
+});
+
 // Test: validation.json creation
 test('assembleMap: creates valid validation.json', () => {
   const tempDir = createTempDir();
@@ -406,6 +444,7 @@ test('assembleMap: returns list of all written files', () => {
     // Check for key files
     const filenames = result.filesWritten.map(f => path.basename(f));
     assert.ok(filenames.includes('meta.json'));
+    assert.ok(filenames.includes('annotations.json'));
     assert.ok(filenames.includes('graph.json'));
     assert.ok(filenames.includes('tags.json'));
     assert.ok(filenames.includes('stats.json'));

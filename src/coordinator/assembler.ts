@@ -3,6 +3,7 @@
  *
  * Assembles and writes all .repo_map/ files atomically:
  * - meta.json
+ * - annotations.json (all file annotations)
  * - tree/*.json (file annotations organized by directory)
  * - graph.json
  * - tags.json
@@ -75,6 +76,11 @@ export function assembleMap(
   const metaPath = path.join(outputPath, 'meta.json');
   writeJsonFile(metaPath, meta);
   filesWritten.push(metaPath);
+
+  // Write annotations.json (all file annotations)
+  const annotationsPath = path.join(outputPath, 'annotations.json');
+  writeJsonFile(annotationsPath, annotations);
+  filesWritten.push(annotationsPath);
 
   // Write graph.json
   const graphPath = path.join(outputPath, 'graph.json');
