@@ -91,7 +91,7 @@ export const mapCommand = new Command('map')
 /**
  * Compute map status (pure business logic)
  */
-async function computeMapStatus(): Promise<MapStatusResult> {
+export async function computeMapStatus(): Promise<MapStatusResult> {
   const repoRoot = process.cwd();
 
   // Check for checkpoint first
@@ -206,7 +206,7 @@ async function computeMapStatus(): Promise<MapStatusResult> {
 /**
  * Compute full map build (pure business logic)
  */
-async function computeFullMapBuild(options: { resume?: boolean }): Promise<MapBuildResult> {
+export async function computeFullMapBuild(options: { resume?: boolean }): Promise<MapBuildResult> {
   displayOperationHeader('Building Repository Map');
 
   const repoRoot = process.cwd();
@@ -261,7 +261,7 @@ async function computeFullMapBuild(options: { resume?: boolean }): Promise<MapBu
 /**
  * Compute map update (pure business logic)
  */
-async function computeMapUpdate(): Promise<MapUpdateResult> {
+export async function computeMapUpdate(): Promise<MapUpdateResult> {
   const repoRoot = process.cwd();
 
   // Check if map exists
@@ -312,7 +312,7 @@ async function computeMapUpdate(): Promise<MapUpdateResult> {
 /**
  * Compute build or update (default behavior)
  */
-async function computeBuildOrUpdate(options: { resume?: boolean }): Promise<MapBuildResult> {
+export async function computeBuildOrUpdate(options: { resume?: boolean }): Promise<MapBuildResult> {
   displayOperationHeader('Repository Map Builder');
 
   const repoRoot = process.cwd();

@@ -41,7 +41,7 @@ export const getContextCommand = new Command('get-context')
 /**
  * Compute get-context query (pure business logic)
  */
-async function computeGetContext(
+export async function computeGetContext(
   tags: string[],
   options: GetContextOptions
 ): Promise<GetContextResult> {
