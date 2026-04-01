@@ -7,10 +7,15 @@
  * - Full rebuild (>100 files or structural changes)
  */
 
-import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { MetaJson } from '../core/types.js';
+import {
+  getCurrentCommitSafe,
+  getGitDiffSafe,
+  getCommitTimestampSafe,
+  getCommitCountSafe,
+} from '../core/git-utils.js';
 
 /**
  * Result of change detection analysis
@@ -124,11 +129,7 @@ export function detectChanges(
  */
 export function getCurrentCommit(repoRoot: string): string {
   try {
-    const commit = execSync('git rev-parse HEAD', {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }).trim();
-    return commit;
+    return getCurrentCommitSafe(repoRoot);
   } catch (error) {
     throw new Error('Failed to get git commit. Is this a git repository?');
   }
@@ -148,11 +149,8 @@ export function getGitDiff(
   toCommit: string = 'HEAD'
 ): { added: string[]; modified: string[]; deleted: string[] } {
   try {
-    // Use git diff with name-status to get file changes
-    const output = execSync(`git diff --name-status ${fromCommit} ${toCommit}`, {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }).trim();
+    // Use git diff with name-status to get file changes (safe version with validation)
+    const output = getGitDiffSafe(repoRoot, fromCommit, toCommit);
 
     if (!output) {
       return { added: [], modified: [], deleted: [] };
@@ -283,10 +281,8 @@ function shouldSkipFile(filePath: string): boolean {
  */
 export function getCommitAge(repoRoot: string, commitHash: string): number {
   try {
-    const timestamp = execSync(`git show -s --format=%ct ${commitHash}`, {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }).trim();
+    // Use safe version with commit hash validation
+    const timestamp = getCommitTimestampSafe(repoRoot, commitHash);
 
     const commitDate = new Date(parseInt(timestamp) * 1000);
     const now = new Date();
@@ -313,10 +309,8 @@ export function getCommitCount(
   toCommit: string = 'HEAD'
 ): number {
   try {
-    const output = execSync(`git rev-list --count ${fromCommit}..${toCommit}`, {
-      cwd: repoRoot,
-      encoding: 'utf8',
-    }).trim();
+    // Use safe version with commit hash validation
+    const output = getCommitCountSafe(repoRoot, fromCommit, toCommit);
 
     return parseInt(output) || 0;
   } catch (error) {
