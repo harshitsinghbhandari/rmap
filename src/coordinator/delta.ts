@@ -15,7 +15,8 @@ import {
   getGitDiffSafe,
   getCommitTimestampSafe,
   getCommitCountSafe,
-} from '../core/git-utils.js';
+  GitError,
+} from '../core/index.js';
 import { DELTA } from '../config/index.js';
 
 /**
@@ -132,7 +133,10 @@ export function getCurrentCommit(repoRoot: string): string {
   try {
     return getCurrentCommitSafe(repoRoot);
   } catch (error) {
-    throw new Error('Failed to get git commit. Is this a git repository?');
+    throw new GitError(
+      'Failed to get git commit. Is this a git repository?',
+      error instanceof Error ? error : undefined
+    );
   }
 }
 
@@ -192,8 +196,10 @@ export function getGitDiff(
 
     return { added, modified, deleted };
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Failed to get git diff: ${message}`);
+    throw new GitError(
+      'Failed to get git diff',
+      error instanceof Error ? error : undefined
+    );
   }
 }
 

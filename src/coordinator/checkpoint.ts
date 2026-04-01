@@ -19,6 +19,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { CheckpointState, LevelCheckpoint } from '../core/types.js';
 import { CHECKPOINT_DIR, CHECKPOINT_VERSION, CHECKPOINT_FILES } from '../core/constants.js';
+import { CheckpointError, FileSystemError } from '../core/index.js';
 
 /**
  * Get the checkpoint directory path for a repository
@@ -63,11 +64,20 @@ function getLevelOutputPath(repoPath: string, level: number): string {
  * Ensure checkpoint directory exists
  *
  * @param repoPath - Absolute path to repository root
+ * @throws {FileSystemError} If directory creation fails
  */
 function ensureCheckpointDir(repoPath: string): void {
   const dir = getCheckpointDir(repoPath);
   if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch (error) {
+      throw new FileSystemError(
+        'Failed to create checkpoint directory',
+        dir,
+        error instanceof Error ? error : undefined
+      );
+    }
   }
 }
 
@@ -79,24 +89,34 @@ function ensureCheckpointDir(repoPath: string): void {
  *
  * @param filepath - Target file path
  * @param data - Data to write
+ * @throws {FileSystemError} If write or rename operation fails
  */
 function writeJsonAtomic(filepath: string, data: unknown): void {
   const dir = path.dirname(filepath);
   const tempPath = path.join(dir, `.${path.basename(filepath)}.tmp`);
 
-  // Write to temporary file
-  const json = JSON.stringify(data, null, 2);
-  fs.writeFileSync(tempPath, json + '\n', 'utf8');
+  try {
+    // Write to temporary file
+    const json = JSON.stringify(data, null, 2);
+    fs.writeFileSync(tempPath, json + '\n', 'utf8');
 
-  // Atomically rename to target file
-  fs.renameSync(tempPath, filepath);
+    // Atomically rename to target file
+    fs.renameSync(tempPath, filepath);
+  } catch (error) {
+    throw new FileSystemError(
+      'Failed to write checkpoint file',
+      filepath,
+      error instanceof Error ? error : undefined
+    );
+  }
 }
 
 /**
  * Read and parse JSON file safely
  *
  * @param filepath - File path to read
- * @returns Parsed JSON data or null if file doesn't exist or is corrupted
+ * @returns Parsed JSON data or null if file doesn't exist
+ * @throws {CheckpointError} If file exists but is corrupted
  */
 function readJsonSafe<T>(filepath: string): T | null {
   if (!fs.existsSync(filepath)) {
@@ -107,8 +127,10 @@ function readJsonSafe<T>(filepath: string): T | null {
     const content = fs.readFileSync(filepath, 'utf8');
     return JSON.parse(content) as T;
   } catch (error) {
-    console.warn(`Warning: Failed to read checkpoint file ${filepath}: ${error}`);
-    return null;
+    throw new CheckpointError(
+      `Corrupted checkpoint file: ${filepath}`,
+      error instanceof Error ? error : undefined
+    );
   }
 }
 
