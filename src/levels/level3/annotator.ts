@@ -11,15 +11,7 @@ import * as path from 'node:path';
 import type { FileAnnotation, RawFileMetadata, DelegationTask } from '../../core/types.js';
 import { buildAnnotationPrompt } from './prompt.js';
 import { parseAnnotationResponse, AnnotationValidationError } from './parser.js';
-
-/**
- * Model selection based on agent size
- */
-const MODEL_MAP = {
-  small: 'claude-haiku-4-20250318',
-  medium: 'claude-sonnet-4-20250514',
-  large: 'claude-sonnet-4-20250514', // Use Sonnet for large as well
-} as const;
+import { ANNOTATION_MODEL_MAP } from '../../config/models.js';
 
 /**
  * Sleep for specified milliseconds
@@ -235,7 +227,7 @@ export async function annotateFiles(
   }
 
   // Select model
-  const model = MODEL_MAP[agentSize];
+  const model = ANNOTATION_MODEL_MAP[agentSize];
 
   console.log(`Starting Level 3 annotation...`);
   console.log(`Agent size: ${agentSize} (${model})`);
