@@ -72,7 +72,14 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
         readFile(join(repoMapPath, 'meta.json'), 'utf-8'),
         readFile(join(repoMapPath, 'graph.json'), 'utf-8'),
         readFile(join(repoMapPath, 'tags.json'), 'utf-8'),
-        readFile(join(repoMapPath, 'annotations.json'), 'utf-8'),
+        readFile(join(repoMapPath, 'annotations.json'), 'utf-8').catch((err) => {
+          if (err.code === 'ENOENT') {
+            throw new Error(
+              'annotations.json not found. Please rebuild the map with "rmap map --full" to generate complete annotations.'
+            );
+          }
+          throw err;
+        }),
       ]);
 
     const meta: MetaJson = JSON.parse(metaContent);
