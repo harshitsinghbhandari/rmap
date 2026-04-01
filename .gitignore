@@ -42,3 +42,6 @@ pnpm-debug.log*
 tmp/
 temp/
 *.tmp
+
+# Agent handoff notes
+next-agent.md
