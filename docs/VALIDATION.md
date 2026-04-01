@@ -110,8 +110,8 @@ try {
 Comprehensive tests are in `tests/core/validation.test.ts`:
 
 ```bash
-# Run validation tests
-pnpm test tests/core/validation.test.ts
+# Run validation tests only
+tsx --test tests/core/validation.test.ts
 
 # Run all tests
 pnpm test

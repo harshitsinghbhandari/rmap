@@ -370,26 +370,36 @@ type ValidatableConfig = {
  */
 export function validateConfig(config: ValidatableConfig = {}): void {
   const {
-    delta = DELTA_CONFIG,
-    validation = VALIDATION_CONFIG,
-    retry = RETRY_CONFIG,
-    concurrency = CONCURRENCY_CONFIG,
-    scoring = SCORING_CONFIG,
-    output = OUTPUT_CONFIG,
-    token = TOKEN_CONFIG,
-    file = FILE_CONFIG,
+    delta,
+    validation,
+    retry,
+    concurrency,
+    scoring,
+    output,
+    token,
+    file,
   } = config;
+
+  // Merge provided sections with defaults so partial runtime configs validate correctly
+  const effectiveDelta = { ...DELTA_CONFIG, ...delta };
+  const effectiveValidation = { ...VALIDATION_CONFIG, ...validation };
+  const effectiveRetry = { ...RETRY_CONFIG, ...retry };
+  const effectiveConcurrency = { ...CONCURRENCY_CONFIG, ...concurrency };
+  const effectiveScoring = { ...SCORING_CONFIG, ...scoring };
+  const effectiveOutput = { ...OUTPUT_CONFIG, ...output };
+  const effectiveToken = { ...TOKEN_CONFIG, ...token };
+  const effectiveFile = { ...FILE_CONFIG, ...file };
 
   try {
     // Validate each config section
-    deltaConfigSchema.parse(delta);
-    validationConfigSchema.parse(validation);
-    retryConfigSchema.parse(retry);
-    concurrencyConfigSchema.parse(concurrency);
-    scoringConfigSchema.parse(scoring);
-    outputConfigSchema.parse(output);
-    tokenConfigSchema.parse(token);
-    fileConfigSchema.parse(file);
+    deltaConfigSchema.parse(effectiveDelta);
+    validationConfigSchema.parse(effectiveValidation);
+    retryConfigSchema.parse(effectiveRetry);
+    concurrencyConfigSchema.parse(effectiveConcurrency);
+    scoringConfigSchema.parse(effectiveScoring);
+    outputConfigSchema.parse(effectiveOutput);
+    tokenConfigSchema.parse(effectiveToken);
+    fileConfigSchema.parse(effectiveFile);
   } catch (error) {
     if (error instanceof z.ZodError) {
       // Use Zod's built-in format() method for better error messages
@@ -400,7 +410,8 @@ export function validateConfig(config: ValidatableConfig = {}): void {
       const extractErrors = (obj: any, prefix: string = '') => {
         for (const key in obj) {
           if (key === '_errors' && Array.isArray(obj[key]) && obj[key].length > 0) {
-            messages.push(`${prefix}: ${obj[key].join(', ')}`);
+            const joined = obj[key].join(', ');
+            messages.push(prefix ? `${prefix}: ${joined}` : joined);
           } else if (typeof obj[key] === 'object' && obj[key] !== null && key !== '_errors') {
             extractErrors(obj[key], prefix ? `${prefix}.${key}` : key);
           }
@@ -463,9 +474,11 @@ export function validateFileTags(
  *
  * This ensures configuration errors are caught early during initialization.
  * Validation failures will throw ConfigValidationError.
+ *
+ * @param config - Optional configuration object to validate (defaults to empty, which uses defaults)
  */
-export function validateAll(): void {
+export function validateAll(config: ValidatableConfig = {}): void {
   validateTagTaxonomy();
   validateThresholds();
-  validateConfig();
+  validateConfig(config);
 }

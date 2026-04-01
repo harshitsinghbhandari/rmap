@@ -300,6 +300,15 @@ test('validateConfig: should pass with complete valid config', () => {
   });
 });
 
+test('validateConfig: should validate runtime CONFIG from env.ts', async () => {
+  // Import the actual runtime CONFIG to verify it passes validation
+  const { CONFIG } = await import('../../src/config/env.js');
+
+  assert.doesNotThrow(() => {
+    validateConfig(CONFIG);
+  }, 'Runtime CONFIG from env.ts should pass validation');
+});
+
 test('validateConfig: should reject invalid delta config', () => {
   const invalidConfig = {
     delta: {

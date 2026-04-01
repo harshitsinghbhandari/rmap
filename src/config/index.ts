@@ -54,8 +54,8 @@ import { validateConfig, validateAll } from '../core/validation.js';
  */
 function validateConfigOnLoad(): void {
   try {
-    validateConfig(CONFIG);
-    validateAll();
+    // validateAll now accepts config and validates it along with taxonomy and thresholds
+    validateAll(CONFIG);
   } catch (error) {
     // Log validation errors but don't crash - allow runtime to handle
     if (error instanceof Error) {
