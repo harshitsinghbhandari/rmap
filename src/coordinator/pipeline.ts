@@ -239,6 +239,30 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     checkpoint = initCheckpoint(repoRoot, currentCommit);
   }
 
+  // ===== Set up graceful shutdown handlers =====
+  let isShuttingDown = false;
+
+  const handleShutdown = (signal: string) => {
+    // Prevent multiple signals from being handled
+    if (isShuttingDown) {
+      return;
+    }
+    isShuttingDown = true;
+
+    console.log(`\n⚠️  Received ${signal}, saving checkpoint...`);
+
+    // Mark current level as interrupted
+    if (checkpoint && checkpoint.current_level < 5) {
+      markLevelInterrupted(repoRoot, checkpoint, checkpoint.current_level);
+    }
+
+    console.log('✓ Checkpoint saved. Run again to resume.');
+    process.exit(0);
+  };
+
+  process.on('SIGINT', () => handleShutdown('SIGINT'));
+  process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+
   // ===== LEVEL 0: Metadata Harvester =====
   if (!level0) {
     tracker.startLevel('Level 0: Metadata Harvester');
