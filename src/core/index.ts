@@ -19,6 +19,9 @@ export type {
   DelegationTask,
   TaskDelegation,
   RawFileMetadata,
+  CheckpointState,
+  LevelCheckpoint,
+  LevelStatus,
 } from './types.js';
 
 // Export all constants
