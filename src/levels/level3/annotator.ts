@@ -103,6 +103,11 @@ async function annotateFile(
     const response = await llmClient.sendMessage(prompt, {
       model,
       maxTokens: TOKEN.MAX_TOKENS_LEVEL3,
+      logContext: {
+        level: 'level3',
+        purpose: `File annotation - extracts purpose, tags, exports, and imports for: ${metadata.path}`,
+        model,
+      },
     });
 
     // Record metrics if collector provided
@@ -135,6 +140,11 @@ async function annotateFile(
           model,
           maxTokens: TOKEN.MAX_TOKENS_LEVEL3,
           retryConfig: { maxRetries: RETRY.VALIDATION_ERROR_RETRIES },
+          logContext: {
+            level: 'level3',
+            purpose: `File annotation (retry after validation error) - extracts purpose, tags, exports, and imports for: ${metadata.path}`,
+            model,
+          },
         });
 
         // Record retry metrics

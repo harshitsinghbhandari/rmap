@@ -7,6 +7,7 @@
 import { Command } from 'commander';
 import { version } from '../version.js';
 import { mapCommand, getContextCommand } from './commands/index.js';
+import { initPromptLogger, displayLoggingWarning } from '../core/prompt-logger.js';
 
 const program = new Command();
 
@@ -14,7 +15,9 @@ const program = new Command();
 program
   .name('rmap')
   .description('A semantic repository map builder for coding agents')
-  .version(version);
+  .version(version)
+  .option('--log-prompts', 'Log all prompts sent to Claude API (can use significant disk space)')
+  .option('--log-response', 'Log all responses from Claude API (can use significant disk space)');
 
 // Register commands
 program.addCommand(mapCommand);
@@ -37,6 +40,20 @@ process.on('unhandledRejection', (reason: unknown) => {
   }
   process.exit(1);
 });
+
+// Check for logging flags before parsing to initialize logger
+const hasLogPrompts = process.argv.includes('--log-prompts');
+const hasLogResponse = process.argv.includes('--log-response');
+
+if (hasLogPrompts || hasLogResponse) {
+  const repoRoot = process.cwd();
+
+  // Display warning and wait for confirmation
+  await displayLoggingWarning(hasLogPrompts, hasLogResponse);
+
+  // Initialize the logger
+  initPromptLogger(repoRoot, hasLogPrompts, hasLogResponse);
+}
 
 // Parse command line arguments
 try {

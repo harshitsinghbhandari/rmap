@@ -86,6 +86,37 @@ rmap map --status
 rmap map --update
 ```
 
+### Debugging with Prompt Logging
+
+For debugging or understanding how `rmap` analyzes your code, you can log the exact prompts and responses sent to/from Claude:
+
+```bash
+# Log only prompts (what rmap sends to Claude)
+rmap map --log-prompts
+
+# Log only responses (what Claude returns)
+rmap map --log-response
+
+# Log both prompts and responses
+rmap map --log-prompts --log-response
+```
+
+**⚠️  Warning**: These logs can become very large (multiple MB) and may contain sensitive code information. You'll see a warning with a 5-second delay before the process starts.
+
+Logs are saved to `.repo_map/prompts/` organized by level:
+- `level1_YYYY-MM-DDTHH-mm-ss.jsonl` - Repository structure detection
+- `level2_YYYY-MM-DDTHH-mm-ss.jsonl` - Work division
+- `level3_YYYY-MM-DDTHH-mm-ss.jsonl` - File annotations
+
+Each log entry includes:
+- `timestamp` - When the prompt was sent
+- `level` - Which analysis level (level1, level2, level3)
+- `purpose` - What the prompt is for
+- `model` - Which Claude model was used
+- `prompt` - The full prompt text (if `--log-prompts` enabled)
+- `response` - The full response text (if `--log-response` enabled)
+- `inputTokens` / `outputTokens` - Token usage
+
 ### Querying the Map
 
 The `get-context` command is designed to provide compact, relevant context for AI agents:

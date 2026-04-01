@@ -95,3 +95,11 @@ export {
   validateAll,
   ConfigValidationError,
 } from './validation.js';
+// Export prompt logging utilities
+export {
+  initPromptLogger,
+  isLoggingEnabled,
+  logPromptResponse,
+  displayLoggingWarning,
+} from './prompt-logger.js';
+export type { PromptLogContext } from './prompt-logger.js';
