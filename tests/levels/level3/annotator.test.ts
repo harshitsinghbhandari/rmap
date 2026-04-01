@@ -439,3 +439,51 @@ test('annotateFiles: requires ANTHROPIC_API_KEY', () => {
     assert.ok(true, 'API key not set (expected in test environment)');
   }
 });
+
+// Test: Concurrent processing
+test('annotateFiles: processes files concurrently', async () => {
+  const { ConcurrencyPool } = await import('../../../src/core/concurrency.js');
+
+  let inFlight = 0;
+  let maxInFlight = 0;
+  const processedFiles: string[] = [];
+
+  // Use ConcurrencyPool directly (the mechanism annotateFiles uses internally)
+  const pool = new ConcurrencyPool({ concurrency: 3 });
+
+  await pool.run(mockFileMetadata, async (file) => {
+    inFlight++;
+    if (inFlight > maxInFlight) maxInFlight = inFlight;
+    try {
+      await new Promise<void>(resolve => setTimeout(resolve, 50));
+      processedFiles.push(file.path);
+    } finally {
+      inFlight--;
+    }
+  });
+
+  // Verify all files were processed
+  assert.strictEqual(processedFiles.length, mockFileMetadata.length);
+
+  // Verify actual concurrency was used (more than 1 task in-flight)
+  assert.ok(maxInFlight > 1, `Expected concurrent execution but max in-flight was ${maxInFlight}`);
+
+  // Verify the concurrency limit was respected
+  assert.ok(maxInFlight <= 3, `Expected max 3 in-flight but was ${maxInFlight}`);
+});
+
+// Test: Concurrency configuration
+test('annotateFiles: respects CONCURRENCY_CONFIG', async () => {
+  const { CONCURRENCY_CONFIG } = await import('../../../src/config/models.js');
+
+  // Regardless of what env vars are set, parseEnvInt guarantees valid values
+  assert.ok(typeof CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS === 'number');
+  assert.ok(Number.isFinite(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS));
+  assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS >= 1);
+  assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS <= 100);
+
+  assert.ok(typeof CONCURRENCY_CONFIG.TASK_START_DELAY_MS === 'number');
+  assert.ok(Number.isFinite(CONCURRENCY_CONFIG.TASK_START_DELAY_MS));
+  assert.ok(CONCURRENCY_CONFIG.TASK_START_DELAY_MS >= 0);
+  assert.ok(CONCURRENCY_CONFIG.TASK_START_DELAY_MS <= 60_000);
+});
