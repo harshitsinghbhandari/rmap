@@ -1,10 +1,12 @@
 # REF-011: Improve Import Extraction with Tree-sitter
 
 **Date:** 2026-04-01
-**Status:** PLANNING
+**Status:** COMPLETED
+**Completed:** 2026-04-01
 **Priority:** HIGH (Data Quality at Foundation)
-**Effort:** L (2 days)
+**Effort:** L (2 days actual: 1.5 days)
 **Impact:** High - Level 0 is foundational; bad import data cascades through entire pipeline
+**Implementation:** Babel AST parser (not tree-sitter) with regex fallback
 
 ---
 

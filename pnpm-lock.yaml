@@ -24,9 +24,6 @@ importers:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
-      '@types/babel__parser':
-        specifier: ^7.1.5
-        version: 7.1.5
       '@types/babel__traverse':
         specifier: ^7.28.0
         version: 7.28.0
@@ -378,10 +375,6 @@ packages:
     resolution: {integrity: sha512-lWMnixq/QzxyhTV6NjQJ4SFo1J6PvOX8vUx5Wb4bBPsEb+8xZ89Bz6kOXpfXj9ak9AHTQVQzlgzBEc1SyM27xQ==}
     cpu: [x64]
     os: [win32]
-
-  '@types/babel__parser@7.1.5':
-    resolution: {integrity: sha512-yyWPJg3KawM9ydArmt2q+UE6dhy0usfXNB1yxDv0gE27KbZXeFCDtqR2L4jdVxXqq7I9tvkL9zuSY/ZVgF6fXQ==}
-    deprecated: This is a stub types definition. @babel/parser provides its own type definitions, so you do not need this installed.
 
   '@types/babel__traverse@7.28.0':
     resolution: {integrity: sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==}
@@ -984,10 +977,6 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.60.1':
     optional: true
-
-  '@types/babel__parser@7.1.5':
-    dependencies:
-      '@babel/parser': 7.29.2
 
   '@types/babel__traverse@7.28.0':
     dependencies:

@@ -125,7 +125,7 @@
 |----|------|--------|--------|--------|--------|--------|
 | ~~REF-009~~ | ~~Add LLM response caching~~ | ~~Levels~~ | ~~M~~ | ~~50% Cost Savings~~ | ⏭️ YAGNI | ⏳ Pending |
 | ~~REF-010~~ | ~~Abstract LLM provider interface~~ | ~~Levels~~ | ~~L~~ | ~~Flexibility~~ | ⏭️ YAGNI | ⏳ Pending |
-| REF-011 | Improve import extraction with tree-sitter | Levels | L | Data Quality | ✅ | ✅ Complete |
+| REF-011 | Improve import extraction using Babel AST (with regex fallback) | Levels | L | Data Quality | ✅ | ✅ Complete |
 | REF-012 | Separate display from business logic | CLI | L | Testability | 🔲 | ⏳ Pending |
 | REF-013 | Standardize error handling patterns | All | L | Consistency | 🔲 | ⏳ Pending |
 | REF-014 | Extract configuration constants | All | M | Configurability | 🔲 | ✅ PR #52 |
@@ -266,7 +266,7 @@
 - **Description:** Tight coupling to Anthropic SDK prevents provider switching. Locked into pricing/availability.
 - **Solution:** Create `LLMProvider` interface, `BaseLLMProvider` abstract class, `AnthropicProvider` implementation, factory pattern
 
-### REF-011: Improve Import Extraction with Tree-sitter
+### REF-011: Improve Import Extraction using Babel AST Parser
 - **Status:** ✅ **COMPLETED**
 - **Source:** levels-audit.md, Lines 38-66
 - **Quadrant:** SCHEDULE
@@ -274,8 +274,8 @@
 - **Impact:** High (Data Quality from foundation)
 - **Dependencies:** None
 - **Description:** Regex-based import parsing misses dynamic imports, multi-line imports, template literals. Produces garbage data.
-- **Solution:** Add tree-sitter parsers for JS/TS/Python with proper AST traversal
-- **Implementation:** Used Babel parser for JS/TS (no native deps), regex fallback for other languages
+- **Solution:** Add AST-based parsers using Babel for JS/TS with proper AST traversal, regex fallback for other languages
+- **Implementation:** Used @babel/parser and @babel/traverse for JS/TS (no native deps), regex fallback for unsupported languages
 - **Results:**
   - 95%+ import accuracy (up from 70-80%)
   - Handles dynamic imports, multi-line imports, type imports, re-exports

@@ -64,7 +64,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@types/babel__parser": "^7.1.5",
     "@types/babel__traverse": "^7.28.0",
     "@types/node": "^20.17.15",
     "tsup": "^8.3.5",

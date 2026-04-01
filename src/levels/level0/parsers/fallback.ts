@@ -14,10 +14,10 @@ import type { Parser, ParseResult, ImportInfo } from './types.js';
 const IMPORT_PATTERNS = {
   // JavaScript/TypeScript: import, require, export from
   javascript: [
-    /import\s+(?:(?:\*\s+as\s+\w+)|(?:\{[^}]*\})|(?:\w+))\s+from\s+['"]([^'"]+)['"]/g,
-    /import\s+['"]([^'"]+)['"]/g,
-    /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-    /export\s+(?:\*|\{[^}]*\})\s+from\s+['"]([^'"]+)['"]/g,
+    /import\s+[^'"]+?\s+from\s+['"]([^'"]+)['"]/g, // Matches all import forms including mixed
+    /import\s+['"]([^'"]+)['"]/g, // Side-effect imports
+    /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g, // CommonJS require
+    /export\s+(?:\*(?:\s+as\s+\w+)?|\{[^}]*\})\s+from\s+['"]([^'"]+)['"]/g, // Re-exports including export * as
   ],
   // Python: import, from ... import
   python: [/from\s+([\w.]+)\s+import/g, /import\s+([\w.]+)/g],
