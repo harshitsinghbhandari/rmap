@@ -19,7 +19,6 @@ import type {
   MetaJson,
   StatsJson,
   ValidationJson,
-  CheckpointState,
 } from '../core/types.js';
 import { SCHEMA_VERSION, CHECKPOINT_FILES } from '../core/constants.js';
 import { harvest } from '../levels/level0/index.js';
@@ -30,19 +29,8 @@ import { validateMap } from '../levels/level4/index.js';
 import { buildGraph } from './graph.js';
 import { ProgressTracker } from './progress.js';
 import { readExistingMeta } from './assembler.js';
-import {
-  initCheckpoint,
-  loadCheckpoint,
-  validateCheckpoint,
-  saveLevelOutput,
-  loadLevelOutput,
-  markLevelStarted,
-  markLevelCompleted,
-  markLevelInterrupted,
-  updateLevelCheckpoint,
-} from './checkpoint.js';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import { CheckpointOrchestrator } from './checkpoint-orchestrator.js';
+import { GracefulShutdownHandler } from './shutdown-handler.js';
 
 /**
  * Pipeline options
@@ -98,71 +86,6 @@ function getGitCommit(repoRoot: string): string {
   }
 }
 
-/**
- * Generate a stable task ID from task index and scope
- *
- * @param index - Task index in delegation.tasks array
- * @param scope - Task scope (e.g., "src/auth/")
- * @returns Stable task ID
- */
-function getTaskId(index: number, scope: string): string {
-  // Use index and sanitized scope to create stable ID
-  const sanitizedScope = scope.replace(/[^a-zA-Z0-9]/g, '_');
-  return `task_${index}_${sanitizedScope}`;
-}
-
-/**
- * Get path to Level 3 progress file
- *
- * @param repoPath - Absolute path to repository root
- * @returns Absolute path to level3_progress.json
- */
-function getLevel3ProgressPath(repoPath: string): string {
-  return path.join(repoPath, '.repo_map', '.checkpoint', CHECKPOINT_FILES.LEVEL3_PROGRESS);
-}
-
-/**
- * Load saved Level 3 annotations from checkpoint
- *
- * @param repoPath - Absolute path to repository root
- * @returns Array of previously completed annotations or empty array
- */
-function loadLevel3Progress(repoPath: string): FileAnnotation[] {
-  const progressPath = getLevel3ProgressPath(repoPath);
-  if (!fs.existsSync(progressPath)) {
-    return [];
-  }
-
-  try {
-    const content = fs.readFileSync(progressPath, 'utf8');
-    return JSON.parse(content) as FileAnnotation[];
-  } catch (error) {
-    console.warn(`Warning: Failed to load Level 3 progress: ${error}`);
-    return [];
-  }
-}
-
-/**
- * Save Level 3 annotations to checkpoint
- *
- * @param repoPath - Absolute path to repository root
- * @param annotations - Annotations to save
- */
-function saveLevel3Progress(repoPath: string, annotations: FileAnnotation[]): void {
-  const progressPath = getLevel3ProgressPath(repoPath);
-  const dir = path.dirname(progressPath);
-
-  // Ensure directory exists
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-
-  // Write atomically using temp file
-  const tempPath = path.join(dir, `.${path.basename(progressPath)}.tmp`);
-  const json = JSON.stringify(annotations, null, 2);
-  fs.writeFileSync(tempPath, json + '\n', 'utf8');
-  fs.renameSync(tempPath, progressPath);
-}
 
 /**
  * Run the complete map building pipeline
@@ -181,133 +104,100 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   // Get current git commit for checkpoint
   const currentCommit = getGitCommit(repoRoot);
 
+  // Initialize checkpoint orchestrator
+  const checkpointer = new CheckpointOrchestrator(repoRoot, currentCommit);
+
   // Try to load existing checkpoint
-  let checkpoint: CheckpointState | null = null;
   let level0: Level0Output | null = null;
   let level1: Level1Output | null = null;
   let delegation: TaskDelegation | null = null;
   let level3Annotations: FileAnnotation[] = [];
   let completedTaskIds: Set<string> = new Set();
 
-  if (resume) {
-    checkpoint = loadCheckpoint(repoRoot);
+  const checkpointValidation = checkpointer.tryLoadCheckpoint(currentCommit, resume);
+  if (checkpointValidation.valid) {
+    console.log('📋 Found valid checkpoint, resuming from last completed level...');
 
-    if (checkpoint) {
-      const validation = validateCheckpoint(checkpoint, currentCommit);
+    // Load completed levels
+    level0 = checkpointer.loadCompletedLevel<Level0Output>(0);
+    if (level0) console.log('  ✓ Level 0 already completed');
 
-      if (validation.valid) {
-        console.log('📋 Found valid checkpoint, resuming from last completed level...');
+    level1 = checkpointer.loadCompletedLevel<Level1Output>(1);
+    if (level1) console.log('  ✓ Level 1 already completed');
 
-        // Load completed levels
-        if (checkpoint.levels[0]?.status === 'completed') {
-          level0 = loadLevelOutput<Level0Output>(repoRoot, 0);
-          console.log('  ✓ Level 0 already completed');
-        }
+    delegation = checkpointer.loadCompletedLevel<TaskDelegation>(2);
+    if (delegation) console.log('  ✓ Level 2 already completed');
 
-        if (checkpoint.levels[1]?.status === 'completed') {
-          level1 = loadLevelOutput<Level1Output>(repoRoot, 1);
-          console.log('  ✓ Level 1 already completed');
-        }
-
-        if (checkpoint.levels[2]?.status === 'completed') {
-          delegation = loadLevelOutput<TaskDelegation>(repoRoot, 2);
-          console.log('  ✓ Level 2 already completed');
-        }
-
-        // Load Level 3 partial progress if interrupted
-        if (checkpoint.levels[3]?.status === 'in_progress') {
-          level3Annotations = loadLevel3Progress(repoRoot);
-          completedTaskIds = new Set(checkpoint.levels[3].completed_task_ids || []);
-          if (completedTaskIds.size > 0) {
-            console.log(
-              `  ⏸️  Level 3 partially completed: ${completedTaskIds.size} tasks done`
-            );
-          }
-        } else if (checkpoint.levels[3]?.status === 'completed') {
-          // Level 3 fully completed - will be skipped
-          console.log('  ✓ Level 3 already completed');
-        }
-      } else {
-        console.log(`⚠️  Checkpoint invalid: ${validation.error}`);
-        console.log('   Starting fresh...');
-        checkpoint = null;
+    // Load Level 3 partial progress if interrupted
+    const checkpoint = checkpointer.getCheckpoint();
+    if (checkpoint.levels[3]?.status === 'in_progress') {
+      level3Annotations = checkpointer.loadLevel3Progress();
+      completedTaskIds = checkpointer.getCompletedTaskIds();
+      if (completedTaskIds.size > 0) {
+        console.log(`  ⏸️  Level 3 partially completed: ${completedTaskIds.size} tasks done`);
       }
+    } else if (checkpoint.levels[3]?.status === 'completed') {
+      console.log('  ✓ Level 3 already completed');
     }
+  } else if (resume) {
+    console.log(`⚠️  Checkpoint invalid: ${checkpointValidation.error}`);
+    console.log('   Starting fresh...');
   }
 
-  // Initialize new checkpoint if none exists or resume is disabled
-  if (!checkpoint) {
-    checkpoint = initCheckpoint(repoRoot, currentCommit);
-  }
+  // ===== Set up graceful shutdown handler =====
+  const shutdownHandler = new GracefulShutdownHandler();
 
-  // ===== Set up graceful shutdown handlers =====
-  let isShuttingDown = false;
+  // Note: Hoisted to function scope so shutdown handler can access it
+  let annotations: FileAnnotation[] = [];
 
-  const handleShutdown = (signal: string) => {
-    // Prevent multiple signals from being handled
-    if (isShuttingDown) {
-      return;
-    }
-    isShuttingDown = true;
-
-    console.log(`\n⚠️  Received ${signal}, saving checkpoint...`);
-
+  shutdownHandler.onShutdown(() => {
     // Mark current level as interrupted
-    if (checkpoint && checkpoint.current_level < 5) {
-      markLevelInterrupted(repoRoot, checkpoint, checkpoint.current_level);
+    const currentLevel = checkpointer.getCurrentLevel();
+    if (currentLevel < 5) {
+      checkpointer.interruptLevel(currentLevel);
     }
 
     // For Level 3, save partial progress if we have annotations
-    if (checkpoint && checkpoint.current_level === 3 && annotations.length > 0) {
-      saveLevel3Progress(repoRoot, annotations);
+    if (currentLevel === 3 && annotations.length > 0) {
+      checkpointer.saveLevel3Progress(annotations);
       console.log(`  Saved ${annotations.length} partial annotations`);
     }
+  });
 
-    console.log('✓ Checkpoint saved. Run again to resume.');
-    process.exit(0);
-  };
-
-  const sigintHandler = () => handleShutdown('SIGINT');
-  const sigtermHandler = () => handleShutdown('SIGTERM');
-
-  process.on('SIGINT', sigintHandler);
-  process.on('SIGTERM', sigtermHandler);
+  shutdownHandler.register();
 
   // ===== LEVEL 0: Metadata Harvester =====
   if (!level0) {
     tracker.startLevel('Level 0: Metadata Harvester');
-    markLevelStarted(repoRoot, checkpoint, 0);
+    checkpointer.startLevel(0);
 
     level0 = await harvest(repoRoot);
 
-    saveLevelOutput(repoRoot, 0, level0);
-    markLevelCompleted(repoRoot, checkpoint, 0, 'level0.json');
+    checkpointer.completeLevel(0, level0, 'level0.json');
     tracker.completeLevel('Level 0: Metadata Harvester');
   }
 
   // ===== LEVEL 1: Structure Detector =====
   if (!level1) {
     tracker.startLevel('Level 1: Structure Detector');
-    markLevelStarted(repoRoot, checkpoint, 1);
+    checkpointer.startLevel(1);
 
     level1 = await detectStructure(level0, repoRoot);
-    tracker.trackLLMCall(); // Track LLM usage (actual token count would come from API response)
+    tracker.trackLLMCall();
 
-    saveLevelOutput(repoRoot, 1, level1);
-    markLevelCompleted(repoRoot, checkpoint, 1, 'level1.json');
+    checkpointer.completeLevel(1, level1, 'level1.json');
     tracker.completeLevel('Level 1: Structure Detector');
   }
 
   // ===== LEVEL 2: Work Divider =====
   if (!delegation) {
     tracker.startLevel('Level 2: Work Divider');
-    markLevelStarted(repoRoot, checkpoint, 2);
+    checkpointer.startLevel(2);
 
     delegation = await divideWork(level0, level1);
-    tracker.trackLLMCall(); // Track LLM usage
+    tracker.trackLLMCall();
 
-    saveLevelOutput(repoRoot, 2, delegation);
-    markLevelCompleted(repoRoot, checkpoint, 2, 'level2.json');
+    checkpointer.completeLevel(2, delegation, 'level2.json');
     tracker.completeLevel('Level 2: Work Divider');
   }
 
@@ -316,32 +206,22 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   );
 
   // ===== LEVEL 3: Deep File Annotator =====
-  // Note: Hoisted to function scope so signal handlers can access it
-  let annotations: FileAnnotation[] = [];
+  const checkpoint = checkpointer.getCheckpoint();
 
-  // Check if Level 3 is already completed
   if (checkpoint.levels[3]?.status === 'completed') {
     // Load completed annotations from checkpoint
-    annotations = loadLevelOutput<FileAnnotation[]>(repoRoot, 3) || [];
+    annotations = checkpointer.loadCompletedLevel<FileAnnotation[]>(3) || [];
     tracker.logProgress(`Loaded ${annotations.length} annotations from checkpoint`);
   } else {
     tracker.startLevel('Level 3: Deep File Annotator');
 
     // Initialize Level 3 checkpoint if not already started
     if (checkpoint.levels[3]?.status !== 'in_progress') {
-      markLevelStarted(repoRoot, checkpoint, 3);
-      updateLevelCheckpoint(repoRoot, checkpoint, 3, {
-        tasks_total: delegation.tasks.length,
-        tasks_completed: 0,
-        completed_task_ids: [],
-      });
+      checkpointer.initializeLevel3(delegation.tasks.length);
     }
 
     // Filter out completed tasks for resume
-    const remainingTasks = delegation.tasks.filter((task, index) => {
-      const taskId = getTaskId(index, task.scope);
-      return !completedTaskIds.has(taskId);
-    });
+    const remainingTasks = checkpointer.filterRemainingTasks(delegation.tasks, delegation);
 
     if (remainingTasks.length < delegation.tasks.length) {
       tracker.logProgress(
@@ -363,20 +243,10 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       annotations.push(...newAnnotations);
 
       // Update checkpoint with all completed tasks
-      const allCompletedIds = new Set(completedTaskIds);
-      remainingTasks.forEach((task, idx) => {
-        const originalIndex = delegation.tasks.findIndex((t) => t.scope === task.scope);
-        const taskId = getTaskId(originalIndex, task.scope);
-        allCompletedIds.add(taskId);
-      });
+      checkpointer.markTasksCompleted(remainingTasks, delegation, completedTaskIds);
+      checkpointer.saveLevel3Progress(annotations);
 
-      updateLevelCheckpoint(repoRoot, checkpoint, 3, {
-        tasks_completed: allCompletedIds.size,
-        completed_task_ids: Array.from(allCompletedIds),
-      });
-      saveLevel3Progress(repoRoot, annotations);
-
-      tracker.trackLLMCall(remainingTasks.length); // Track multiple LLM calls
+      tracker.trackLLMCall(remainingTasks.length);
     } else {
       // Run tasks sequentially with checkpointing after each
       tracker.logProgress(`Running ${remainingTasks.length} tasks sequentially...`);
@@ -386,17 +256,10 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         annotations.push(...taskAnnotations);
 
         // Checkpoint this task's completion
-        const originalIndex = delegation.tasks.findIndex((t) => t.scope === task.scope);
-        const taskId = getTaskId(originalIndex, task.scope);
-        completedTaskIds.add(taskId);
+        checkpointer.markTaskCompleted(task, delegation, completedTaskIds);
+        checkpointer.saveLevel3Progress(annotations);
 
-        updateLevelCheckpoint(repoRoot, checkpoint, 3, {
-          tasks_completed: completedTaskIds.size,
-          completed_task_ids: Array.from(completedTaskIds),
-        });
-        saveLevel3Progress(repoRoot, annotations);
-
-        tracker.trackLLMCall(); // Track LLM usage per task
+        tracker.trackLLMCall();
         tracker.logProgress(
           `Completed task ${completedTaskIds.size}/${delegation.tasks.length}`
         );
@@ -404,8 +267,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     }
 
     // Mark Level 3 as completed and save final output
-    saveLevelOutput(repoRoot, 3, annotations);
-    markLevelCompleted(repoRoot, checkpoint, 3, CHECKPOINT_FILES.LEVEL3_PROGRESS);
+    checkpointer.completeLevel(3, annotations, CHECKPOINT_FILES.LEVEL3_PROGRESS);
     tracker.completeLevel('Level 3: Deep File Annotator');
     tracker.logProgress(`Annotated ${annotations.length} files`);
   }
@@ -452,9 +314,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   });
 
   // ===== Clean up signal handlers =====
-  // Remove handlers to prevent memory leaks and interference with other processes
-  process.removeListener('SIGINT', sigintHandler);
-  process.removeListener('SIGTERM', sigtermHandler);
+  shutdownHandler.unregister();
 
   return {
     annotations: finalAnnotations,
