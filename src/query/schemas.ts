@@ -64,11 +64,12 @@ export const GraphJsonSchema = z.record(z.string(), GraphNodeSchema);
  * Schema for tags.json
  *
  * Tag index for fast lookup
+ * Note: The index is a partial record - not all tags need to be present
  */
 export const TagsJsonSchema = z.object({
   taxonomy_version: z.string(),
   aliases: z.record(z.string(), z.array(TagSchema)),
-  index: z.record(TagSchema, z.array(z.string())),
+  index: z.record(z.string(), z.array(z.string())),
 });
 
 /**
