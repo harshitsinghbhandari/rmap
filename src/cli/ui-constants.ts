@@ -71,8 +71,29 @@ const EMOJI_PLAIN = {
  * UI character set interface
  */
 export interface UIConstants {
-  BOX: typeof BOX;
-  EMOJI: typeof EMOJI;
+  BOX: {
+    TOP_LEFT: string;
+    TOP_RIGHT: string;
+    BOTTOM_LEFT: string;
+    BOTTOM_RIGHT: string;
+    HORIZONTAL: string;
+    VERTICAL: string;
+    HORIZONTAL_THIN: string;
+  };
+  EMOJI: {
+    CLIPBOARD: string;
+    CROSS: string;
+    WARNING: string;
+    FOLDER: string;
+    CHART: string;
+    SPARKLES: string;
+    TRASH: string;
+    RED_CIRCLE: string;
+    YELLOW_CIRCLE: string;
+    GREEN_CIRCLE: string;
+    ARROWS: string;
+    CHECK: string;
+  };
 }
 
 /**
