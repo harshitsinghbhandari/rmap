@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "started_at": "2026-04-01T16:08:06.422Z",
+  "git_commit": "bea61bf02943602b2866e8273e757ad300e9f98b",
+  "current_level": 3,
+  "levels": {
+    "0": {
+      "status": "completed",
+      "started_at": "2026-04-01T16:08:06.423Z",
+      "completed_at": "2026-04-01T16:08:06.663Z",
+      "output_file": "level0.json"
+    },
+    "1": {
+      "status": "completed",
+      "started_at": "2026-04-01T16:08:06.663Z",
+      "completed_at": "2026-04-01T16:08:14.057Z",
+      "output_file": "level1.json"
+    },
+    "2": {
+      "status": "completed",
+      "started_at": "2026-04-01T16:08:14.059Z",
+      "completed_at": "2026-04-01T16:08:29.921Z",
+      "output_file": "level2.json"
+    },
+    "3": {
+      "status": "interrupted",
+      "started_at": "2026-04-01T16:08:29.923Z",
+      "tasks_total": 25,
+      "tasks_completed": 0,
+      "completed_task_ids": []
+    },
+    "4": {
+      "status": "pending"
+    }
+  }
+}

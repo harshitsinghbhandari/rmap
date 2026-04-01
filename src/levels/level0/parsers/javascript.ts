@@ -6,8 +6,11 @@
  */
 
 import { parse } from '@babel/parser';
-import traverse from '@babel/traverse';
+import _traverse from '@babel/traverse';
 import type { Parser, ParseResult, ImportInfo } from './types.js';
+
+// Handle CommonJS/ESM interop for @babel/traverse
+const traverse = (_traverse as any).default || _traverse;
 
 /**
  * Parser for JavaScript and TypeScript files using Babel

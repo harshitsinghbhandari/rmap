@@ -1,0 +1,73 @@
+{
+  "repo_name": "agent-orchestrator",
+  "purpose": "A multi-level code analysis and processing system that orchestrates agents to harvest, detect, divide, annotate, and validate code structures with LLM integration.",
+  "stack": "TypeScript, Node.js, pnpm",
+  "languages": [
+    "TypeScript",
+    "JavaScript",
+    "YAML",
+    "Markdown"
+  ],
+  "entrypoints": [
+    "src/index.ts",
+    "src/cli/index.ts"
+  ],
+  "modules": [
+    {
+      "path": "src/cli",
+      "description": "Command-line interface with commands for context retrieval and code mapping, including display utilities and UI constants."
+    },
+    {
+      "path": "src/config",
+      "description": "Configuration management including environment variable parsing, default settings, and configuration models."
+    },
+    {
+      "path": "src/coordinator",
+      "description": "Orchestration layer managing pipeline execution, checkpoints, deltas, graph repair, versioning, and progress tracking."
+    },
+    {
+      "path": "src/core",
+      "description": "Core utilities including error handling, validation, metrics logging, git operations, LLM client, concurrency management, and type definitions."
+    },
+    {
+      "path": "src/levels",
+      "description": "Multi-level processing pipeline with Level 0 (harvesting), Level 1 (detection), Level 2 (dividing), Level 3 (annotation), and Level 4 (validation/autofix)."
+    },
+    {
+      "path": "src/query",
+      "description": "Query engine for filtering, ranking, formatting, and validating code analysis results."
+    },
+    {
+      "path": "tests",
+      "description": "Comprehensive test suite covering all modules with unit and integration tests."
+    },
+    {
+      "path": "audit",
+      "description": "Audit reports and refactoring plans documenting code analysis, improvements, and architectural decisions."
+    },
+    {
+      "path": "docs",
+      "description": "Documentation including architecture, CLI usage, configuration, and validation guides."
+    }
+  ],
+  "config_files": [
+    "package.json",
+    "tsconfig.json",
+    "tsup.config.ts",
+    "pnpm-lock.yaml",
+    ".env",
+    ".gitignore",
+    "agent-orchestrator.yaml",
+    "skills-lock.json"
+  ],
+  "conventions": [
+    "Uses barrel exports (index.ts) for module organization across all directories",
+    "Test files colocated in separate tests/ directory mirroring src/ structure",
+    "Multi-level processing pipeline architecture (Level 0-4) with each level having dedicated modules",
+    "Comprehensive audit and documentation in separate directories",
+    "TypeScript strict mode with tsconfig.json configuration",
+    "Markdown documentation for architecture, CLI, configuration, and validation",
+    "Separation of concerns: CLI, config, coordinator, core utilities, processing levels, and query engine",
+    "Each level contains parsers, validators, and prompt templates as needed"
+  ]
+}
