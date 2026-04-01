@@ -19,12 +19,13 @@ import { RATE_LIMIT } from '../config/index.js';
  * - Tokens refill continuously at a constant rate (not reset every minute)
  * - Requests wait if insufficient tokens available
  * - Prevents bursts while allowing smooth throughput
- * - Allows requests larger than capacity by waiting across multiple refill windows
+ * - Allows requests larger than capacity by going into debt
  *
  * @example
  * ```typescript
  * const bucket = new TokenBucket(30, 30); // 30 tokens, 30 per minute
  * await bucket.acquire(1); // Acquires 1 token, waits if needed
+ * await bucket.acquire(40); // Waits ~1.3 minutes for 40 tokens
  * ```
  */
 export class TokenBucket {
@@ -55,21 +56,20 @@ export class TokenBucket {
    * Refill the bucket based on elapsed time
    *
    * Tokens are added continuously based on time elapsed since last refill.
-   * This provides smoother rate limiting than discrete refills.
-   * The bucket can hold at most `capacity` tokens, but can go negative
-   * when large requests are waiting.
+   * When there's a pending queue, we don't cap at capacity to allow
+   * large requests to be fulfilled.
    */
   private refill(): void {
     const now = Date.now();
     const elapsed = now - this.lastRefillTime;
     const tokensToAdd = elapsed * this.refillRatePerMs;
 
-    // Only cap at capacity if we're not in debt (negative balance)
-    if (this.tokens >= 0) {
-      this.tokens = Math.min(this.capacity, this.tokens + tokensToAdd);
-    } else {
-      // If negative, just add tokens (still in debt)
+    // If there's a queue, allow exceeding capacity to fulfill large requests
+    if (this.pendingQueue.length > 0) {
       this.tokens += tokensToAdd;
+    } else {
+      // Otherwise, cap at capacity
+      this.tokens = Math.min(this.capacity, this.tokens + tokensToAdd);
     }
     this.lastRefillTime = now;
   }
@@ -93,6 +93,8 @@ export class TokenBucket {
     if (this.pendingQueue.length === 0 && this.refillTimer !== null) {
       clearInterval(this.refillTimer);
       this.refillTimer = null;
+      // Cap tokens at capacity now that queue is empty
+      this.tokens = Math.min(this.capacity, this.tokens);
     }
   }
 
@@ -115,7 +117,8 @@ export class TokenBucket {
    * Implements fair FIFO queuing for waiting requests.
    *
    * Large requests (exceeding capacity) are allowed and will wait across
-   * multiple refill windows. The bucket balance can go negative to track debt.
+   * multiple refill windows. The bucket temporarily exceeds capacity while
+   * processing such requests.
    *
    * @param tokensNeeded - Number of tokens to acquire
    * @returns Promise that resolves when tokens are acquired
@@ -123,7 +126,7 @@ export class TokenBucket {
   async acquire(tokensNeeded: number): Promise<void> {
     this.refill();
 
-    // If enough tokens available and no queue, proceed immediately
+    // Fast path: if enough tokens and no queue, proceed immediately
     if (this.tokens >= tokensNeeded && this.pendingQueue.length === 0) {
       this.tokens -= tokensNeeded;
       return;
