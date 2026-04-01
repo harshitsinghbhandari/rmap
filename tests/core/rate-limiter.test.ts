@@ -152,8 +152,9 @@ test('RateLimiter: acquires from both buckets', async () => {
   await limiter.acquire(1000); // 1 request, 1000 tokens
 
   const state = limiter.getState();
-  assert.strictEqual(state.requests.current, 29); // 30 - 1
-  assert.strictEqual(state.tokens.current, 17000); // 18000 - 1000
+  // Allow for small floating point variance due to continuous refill
+  assert.ok(state.requests.current >= 29 && state.requests.current < 29.1);
+  assert.ok(state.tokens.current >= 17000 && state.tokens.current < 17010);
 });
 
 test('RateLimiter: handles multiple acquisitions', async () => {
