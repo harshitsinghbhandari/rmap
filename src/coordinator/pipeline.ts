@@ -256,6 +256,12 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       markLevelInterrupted(repoRoot, checkpoint, checkpoint.current_level);
     }
 
+    // For Level 3, save partial progress if we have annotations
+    if (checkpoint && checkpoint.current_level === 3 && annotations.length > 0) {
+      saveLevel3Progress(repoRoot, annotations);
+      console.log(`  Saved ${annotations.length} partial annotations`);
+    }
+
     console.log('✓ Checkpoint saved. Run again to resume.');
     process.exit(0);
   };
