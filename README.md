@@ -247,14 +247,37 @@ Works with:
 
 ## Environment Variables
 
-```bash
-# Required
-ANTHROPIC_API_KEY=your-api-key-here
+### Required
 
-# Optional (defaults shown)
-RMAP_MAX_FILES_PER_TASK=50  # Max files per annotation task
-RMAP_AGENT_SIZE=small       # LLM size: small, medium, large
+```bash
+ANTHROPIC_API_KEY=your-api-key-here
 ```
+
+### Optional
+
+`rmap` supports many configuration options via `RMAP_*` environment variables:
+
+```bash
+# Concurrency
+RMAP_CONCURRENCY=10              # Max concurrent annotations (default: 10)
+RMAP_TASK_DELAY=100              # Delay between tasks in ms (default: 100)
+
+# Delta updates
+RMAP_DELTA_MIN_VALIDATION=20     # Min files for validation (default: 20)
+RMAP_DELTA_MAX_UPDATE=100        # Max files for delta update (default: 100)
+
+# File processing
+RMAP_FILE_MAX_LINE_COUNT=10000   # Skip files exceeding this (default: 10000)
+RMAP_FILE_MAX_PER_TASK=50        # Max files per task (default: 50)
+
+# Retry behavior
+RMAP_RETRY_MAX=5                 # Max retry attempts (default: 5)
+RMAP_RETRY_BASE_BACKOFF_MS=2000  # Base backoff in ms (default: 2000)
+
+# And many more...
+```
+
+See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for complete configuration reference with all available options, defaults, and tuning guidance.
 
 ## Development
 
@@ -357,8 +380,9 @@ MIT - See [LICENSE](LICENSE) for details
 - **Documentation**: [docs/](docs/)
 - **CLI Reference**: [docs/CLI.md](docs/CLI.md)
 - **Architecture**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- **Configuration**: [docs/CONFIGURATION.md](docs/CONFIGURATION.md)
 - **NPM Package**: https://www.npmjs.com/package/rmap
-- **Issues**: https://github.com/yourusername/rmap/issues
+- **Issues**: https://github.com/harshitsinghbhandari/rmap/issues
 
 ## Acknowledgments
 
