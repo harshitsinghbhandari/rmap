@@ -5,26 +5,21 @@
  */
 
 import type { RawFileMetadata } from '../../core/types.js';
-import { TAG_TAXONOMY, MAX_TAGS_PER_FILE } from '../../core/constants.js';
-
-/**
- * Maximum number of lines to include in the prompt
- * Files larger than this will be truncated
- */
-const MAX_LINES_IN_PROMPT = 10000;
+import { TAG_TAXONOMY } from '../../core/constants.js';
+import { FILE, TOKEN } from '../../config/index.js';
 
 /**
  * Truncate file content if it exceeds max lines
  */
-export function truncateContent(content: string, maxLines: number = MAX_LINES_IN_PROMPT): string {
+export function truncateContent(content: string, maxLines: number = TOKEN.MAX_LINES_IN_PROMPT): string {
   const lines = content.split('\n');
 
   if (lines.length <= maxLines) {
     return content;
   }
 
-  // Take first 70% and last 30% of allowed lines
-  const firstPart = Math.floor(maxLines * 0.7);
+  // Take first part and last part of allowed lines based on truncation ratio
+  const firstPart = Math.floor(maxLines * FILE.TRUNCATION_FIRST_PART_RATIO);
   const lastPart = maxLines - firstPart;
 
   const truncated = [
@@ -74,14 +69,14 @@ ${content}
 
 Your task is to analyze this file and extract:
 
-1. **purpose**: A single clear sentence (max 100 chars) describing what this file does
+1. **purpose**: A single clear sentence (max ${TOKEN.MAX_PURPOSE_CHARS} chars) describing what this file does
    - Focus on the "what" and "why", not implementation details
    - Examples:
      * "Handles user authentication via JWT tokens"
      * "Defines database schema for the users table"
      * "Utility functions for date formatting and validation"
 
-2. **tags**: 1-${MAX_TAGS_PER_FILE} tags from the taxonomy below that best describe this file's role
+2. **tags**: 1-${FILE.MAX_TAGS_PER_FILE} tags from the taxonomy below that best describe this file's role
    - Pick tags that help categorize the file semantically
    - Choose the MOST specific tags that apply
    - Use general tags (like "utility" or "backend") only if no specific tags fit
@@ -107,7 +102,7 @@ Your task is to analyze this file and extract:
      * "os"
      * "node:fs"
 
-Available Tag Taxonomy (pick 1-${MAX_TAGS_PER_FILE}):
+Available Tag Taxonomy (pick 1-${FILE.MAX_TAGS_PER_FILE}):
 ${taxonomyList}
 
 Guidelines:
@@ -120,14 +115,14 @@ Guidelines:
 
 Respond with valid JSON in this exact structure:
 {
-  "purpose": "string (max 100 chars)",
+  "purpose": "string (max ${TOKEN.MAX_PURPOSE_CHARS} chars)",
   "tags": ["tag1", "tag2"],
   "exports": ["symbol1", "symbol2"],
   "imports": ["path/to/file1.ts", "path/to/file2.ts"]
 }
 
 Important:
-- tags array must contain 1-${MAX_TAGS_PER_FILE} items, all from the taxonomy
+- tags array must contain 1-${FILE.MAX_TAGS_PER_FILE} items, all from the taxonomy
 - imports should ONLY include internal repository files
 - All paths in imports should be relative to repository root
 - Respond with valid JSON only (no markdown, no explanation)`;

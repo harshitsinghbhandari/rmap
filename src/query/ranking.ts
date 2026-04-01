@@ -5,6 +5,7 @@
  */
 
 import type { FileAnnotation, GraphJson } from '../core/types.js';
+import { SCORING } from '../config/index.js';
 
 /**
  * Score interface for ranking
@@ -52,7 +53,7 @@ function computeScore(
     const matchingTags = file.tags.filter((tag) =>
       queryTagSet.has(tag.toLowerCase())
     );
-    score += matchingTags.length * 10; // 10 points per matching tag
+    score += matchingTags.length * SCORING.POINTS_PER_TAG;
   }
 
   // Graph connectivity score
@@ -62,18 +63,18 @@ function computeScore(
     const importedByCount = graphNode.imported_by.length;
 
     // Files that are imported by many others are more central
-    score += importedByCount * 5;
+    score += importedByCount * SCORING.POINTS_PER_IMPORTED_BY;
 
     // Files that import many others might be entry points
-    score += importCount * 2;
+    score += importCount * SCORING.POINTS_PER_IMPORT;
   }
 
   // Export count score (files with more exports are likely more important)
-  score += file.exports.length * 3;
+  score += file.exports.length * SCORING.POINTS_PER_EXPORT;
 
   // File size penalty (very large files might be less focused)
-  if (file.line_count > 1000) {
-    score -= 5;
+  if (file.line_count > SCORING.LARGE_FILE_LINE_THRESHOLD) {
+    score -= SCORING.LARGE_FILE_PENALTY;
   }
 
   return score;

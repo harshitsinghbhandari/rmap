@@ -5,7 +5,7 @@
  */
 
 import type { Level0Output, Level1Output } from '../../core/types.js';
-import { MAX_FILES_PER_TASK } from '../../core/constants.js';
+import { FILE, OUTPUT } from '../../config/index.js';
 
 /**
  * Group files by directory for prompt
@@ -64,15 +64,15 @@ function formatDirectoryGroups(groups: DirectoryGroup[]): string {
   for (const group of groups) {
     output += `\n${group.path}/ (${group.totalFiles} files, ${group.totalSizeKb.toFixed(1)} KB)\n`;
 
-    // Show first 10 files as examples
-    const filesToShow = group.files.slice(0, 10);
+    // Show first N files as examples
+    const filesToShow = group.files.slice(0, OUTPUT.MAX_FILES_IN_PROMPT);
     for (const file of filesToShow) {
       const langInfo = file.language ? ` [${file.language}]` : '';
       output += `  - ${file.name}${langInfo}\n`;
     }
 
-    if (group.files.length > 10) {
-      output += `  ... and ${group.files.length - 10} more files\n`;
+    if (group.files.length > OUTPUT.MAX_FILES_IN_PROMPT) {
+      output += `  ... and ${group.files.length - OUTPUT.MAX_FILES_IN_PROMPT} more files\n`;
     }
   }
 
@@ -119,7 +119,7 @@ ${directoryTree}
 Your task is to divide this repository into annotation tasks for Level 3 agents. Each task will be processed by an LLM agent that reads files and produces semantic annotations (purpose, tags, exports, imports).
 
 Division Rules:
-1. **Max ${MAX_FILES_PER_TASK} files per task** - Hard limit for manageable context
+1. **Max ${FILE.MAX_FILES_PER_TASK} files per task** - Hard limit for manageable context
 2. **Group related files** - Keep files in the same directory together when possible
 3. **Consider coupling** - Files that import each other should ideally be in the same task
 4. **Balance complexity**:
@@ -154,7 +154,7 @@ Output a task delegation plan with this exact JSON structure:
 
 Important:
 - "scope" should be a directory path (e.g., "src/auth/", "tests/") or specific file pattern
-- Each task's estimated_files must be ≤ ${MAX_FILES_PER_TASK}
+- Each task's estimated_files must be ≤ ${FILE.MAX_FILES_PER_TASK}
 - Sum of all estimated_files should equal ${totalFiles}
 - For execution, use "parallel" unless there's a strong reason for "sequential"
 - estimated_total_minutes should account for parallel vs sequential execution

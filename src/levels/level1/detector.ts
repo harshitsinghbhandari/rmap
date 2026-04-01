@@ -10,7 +10,7 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import type { Level0Output, Level1Output, Module } from '../../core/types.js';
 import { validateLevel1Output, ValidationError } from './validation.js';
-import { DETECTION_MODEL } from '../../config/models.js';
+import { DETECTION_MODEL, TOKEN } from '../../config/index.js';
 import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
@@ -190,7 +190,7 @@ export async function detectStructure(
   // Call Claude with retry logic
   const response = await llmClient.sendMessage(prompt, {
     model: DETECTION_MODEL,
-    maxTokens: 2000,
+    maxTokens: TOKEN.MAX_TOKENS_LEVEL1,
   });
 
   // Record metrics if collector provided

@@ -5,6 +5,8 @@
  * Useful for processing multiple API calls while respecting rate limits.
  */
 
+import { CONCURRENCY } from '../config/index.js';
+
 /**
  * Result of a task execution — discriminated union on `success`
  */
@@ -49,7 +51,7 @@ export class ConcurrencyPool<T, R> {
   private stopOnError: boolean;
 
   constructor(options: ConcurrencyPoolOptions = {}) {
-    const defaultConcurrency = 10;
+    const defaultConcurrency = CONCURRENCY.MAX_PARALLEL_FILES;
     const configuredConcurrency =
       options.concurrency !== undefined ? Number(options.concurrency) : defaultConcurrency;
     this.concurrency = Number.isFinite(configuredConcurrency)

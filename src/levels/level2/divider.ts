@@ -7,9 +7,8 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { Level0Output, Level1Output, TaskDelegation, DelegationTask } from '../../core/types.js';
-import { MAX_FILES_PER_TASK } from '../../core/constants.js';
 import { buildWorkDivisionPrompt } from './prompt.js';
-import { DIVISION_MODEL } from '../../config/models.js';
+import { DIVISION_MODEL, FILE, TOKEN } from '../../config/index.js';
 import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
@@ -50,9 +49,9 @@ function validateDelegationTask(task: unknown): DelegationTask {
     throw new DivisionValidationError('Task estimated_files must be a positive number');
   }
 
-  if (obj.estimated_files > MAX_FILES_PER_TASK) {
+  if (obj.estimated_files > FILE.MAX_FILES_PER_TASK) {
     throw new DivisionValidationError(
-      `Task estimated_files (${obj.estimated_files}) exceeds maximum (${MAX_FILES_PER_TASK})`
+      `Task estimated_files (${obj.estimated_files}) exceeds maximum (${FILE.MAX_FILES_PER_TASK})`
     );
   }
 
@@ -172,7 +171,7 @@ export async function divideWork(
   // Call Claude with retry logic
   const response = await llmClient.sendMessage(prompt, {
     model: DIVISION_MODEL,
-    maxTokens: 4000,
+    maxTokens: TOKEN.MAX_TOKENS_LEVEL2,
   });
 
   // Record metrics if collector provided
