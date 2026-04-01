@@ -33,3 +33,13 @@ export {
 
 // Export Tag type
 export type { Tag } from './constants.js';
+
+// Export git utilities
+export {
+  validateGitRef,
+  safeGitExec,
+  getGitDiffSafe,
+  getCommitTimestampSafe,
+  getCommitCountSafe,
+  getCurrentCommitSafe,
+} from './git-utils.js';
