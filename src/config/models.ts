@@ -60,4 +60,27 @@ export const RETRY_CONFIG = {
   REQUEST_DELAY_MS: 500,
 } as const;
 
+/**
+ * Concurrency configuration for parallel processing
+ *
+ * Controls how many files are annotated in parallel during Level 3 processing.
+ * Higher values = faster processing but more API load and potential rate limiting.
+ * Lower values = slower but safer for API rate limits.
+ */
+export const CONCURRENCY_CONFIG = {
+  /**
+   * Maximum number of concurrent Level 3 annotation tasks
+   * Default: 10 (provides ~7x speedup vs sequential)
+   * Can be overridden with RMAP_CONCURRENCY environment variable
+   */
+  MAX_CONCURRENT_ANNOTATIONS: parseInt(process.env.RMAP_CONCURRENCY || '10', 10),
+
+  /**
+   * Delay in milliseconds between starting each annotation task
+   * Default: 100ms (helps smooth out API request bursts)
+   * Can be overridden with RMAP_TASK_DELAY environment variable
+   */
+  TASK_START_DELAY_MS: parseInt(process.env.RMAP_TASK_DELAY || '100', 10),
+} as const;
+
 export type AgentSize = keyof typeof ANNOTATION_MODEL_MAP;
