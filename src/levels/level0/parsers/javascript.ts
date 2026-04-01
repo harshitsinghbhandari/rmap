@@ -6,7 +6,14 @@
  */
 
 import { parse } from '@babel/parser';
-import _traverse from '@babel/traverse';
+import _traverse, { NodePath } from '@babel/traverse';
+import type {
+  ImportDeclaration,
+  Import,
+  CallExpression,
+  ExportNamedDeclaration,
+  ExportAllDeclaration,
+} from '@babel/types';
 import type { Parser, ParseResult, ImportInfo } from './types.js';
 
 // Handle CommonJS/ESM interop for @babel/traverse
@@ -45,7 +52,7 @@ export class JavaScriptParser implements Parser {
       // Traverse AST and collect imports
       traverse(ast, {
         // Static imports: import foo from 'bar'
-        ImportDeclaration(path) {
+        ImportDeclaration(path: NodePath<ImportDeclaration>) {
           imports.push({
             source: path.node.source.value,
             type: path.node.importKind === 'type' ? 'type-only' : 'static',
@@ -55,7 +62,7 @@ export class JavaScriptParser implements Parser {
         },
 
         // Dynamic imports: import('bar')
-        Import(path) {
+        Import(path: NodePath<Import>) {
           const parent = path.parent;
           if (parent.type === 'CallExpression' && parent.arguments[0]) {
             const arg = parent.arguments[0];
@@ -73,7 +80,7 @@ export class JavaScriptParser implements Parser {
         },
 
         // CommonJS: require('bar')
-        CallExpression(path) {
+        CallExpression(path: NodePath<CallExpression>) {
           if (
             path.node.callee.type === 'Identifier' &&
             path.node.callee.name === 'require' &&
@@ -89,7 +96,7 @@ export class JavaScriptParser implements Parser {
         },
 
         // Re-exports: export { foo } from 'bar'
-        ExportNamedDeclaration(path) {
+        ExportNamedDeclaration(path: NodePath<ExportNamedDeclaration>) {
           if (path.node.source) {
             imports.push({
               source: path.node.source.value,
@@ -101,7 +108,7 @@ export class JavaScriptParser implements Parser {
         },
 
         // Re-export all: export * from 'bar'
-        ExportAllDeclaration(path) {
+        ExportAllDeclaration(path: NodePath<ExportAllDeclaration>) {
           imports.push({
             source: path.node.source.value,
             type: 'static',
