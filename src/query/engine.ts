@@ -104,6 +104,12 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
       if (
         !file.path ||
         typeof file.path !== 'string' ||
+        typeof file.language !== 'string' ||
+        typeof file.purpose !== 'string' ||
+        typeof file.size_bytes !== 'number' ||
+        !Number.isFinite(file.size_bytes) ||
+        typeof file.line_count !== 'number' ||
+        !Number.isFinite(file.line_count) ||
         !Array.isArray(file.tags) ||
         !Array.isArray(file.exports) ||
         !Array.isArray(file.imports)
