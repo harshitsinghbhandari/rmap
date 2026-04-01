@@ -191,6 +191,11 @@ export async function detectStructure(
   const response = await llmClient.sendMessage(prompt, {
     model: DETECTION_MODEL,
     maxTokens: TOKEN.MAX_TOKENS_LEVEL1,
+    logContext: {
+      level: 'level1',
+      purpose: 'Repository structure detection - identifies repo name, purpose, stack, languages, entry points, modules, and conventions',
+      model: DETECTION_MODEL,
+    },
   });
 
   // Record metrics if collector provided

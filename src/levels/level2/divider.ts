@@ -172,6 +172,11 @@ export async function divideWork(
   const response = await llmClient.sendMessage(prompt, {
     model: DIVISION_MODEL,
     maxTokens: TOKEN.MAX_TOKENS_LEVEL2,
+    logContext: {
+      level: 'level2',
+      purpose: 'Work division - divides repository files into annotation tasks with agent size and execution strategy',
+      model: DIVISION_MODEL,
+    },
   });
 
   // Record metrics if collector provided

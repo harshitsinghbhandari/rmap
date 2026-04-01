@@ -8,6 +8,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { RETRY_CONFIG } from '../config/models.js';
 import { globalRateLimiter, estimateTokens } from './rate-limiter.js';
+import { logPromptResponse, type PromptLogContext } from './prompt-logger.js';
 
 /**
  * Configuration for retry behavior
@@ -35,6 +36,8 @@ export interface LLMCallOptions {
   temperature?: number;
   /** Override retry configuration for this call */
   retryConfig?: RetryConfig;
+  /** Logging context (level and purpose) for prompt/response logging */
+  logContext?: PromptLogContext;
 }
 
 /**
@@ -157,13 +160,26 @@ export class LLMClient {
           throw new Error('Unexpected response type from Claude');
         }
 
-        // Return response with usage metrics
-        return {
+        const result = {
           text: content.text,
           inputTokens: response.usage.input_tokens,
           outputTokens: response.usage.output_tokens,
           model: options.model,
         };
+
+        // Log prompt and response if logging is enabled
+        if (options.logContext) {
+          logPromptResponse(
+            options.logContext,
+            prompt,
+            result.text,
+            result.inputTokens,
+            result.outputTokens
+          );
+        }
+
+        // Return response with usage metrics
+        return result;
       } catch (error) {
         lastError = error as Error;
 
