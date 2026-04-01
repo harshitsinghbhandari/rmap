@@ -442,46 +442,48 @@ test('annotateFiles: requires ANTHROPIC_API_KEY', () => {
 
 // Test: Concurrent processing
 test('annotateFiles: processes files concurrently', async () => {
-  // Mock concurrent execution tracking
-  const executionLog: Array<{ file: string; start: number; end: number }> = [];
-  const concurrency = 3;
+  const { ConcurrencyPool } = await import('../../../src/core/concurrency.js');
 
-  // Simulate concurrent file processing
-  const files = mockFileMetadata;
-  const processFile = async (file: RawFileMetadata) => {
-    const start = Date.now();
-    await new Promise(resolve => setTimeout(resolve, 50)); // Simulate LLM call
-    const end = Date.now();
-    executionLog.push({ file: file.path, start, end });
-    return file;
-  };
+  let inFlight = 0;
+  let maxInFlight = 0;
+  const processedFiles: string[] = [];
 
-  // Process with concurrency
-  const startTime = Date.now();
-  const promises = files.map(f => processFile(f));
-  await Promise.all(promises);
-  const totalTime = Date.now() - startTime;
+  // Use ConcurrencyPool directly (the mechanism annotateFiles uses internally)
+  const pool = new ConcurrencyPool({ concurrency: 3 });
 
-  // With 3 files and concurrency, should complete faster than sequential
-  // Sequential: 3 * 50ms = 150ms
-  // Concurrent: ~50ms (plus overhead)
-  assert.ok(totalTime < 150, `Concurrent processing should be faster: ${totalTime}ms`);
+  await pool.run(mockFileMetadata, async (file) => {
+    inFlight++;
+    if (inFlight > maxInFlight) maxInFlight = inFlight;
+    try {
+      await new Promise<void>(resolve => setTimeout(resolve, 50));
+      processedFiles.push(file.path);
+    } finally {
+      inFlight--;
+    }
+  });
 
   // Verify all files were processed
-  assert.strictEqual(executionLog.length, files.length);
+  assert.strictEqual(processedFiles.length, mockFileMetadata.length);
+
+  // Verify actual concurrency was used (more than 1 task in-flight)
+  assert.ok(maxInFlight > 1, `Expected concurrent execution but max in-flight was ${maxInFlight}`);
+
+  // Verify the concurrency limit was respected
+  assert.ok(maxInFlight <= 3, `Expected max 3 in-flight but was ${maxInFlight}`);
 });
 
 // Test: Concurrency configuration
 test('annotateFiles: respects CONCURRENCY_CONFIG', async () => {
-  // Test that concurrency settings are available
   const { CONCURRENCY_CONFIG } = await import('../../../src/config/models.js');
 
+  // Regardless of what env vars are set, parseEnvInt guarantees valid values
   assert.ok(typeof CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS === 'number');
-  assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS > 0);
-  assert.ok(typeof CONCURRENCY_CONFIG.TASK_START_DELAY_MS === 'number');
-  assert.ok(CONCURRENCY_CONFIG.TASK_START_DELAY_MS >= 0);
-
-  // Default values should be reasonable
+  assert.ok(Number.isFinite(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS));
   assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS >= 1);
-  assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS <= 50);
+  assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS <= 100);
+
+  assert.ok(typeof CONCURRENCY_CONFIG.TASK_START_DELAY_MS === 'number');
+  assert.ok(Number.isFinite(CONCURRENCY_CONFIG.TASK_START_DELAY_MS));
+  assert.ok(CONCURRENCY_CONFIG.TASK_START_DELAY_MS >= 0);
+  assert.ok(CONCURRENCY_CONFIG.TASK_START_DELAY_MS <= 60_000);
 });

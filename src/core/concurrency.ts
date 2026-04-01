@@ -6,18 +6,11 @@
  */
 
 /**
- * Result of a task execution
+ * Result of a task execution — discriminated union on `success`
  */
-export interface TaskResult<T> {
-  /** Index of the task in the original array */
-  index: number;
-  /** Result value if successful */
-  value?: T;
-  /** Error if failed */
-  error?: Error;
-  /** Whether the task succeeded */
-  success: boolean;
-}
+export type TaskResult<T> =
+  | { index: number; success: true; value: T }
+  | { index: number; success: false; error: Error };
 
 /**
  * Options for ConcurrencyPool
@@ -56,7 +49,12 @@ export class ConcurrencyPool<T, R> {
   private stopOnError: boolean;
 
   constructor(options: ConcurrencyPoolOptions = {}) {
-    this.concurrency = options.concurrency ?? 10;
+    const defaultConcurrency = 10;
+    const configuredConcurrency =
+      options.concurrency !== undefined ? Number(options.concurrency) : defaultConcurrency;
+    this.concurrency = Number.isFinite(configuredConcurrency)
+      ? Math.max(1, Math.floor(configuredConcurrency))
+      : defaultConcurrency;
     this.delayBetweenTasks = options.delayBetweenTasks ?? 0;
     this.stopOnError = options.stopOnError ?? false;
   }
@@ -72,7 +70,7 @@ export class ConcurrencyPool<T, R> {
     items: T[],
     task: (item: T, index: number) => Promise<R>
   ): Promise<TaskResult<R>[]> {
-    const results: TaskResult<R>[] = new Array(items.length);
+    const resultMap = new Map<number, TaskResult<R>>();
     const executing = new Set<Promise<void>>();
     let stopped = false;
 
@@ -83,13 +81,13 @@ export class ConcurrencyPool<T, R> {
       const taskPromise = (async (index: number) => {
         try {
           const value = await task(items[index], index);
-          results[index] = { index, value, success: true };
+          resultMap.set(index, { index, value, success: true });
         } catch (error) {
-          results[index] = {
+          resultMap.set(index, {
             index,
             error: error instanceof Error ? error : new Error(String(error)),
             success: false,
-          };
+          });
 
           if (this.stopOnError) {
             stopped = true;
@@ -120,6 +118,12 @@ export class ConcurrencyPool<T, R> {
     // Wait for all remaining tasks to complete
     await Promise.all(Array.from(executing));
 
+    // Return results in input order, omitting indices never started (stopOnError).
+    const results: TaskResult<R>[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const result = resultMap.get(i);
+      if (result !== undefined) results.push(result);
+    }
     return results;
   }
 
@@ -136,8 +140,8 @@ export class ConcurrencyPool<T, R> {
   ): Promise<R[]> {
     const results = await this.run(items, task);
     return results
-      .filter((r) => r.success && r.value !== undefined)
-      .map((r) => r.value!);
+      .filter((r): r is Extract<TaskResult<R>, { success: true }> => r.success)
+      .map((r) => r.value);
   }
 
   /**
@@ -161,9 +165,9 @@ export class ConcurrencyPool<T, R> {
     const failures: Array<{ item: T; index: number; error: Error }> = [];
 
     results.forEach((result) => {
-      if (result.success && result.value !== undefined) {
+      if (result.success) {
         successes.push(result.value);
-      } else if (result.error) {
+      } else {
         failures.push({
           item: items[result.index],
           index: result.index,

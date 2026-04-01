@@ -60,6 +60,34 @@ export const RETRY_CONFIG = {
   REQUEST_DELAY_MS: 500,
 } as const;
 
+const DEFAULT_MAX_CONCURRENT_ANNOTATIONS = 10;
+const DEFAULT_TASK_START_DELAY_MS = 100;
+const MAX_SAFE_CONCURRENT_ANNOTATIONS = 100;
+const MAX_SAFE_TASK_START_DELAY_MS = 60_000;
+
+function parseEnvInt(
+  envValue: string | undefined,
+  defaultValue: number,
+  min: number,
+  max: number,
+): number {
+  let value: number = envValue !== undefined ? Number(envValue) : defaultValue;
+
+  if (!Number.isFinite(value)) {
+    value = defaultValue;
+  }
+
+  value = Math.trunc(value);
+
+  if (value < min) {
+    value = min;
+  } else if (value > max) {
+    value = max;
+  }
+
+  return value;
+}
+
 /**
  * Concurrency configuration for parallel processing
  *
@@ -73,14 +101,24 @@ export const CONCURRENCY_CONFIG = {
    * Default: 10 (provides ~7x speedup vs sequential)
    * Can be overridden with RMAP_CONCURRENCY environment variable
    */
-  MAX_CONCURRENT_ANNOTATIONS: parseInt(process.env.RMAP_CONCURRENCY || '10', 10),
+  MAX_CONCURRENT_ANNOTATIONS: parseEnvInt(
+    process.env.RMAP_CONCURRENCY,
+    DEFAULT_MAX_CONCURRENT_ANNOTATIONS,
+    1,
+    MAX_SAFE_CONCURRENT_ANNOTATIONS,
+  ),
 
   /**
    * Delay in milliseconds between starting each annotation task
    * Default: 100ms (helps smooth out API request bursts)
    * Can be overridden with RMAP_TASK_DELAY environment variable
    */
-  TASK_START_DELAY_MS: parseInt(process.env.RMAP_TASK_DELAY || '100', 10),
+  TASK_START_DELAY_MS: parseEnvInt(
+    process.env.RMAP_TASK_DELAY,
+    DEFAULT_TASK_START_DELAY_MS,
+    0,
+    MAX_SAFE_TASK_START_DELAY_MS,
+  ),
 } as const;
 
 export type AgentSize = keyof typeof ANNOTATION_MODEL_MAP;

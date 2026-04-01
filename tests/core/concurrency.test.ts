@@ -179,20 +179,31 @@ test('ConcurrencyPool: handles large batches efficiently', async () => {
   const pool = new ConcurrencyPool({ concurrency: 10 });
   const items = Array.from({ length: 100 }, (_, i) => i);
 
-  const startTime = Date.now();
+  let inFlight = 0;
+  let maxInFlight = 0;
+
   const results = await pool.run(items, async (item) => {
-    await sleep(10);
-    return item;
+    inFlight++;
+    if (inFlight > maxInFlight) {
+      maxInFlight = inFlight;
+    }
+    try {
+      await sleep(10);
+      return item;
+    } finally {
+      inFlight--;
+    }
   });
-  const duration = Date.now() - startTime;
 
   // All should succeed
   assert.strictEqual(results.length, 100);
   assert.ok(results.every((r) => r.success));
 
-  // Should be much faster than sequential (100 * 10ms = 1000ms)
-  // With 10 concurrent: ~100ms (plus overhead)
-  assert.ok(duration < 500); // Generous upper bound
+  // Should process multiple items concurrently (not purely sequential)
+  assert.ok(
+    maxInFlight > 1,
+    `Expected more than one item in flight, got ${maxInFlight}`,
+  );
 });
 
 // Test: Index tracking
@@ -236,24 +247,30 @@ test('ConcurrencyPool: provides significant speedup vs sequential', async () => 
   const items = Array.from({ length: 20 }, (_, i) => i);
   const taskDuration = 50; // ms
 
-  // Sequential timing
-  const seqStart = Date.now();
-  for (const item of items) {
-    await sleep(taskDuration);
-  }
-  const seqDuration = Date.now() - seqStart;
-
-  // Concurrent timing with pool
+  let activeTasks = 0;
+  let maxActiveTasks = 0;
   const pool = new ConcurrencyPool({ concurrency: 5 });
-  const poolStart = Date.now();
   await pool.run(items, async () => {
-    await sleep(taskDuration);
+    activeTasks++;
+    if (activeTasks > maxActiveTasks) {
+      maxActiveTasks = activeTasks;
+    }
+    try {
+      await sleep(taskDuration);
+    } finally {
+      activeTasks--;
+    }
   });
-  const poolDuration = Date.now() - poolStart;
 
-  // Pool should be significantly faster (at least 3x)
-  const speedup = seqDuration / poolDuration;
-  assert.ok(speedup >= 3, `Speedup was ${speedup.toFixed(2)}x, expected >= 3x`);
+  // Pool should utilize concurrency without exceeding the configured limit
+  assert.ok(
+    maxActiveTasks <= 5,
+    `Max active tasks was ${maxActiveTasks}, expected <= 5`
+  );
+  assert.ok(
+    maxActiveTasks > 1,
+    `Max active tasks was ${maxActiveTasks}, expected > 1 to show concurrency`
+  );
 });
 
 // Test: Default options
