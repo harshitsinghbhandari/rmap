@@ -114,8 +114,8 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   let level3Annotations: FileAnnotation[] = [];
   let completedTaskIds: Set<string> = new Set();
 
-  const validation = checkpointer.tryLoadCheckpoint(currentCommit, resume);
-  if (validation.valid) {
+  const checkpointValidation = checkpointer.tryLoadCheckpoint(currentCommit, resume);
+  if (checkpointValidation.valid) {
     console.log('📋 Found valid checkpoint, resuming from last completed level...');
 
     // Load completed levels
@@ -140,7 +140,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       console.log('  ✓ Level 3 already completed');
     }
   } else if (resume) {
-    console.log(`⚠️  Checkpoint invalid: ${validation.error}`);
+    console.log(`⚠️  Checkpoint invalid: ${checkpointValidation.error}`);
     console.log('   Starting fresh...');
   }
 
