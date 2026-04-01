@@ -30,7 +30,7 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsx src/cli/index.ts",
-    "test": "tsx --test $(find tests -name '*.test.ts')",
+    "test": "NODE_ENV=test tsx --test $(find tests -name '*.test.ts')",
     "lint": "tsc --noEmit",
     "prepublishOnly": "pnpm build"
   },

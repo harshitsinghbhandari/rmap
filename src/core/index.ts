@@ -78,3 +78,12 @@ export {
   FileSystemError,
   CheckpointError,
 } from './errors.js';
+// Export validation functions
+export {
+  validateTagTaxonomy,
+  validateThresholds,
+  validateConfig,
+  validateFileTags,
+  validateAll,
+  ConfigValidationError,
+} from './validation.js';
