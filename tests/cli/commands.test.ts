@@ -121,9 +121,9 @@ describe('Get-Context Command', () => {
     );
   });
 
-  test('should have exactly two options', () => {
+  test('should have exactly four options', () => {
     const options = getContextCommand.options;
-    assert.strictEqual(options.length, 2, 'Command should have exactly 2 options');
+    assert.strictEqual(options.length, 4, 'Command should have exactly 4 options (--file, --path, --json, --limit)');
   });
 
   test('should accept variadic tags argument', () => {

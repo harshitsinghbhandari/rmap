@@ -23,6 +23,9 @@ export interface FormatOptions {
 
   /** Maximum number of conventions to show */
   maxConventions?: number;
+
+  /** Output format: 'text' for human-readable, 'json' for machine-readable */
+  outputFormat?: 'text' | 'json';
 }
 
 /**
@@ -33,6 +36,7 @@ const DEFAULT_OPTIONS: Required<FormatOptions> = {
   maxExports: OUTPUT.MAX_EXPORTS_PER_FILE,
   fullPaths: true,
   maxConventions: OUTPUT.MAX_CONVENTIONS,
+  outputFormat: 'text',
 };
 
 /**
@@ -242,6 +246,38 @@ export function formatQueryOutput(
 ): string {
   const opts = { ...DEFAULT_OPTIONS, ...options };
 
+  // Return JSON format if requested
+  if (opts.outputFormat === 'json') {
+    const jsonOutput = {
+      repository: {
+        name: params.meta.repo_name,
+        purpose: params.meta.purpose,
+        stack: params.meta.stack,
+        languages: params.meta.languages,
+      },
+      query: {
+        tags: params.queryTags,
+      },
+      relevantFiles: params.relevantFiles.slice(0, opts.maxFiles).map((scored) => ({
+        path: scored.file.path,
+        language: scored.file.language,
+        purpose: scored.file.purpose,
+        tags: scored.file.tags,
+        exports: scored.file.exports.slice(0, opts.maxExports),
+        relevanceScore: scored.score,
+      })),
+      blastRadius: params.blastRadiusFiles.slice(0, opts.maxFiles).map((file) => ({
+        path: file.path,
+        language: file.language,
+        purpose: file.purpose,
+        tags: file.tags,
+      })),
+      conventions: params.meta.conventions.slice(0, opts.maxConventions),
+    };
+    return JSON.stringify(jsonOutput, null, 2);
+  }
+
+  // Default text format
   const sections = [
     formatRepoContext(params.meta),
     formatRelevantFiles(params.relevantFiles, params.queryTags, opts),
@@ -269,6 +305,36 @@ export function formatFileQueryOutput(
   options: Partial<FormatOptions> = {}
 ): string {
   const opts = { ...DEFAULT_OPTIONS, ...options };
+
+  // Return JSON format if requested
+  if (opts.outputFormat === 'json') {
+    const jsonOutput = {
+      repository: {
+        name: params.meta.repo_name,
+        purpose: params.meta.purpose,
+      },
+      file: {
+        path: params.file.path,
+        language: params.file.language,
+        purpose: params.file.purpose,
+        tags: params.file.tags,
+        exports: params.file.exports.slice(0, opts.maxExports),
+        sizeBytes: params.file.size_bytes,
+        lineCount: params.file.line_count,
+      },
+      dependencies: params.dependencies.slice(0, opts.maxFiles).map((file) => ({
+        path: file.path,
+        language: file.language,
+        purpose: file.purpose,
+      })),
+      dependents: params.dependents.slice(0, opts.maxFiles).map((file) => ({
+        path: file.path,
+        language: file.language,
+        purpose: file.purpose,
+      })),
+    };
+    return JSON.stringify(jsonOutput, null, 2);
+  }
 
   const lines = [
     '═══ REPO CONTEXT ═══',
@@ -343,6 +409,33 @@ export function formatPathQueryOutput(
   options: Partial<FormatOptions> = {}
 ): string {
   const opts = { ...DEFAULT_OPTIONS, ...options };
+
+  // Return JSON format if requested
+  if (opts.outputFormat === 'json') {
+    const jsonOutput = {
+      repository: {
+        name: params.meta.repo_name,
+        purpose: params.meta.purpose,
+      },
+      query: {
+        path: params.path,
+      },
+      files: params.files.slice(0, opts.maxFiles).map((scored) => ({
+        path: scored.file.path,
+        language: scored.file.language,
+        purpose: scored.file.purpose,
+        tags: scored.file.tags,
+        exports: scored.file.exports.slice(0, opts.maxExports),
+        relevanceScore: scored.score,
+      })),
+      externalDependents: params.externalDependents.slice(0, opts.maxFiles).map((file) => ({
+        path: file.path,
+        language: file.language,
+        purpose: file.purpose,
+      })),
+    };
+    return JSON.stringify(jsonOutput, null, 2);
+  }
 
   const lines = [
     '═══ REPO CONTEXT ═══',

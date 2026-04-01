@@ -26,7 +26,7 @@ import {
   type FormatOptions,
 } from './formatter.js';
 import {
-  getBlastRadius,
+  getDependents,
   getDependencies,
   getTopFiles,
   rankFilesByRelevance,
@@ -225,7 +225,7 @@ export async function queryByTags(
   const topFiles = getTopFiles(rankedFiles, config.formatOptions?.maxFiles || 10);
 
   // Get blast radius (files that import the top results)
-  const blastRadiusFiles = getBlastRadius(
+  const blastRadiusFiles = getDependents(
     topFiles.map((f) => f.file.path),
     data.graph,
     data.files
@@ -269,7 +269,7 @@ export async function queryByFile(
   const dependencies = getDependencies(filePath, data.graph, data.files);
 
   // Get dependents (files that import this file)
-  const dependents = getBlastRadius([filePath], data.graph, data.files);
+  const dependents = getDependents([filePath], data.graph, data.files);
 
   // Format and return output
   return formatFileQueryOutput(
@@ -311,7 +311,7 @@ export async function queryByPath(
 
   // Get external dependents (files outside the directory that import files from it)
   const filePaths = filesInDir.map((f) => f.path);
-  const allDependents = getBlastRadius(filePaths, data.graph, data.files);
+  const allDependents = getDependents(filePaths, data.graph, data.files);
 
   // Filter to only external dependents (outside the directory)
   const normalizedDirPath = dirPath.endsWith('/') ? dirPath : `${dirPath}/`;

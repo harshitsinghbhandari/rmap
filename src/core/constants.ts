@@ -15,6 +15,10 @@ export const SCHEMA_VERSION = '1.0';
  *
  * Level 3 agents pick from this list only. No freeform tags allowed.
  * A file can have 1-5 tags maximum.
+ *
+ * Naming convention:
+ * - Single-word tags: lowercase (e.g., 'database', 'testing')
+ * - Multi-word tags: snake_case (e.g., 'api_endpoint', 'error_handling')
  */
 export const TAG_TAXONOMY = [
   // Auth & Identity
