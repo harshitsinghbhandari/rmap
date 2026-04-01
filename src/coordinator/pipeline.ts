@@ -266,8 +266,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     process.exit(0);
   };
 
-  process.on('SIGINT', () => handleShutdown('SIGINT'));
-  process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+  const sigintHandler = () => handleShutdown('SIGINT');
+  const sigtermHandler = () => handleShutdown('SIGTERM');
+
+  process.on('SIGINT', sigintHandler);
+  process.on('SIGTERM', sigtermHandler);
 
   // ===== LEVEL 0: Metadata Harvester =====
   if (!level0) {
@@ -446,6 +449,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     agentsUsed: stats.agents_used,
     validationIssues: stats.validation_issues,
   });
+
+  // ===== Clean up signal handlers =====
+  // Remove handlers to prevent memory leaks and interference with other processes
+  process.removeListener('SIGINT', sigintHandler);
+  process.removeListener('SIGTERM', sigtermHandler);
 
   return {
     annotations: finalAnnotations,
