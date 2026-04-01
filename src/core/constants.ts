@@ -149,3 +149,25 @@ export const MAX_TAGS_PER_FILE = 5;
  * Maximum number of files per Level 3 annotation task
  */
 export const MAX_FILES_PER_TASK = 50;
+
+/**
+ * Checkpoint directory name (within .repo_map)
+ */
+export const CHECKPOINT_DIR = '.checkpoint';
+
+/**
+ * Checkpoint format version
+ */
+export const CHECKPOINT_VERSION = '1.0';
+
+/**
+ * Checkpoint file names
+ */
+export const CHECKPOINT_FILES = {
+  STATE: 'state.json',
+  LEVEL0: 'level0.json',
+  LEVEL1: 'level1.json',
+  LEVEL2: 'level2.json',
+  LEVEL3_PROGRESS: 'level3_progress.json',
+  LEVEL3_TASKS: 'level3_tasks.json',
+} as const;
