@@ -9,6 +9,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { Level0Output, Level1Output, TaskDelegation, DelegationTask } from '../../core/types.js';
 import { MAX_FILES_PER_TASK } from '../../core/constants.js';
 import { buildWorkDivisionPrompt } from './prompt.js';
+import { DIVISION_MODEL } from '../../config/models.js';
 
 /**
  * Validation error for task delegation
@@ -40,7 +41,7 @@ async function callClaudeWithRetry(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const response = await client.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: DIVISION_MODEL,
         max_tokens: 4000,
         temperature: 0,
         messages: [
