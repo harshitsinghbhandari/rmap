@@ -38,6 +38,7 @@ import {
   loadLevelOutput,
   markLevelStarted,
   markLevelCompleted,
+  markLevelInterrupted,
   updateLevelCheckpoint,
 } from './checkpoint.js';
 import * as fs from 'node:fs';
@@ -239,6 +240,39 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     checkpoint = initCheckpoint(repoRoot, currentCommit);
   }
 
+  // ===== Set up graceful shutdown handlers =====
+  let isShuttingDown = false;
+
+  const handleShutdown = (signal: string) => {
+    // Prevent multiple signals from being handled
+    if (isShuttingDown) {
+      return;
+    }
+    isShuttingDown = true;
+
+    console.log(`\n⚠️  Received ${signal}, saving checkpoint...`);
+
+    // Mark current level as interrupted
+    if (checkpoint && checkpoint.current_level < 5) {
+      markLevelInterrupted(repoRoot, checkpoint, checkpoint.current_level);
+    }
+
+    // For Level 3, save partial progress if we have annotations
+    if (checkpoint && checkpoint.current_level === 3 && annotations.length > 0) {
+      saveLevel3Progress(repoRoot, annotations);
+      console.log(`  Saved ${annotations.length} partial annotations`);
+    }
+
+    console.log('✓ Checkpoint saved. Run again to resume.');
+    process.exit(0);
+  };
+
+  const sigintHandler = () => handleShutdown('SIGINT');
+  const sigtermHandler = () => handleShutdown('SIGTERM');
+
+  process.on('SIGINT', sigintHandler);
+  process.on('SIGTERM', sigtermHandler);
+
   // ===== LEVEL 0: Metadata Harvester =====
   if (!level0) {
     tracker.startLevel('Level 0: Metadata Harvester');
@@ -282,7 +316,8 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   );
 
   // ===== LEVEL 3: Deep File Annotator =====
-  let annotations: FileAnnotation[];
+  // Note: Hoisted to function scope so signal handlers can access it
+  let annotations: FileAnnotation[] = [];
 
   // Check if Level 3 is already completed
   if (checkpoint.levels[3]?.status === 'completed') {
@@ -415,6 +450,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     agentsUsed: stats.agents_used,
     validationIssues: stats.validation_issues,
   });
+
+  // ===== Clean up signal handlers =====
+  // Remove handlers to prevent memory leaks and interference with other processes
+  process.removeListener('SIGINT', sigintHandler);
+  process.removeListener('SIGTERM', sigtermHandler);
 
   return {
     annotations: finalAnnotations,
