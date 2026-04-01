@@ -1,6 +1,6 @@
 {
   "name": "rmap",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A semantic repository map builder for coding agents. Generates structured, queryable maps of codebases to provide context-aware file selection and dependency understanding.",
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
