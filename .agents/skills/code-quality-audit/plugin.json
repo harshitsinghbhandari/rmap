@@ -1,0 +1,5 @@
+{
+  "name": "code-quality-audit",
+  "description": "Strategic code quality review that combines Sukuna-style analysis with Gojo-style refactoring roadmaps.",
+  "entry": "SKILL.md"
+}
