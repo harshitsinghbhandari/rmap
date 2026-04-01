@@ -236,7 +236,8 @@ export async function annotateFiles(
   console.log(`Concurrency: ${CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS} parallel tasks`);
 
   // Create concurrency pool for parallel processing
-  const pool = new ConcurrencyPool<RawFileMetadata, FileAnnotation | null>({
+  // Type: ConcurrencyPool<input type, output type>
+  const pool = new ConcurrencyPool<RawFileMetadata, FileAnnotation>({
     concurrency: CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS,
     delayBetweenTasks: CONCURRENCY_CONFIG.TASK_START_DELAY_MS,
     stopOnError: false, // Continue processing even if some files fail
@@ -249,7 +250,7 @@ export async function annotateFiles(
   // Process files concurrently
   const { successes: annotations, failures } = await pool.runWithStats(
     files,
-    async (metadata, index) => {
+    async (metadata, index): Promise<FileAnnotation> => {
       const absolutePath = path.join(repoRoot, metadata.path);
 
       const annotation = await annotateFile(absolutePath, metadata, client, model, repoRoot);
