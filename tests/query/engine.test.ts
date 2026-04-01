@@ -16,7 +16,7 @@ import {
   queryByPath,
   hasRepoMap,
 } from '../../src/query/engine.js';
-import type { MetaJson, GraphJson, TagsJson } from '../../src/core/types.js';
+import type { MetaJson, GraphJson, TagsJson, FileAnnotation } from '../../src/core/types.js';
 
 // Test data
 const mockMeta: MetaJson = {
@@ -79,6 +79,59 @@ const mockTags: TagsJson = {
   },
 };
 
+const mockAnnotations: FileAnnotation[] = [
+  {
+    path: 'src/auth/jwt.ts',
+    language: 'TypeScript',
+    size_bytes: 2048,
+    line_count: 80,
+    purpose: 'JWT token generation and validation',
+    tags: ['authentication', 'jwt'],
+    exports: ['generateToken', 'validateToken', 'JwtConfig'],
+    imports: ['src/config/env.ts'],
+  },
+  {
+    path: 'src/auth/session.ts',
+    language: 'TypeScript',
+    size_bytes: 1536,
+    line_count: 60,
+    purpose: 'Session management and storage',
+    tags: ['authentication', 'session'],
+    exports: ['createSession', 'destroySession', 'Session'],
+    imports: ['src/database/users.ts'],
+  },
+  {
+    path: 'src/database/users.ts',
+    language: 'TypeScript',
+    size_bytes: 3072,
+    line_count: 120,
+    purpose: 'User database operations',
+    tags: ['database'],
+    exports: ['findUser', 'createUser', 'updateUser', 'User'],
+    imports: [],
+  },
+  {
+    path: 'src/api/endpoints/auth.ts',
+    language: 'TypeScript',
+    size_bytes: 2560,
+    line_count: 100,
+    purpose: 'Authentication API endpoints',
+    tags: ['authentication', 'api_endpoint'],
+    exports: ['authRouter', 'loginHandler', 'logoutHandler'],
+    imports: ['src/auth/jwt.ts', 'src/auth/session.ts'],
+  },
+  {
+    path: 'src/config/env.ts',
+    language: 'TypeScript',
+    size_bytes: 512,
+    line_count: 20,
+    purpose: 'Environment configuration',
+    tags: ['config'],
+    exports: ['env', 'Config'],
+    imports: [],
+  },
+];
+
 // Helper to create a test repo map
 async function createTestRepoMap(testDir: string) {
   const repoMapDir = join(testDir, '.repo_map');
@@ -97,6 +150,11 @@ async function createTestRepoMap(testDir: string) {
   await writeFile(
     join(repoMapDir, 'tags.json'),
     JSON.stringify(mockTags, null, 2)
+  );
+
+  await writeFile(
+    join(repoMapDir, 'annotations.json'),
+    JSON.stringify(mockAnnotations, null, 2)
   );
 
   return repoMapDir;
@@ -171,6 +229,29 @@ test('queryByTags: expands tag aliases', async () => {
 
     // Should find authentication files via alias expansion
     assert.ok(result.includes('src/auth/jwt.ts'));
+  } finally {
+    await rm(testDir, { recursive: true, force: true });
+  }
+});
+
+test('queryByTags: loads complete annotations with exports and purpose', async () => {
+  const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
+  await mkdir(testDir, { recursive: true });
+
+  try {
+    const repoMapDir = await createTestRepoMap(testDir);
+    const result = await queryByTags(['jwt'], {
+      repoMapPath: repoMapDir,
+    });
+
+    // Should include complete annotation data
+    // Purpose should be present
+    assert.ok(result.includes('JWT token generation and validation'));
+
+    // Exports should be present
+    assert.ok(result.includes('generateToken'));
+    assert.ok(result.includes('validateToken'));
+    assert.ok(result.includes('JwtConfig'));
   } finally {
     await rm(testDir, { recursive: true, force: true });
   }
