@@ -282,7 +282,8 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   );
 
   // ===== LEVEL 3: Deep File Annotator =====
-  let annotations: FileAnnotation[];
+  // Note: Hoisted to function scope so signal handlers can access it
+  let annotations: FileAnnotation[] = [];
 
   // Check if Level 3 is already completed
   if (checkpoint.levels[3]?.status === 'completed') {
