@@ -31,6 +31,7 @@ import { ProgressTracker } from './progress.js';
 import { readExistingMeta } from './assembler.js';
 import { CheckpointOrchestrator } from './checkpoint-orchestrator.js';
 import { GracefulShutdownHandler } from './shutdown-handler.js';
+import { MetricsCollector, writeMetricsLog, printCompactSummary } from '../core/index.js';
 
 /**
  * Pipeline options
@@ -64,6 +65,8 @@ export interface PipelineResult {
   validation: ValidationJson;
   /** Progress tracker (for final stats) */
   tracker: ProgressTracker;
+  /** Metrics collector with usage data */
+  metrics: MetricsCollector;
 }
 
 /**
@@ -96,6 +99,7 @@ function getGitCommit(repoRoot: string): string {
 export async function runPipeline(options: PipelineOptions): Promise<PipelineResult> {
   const { repoRoot, forceFullRebuild = false, autofix = true, parallel = true, resume = true } = options;
   const tracker = new ProgressTracker();
+  const metrics = new MetricsCollector();
 
   console.log('\n🗺️  Starting rmap pipeline...');
   console.log(`Repository: ${repoRoot}`);
@@ -169,35 +173,41 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   // ===== LEVEL 0: Metadata Harvester =====
   if (!level0) {
     tracker.startLevel('Level 0: Metadata Harvester');
+    metrics.startLevel(0, 'Level 0: Metadata Harvester');
     checkpointer.startLevel(0);
 
     level0 = await harvest(repoRoot);
 
     checkpointer.completeLevel(0, level0, 'level0.json');
+    metrics.endLevel(0);
     tracker.completeLevel('Level 0: Metadata Harvester');
   }
 
   // ===== LEVEL 1: Structure Detector =====
   if (!level1) {
     tracker.startLevel('Level 1: Structure Detector');
+    metrics.startLevel(1, 'Level 1: Structure Detector');
     checkpointer.startLevel(1);
 
-    level1 = await detectStructure(level0, repoRoot);
+    level1 = await detectStructure(level0, repoRoot, metrics);
     tracker.trackLLMCall();
 
     checkpointer.completeLevel(1, level1, 'level1.json');
+    metrics.endLevel(1);
     tracker.completeLevel('Level 1: Structure Detector');
   }
 
   // ===== LEVEL 2: Work Divider =====
   if (!delegation) {
     tracker.startLevel('Level 2: Work Divider');
+    metrics.startLevel(2, 'Level 2: Work Divider');
     checkpointer.startLevel(2);
 
-    delegation = await divideWork(level0, level1);
+    delegation = await divideWork(level0, level1, metrics);
     tracker.trackLLMCall();
 
     checkpointer.completeLevel(2, delegation, 'level2.json');
+    metrics.endLevel(2);
     tracker.completeLevel('Level 2: Work Divider');
   }
 
@@ -214,6 +224,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     tracker.logProgress(`Loaded ${annotations.length} annotations from checkpoint`);
   } else {
     tracker.startLevel('Level 3: Deep File Annotator');
+    metrics.startLevel(3, 'Level 3: Deep File Annotator');
 
     // Initialize Level 3 checkpoint if not already started
     if (checkpoint.levels[3]?.status !== 'in_progress') {
@@ -236,7 +247,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       // Run remaining tasks in parallel
       tracker.logProgress(`Running ${remainingTasks.length} tasks in parallel...`);
       const taskPromises = remainingTasks.map((task) =>
-        annotateTask(task, level0.files, repoRoot)
+        annotateTask(task, level0.files, repoRoot, metrics)
       );
       const results = await Promise.all(taskPromises);
       const newAnnotations = results.flat();
@@ -252,7 +263,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       tracker.logProgress(`Running ${remainingTasks.length} tasks sequentially...`);
 
       for (const task of remainingTasks) {
-        const taskAnnotations = await annotateTask(task, level0.files, repoRoot);
+        const taskAnnotations = await annotateTask(task, level0.files, repoRoot, metrics);
         annotations.push(...taskAnnotations);
 
         // Checkpoint this task's completion
@@ -268,6 +279,8 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
 
     // Mark Level 3 as completed and save final output
     checkpointer.completeLevel(3, annotations, CHECKPOINT_FILES.LEVEL3_PROGRESS);
+    metrics.recordFilesProcessed(3, annotations.length);
+    metrics.endLevel(3);
     tracker.completeLevel('Level 3: Deep File Annotator');
     tracker.logProgress(`Annotated ${annotations.length} files`);
   }
@@ -282,11 +295,13 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
 
   // ===== LEVEL 4: Consistency Validator =====
   tracker.startLevel('Level 4: Consistency Validator');
+  metrics.startLevel(4, 'Level 4: Consistency Validator');
   const validatorResult = await validateMap(annotations, graph, meta, {
     repoRoot,
     autofix,
     includeInfo: false,
   });
+  metrics.endLevel(4);
   tracker.completeLevel('Level 4: Consistency Validator');
 
   // Extract validation data
@@ -313,6 +328,14 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     validationIssues: stats.validation_issues,
   });
 
+  // ===== Complete metrics and write log =====
+  metrics.complete();
+  const metricsSummary = metrics.getSummary();
+  const logPath = writeMetricsLog(repoRoot, metricsSummary);
+
+  // Print compact metrics summary
+  printCompactSummary(metricsSummary, stats.files_annotated, logPath);
+
   // ===== Clean up signal handlers =====
   shutdownHandler.unregister();
 
@@ -323,6 +346,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     stats,
     validation,
     tracker,
+    metrics,
   };
 }
 
