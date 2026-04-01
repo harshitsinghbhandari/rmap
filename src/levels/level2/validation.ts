@@ -6,16 +6,21 @@
 
 import type { Level0Output, TaskDelegation } from '../../core/types.js';
 import { FILE, VALIDATION } from '../../config/index.js';
+import { ValidationError } from '../../core/index.js';
 
 /**
  * Validation error for division rules
+ * @deprecated Use ValidationError from core/errors.ts instead
  */
-export class DivisionRuleError extends Error {
+export class DivisionRuleError extends ValidationError {
   constructor(message: string) {
     super(message);
     this.name = 'DivisionRuleError';
   }
 }
+
+// Re-export ValidationError for direct use
+export { ValidationError };
 
 /**
  * Validate that task delegation follows division rules

@@ -117,8 +117,8 @@ test('loadCheckpoint: returns null when no checkpoint exists', () => {
   }
 });
 
-// Test: loadCheckpoint returns null for corrupted checkpoint
-test('loadCheckpoint: returns null for corrupted checkpoint file', () => {
+// Test: loadCheckpoint throws CheckpointError for corrupted checkpoint
+test('loadCheckpoint: throws CheckpointError for corrupted checkpoint file', () => {
   const tempDir = createTempDir();
 
   try {
@@ -130,8 +130,15 @@ test('loadCheckpoint: returns null for corrupted checkpoint file', () => {
     const statePath = path.join(checkpointDir, 'state.json');
     fs.writeFileSync(statePath, '{ invalid json }', 'utf8');
 
-    const loaded = loadCheckpoint(tempDir);
-    assert.strictEqual(loaded, null);
+    assert.throws(
+      () => loadCheckpoint(tempDir),
+      (error: Error) => {
+        return (
+          error.name === 'CheckpointError' &&
+          error.message.includes('Corrupted checkpoint file')
+        );
+      }
+    );
   } finally {
     cleanupTempDir(tempDir);
   }

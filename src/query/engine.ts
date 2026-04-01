@@ -12,6 +12,7 @@ import type {
   MetaJson,
   TagsJson,
 } from '../core/types.js';
+import { ValidationError, FileSystemError } from '../core/index.js';
 import {
   expandTagAliases,
   filterFilesByPath,
@@ -97,32 +98,36 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
     try {
       metaRaw = JSON.parse(metaContent);
     } catch (error) {
-      throw new Error(
-        `Failed to parse meta.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`
+      throw new ValidationError(
+        `Failed to parse meta.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`,
+        error instanceof Error ? error : undefined
       );
     }
 
     try {
       graphRaw = JSON.parse(graphContent);
     } catch (error) {
-      throw new Error(
-        `Failed to parse graph.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`
+      throw new ValidationError(
+        `Failed to parse graph.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`,
+        error instanceof Error ? error : undefined
       );
     }
 
     try {
       tagsRaw = JSON.parse(tagsContent);
     } catch (error) {
-      throw new Error(
-        `Failed to parse tags.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`
+      throw new ValidationError(
+        `Failed to parse tags.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`,
+        error instanceof Error ? error : undefined
       );
     }
 
     try {
       filesRaw = JSON.parse(annotationsContent);
     } catch (error) {
-      throw new Error(
-        `Failed to parse annotations.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`
+      throw new ValidationError(
+        `Failed to parse annotations.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`,
+        error instanceof Error ? error : undefined
       );
     }
 
@@ -133,7 +138,7 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
         .join('\n');
-      throw new Error(
+      throw new ValidationError(
         `Invalid meta.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
       );
     }
@@ -144,7 +149,7 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
         .join('\n');
-      throw new Error(
+      throw new ValidationError(
         `Invalid graph.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
       );
     }
@@ -155,7 +160,7 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
         .join('\n');
-      throw new Error(
+      throw new ValidationError(
         `Invalid tags.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
       );
     }
@@ -166,7 +171,7 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
         .join('\n');
-      throw new Error(
+      throw new ValidationError(
         `Invalid annotations.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
       );
     }
@@ -179,8 +184,10 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
     return { meta, graph, tags, files };
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-      throw new Error(
-        'Repository map not found. Run "rmap map" to build the map first.'
+      throw new FileSystemError(
+        'Repository map not found. Run "rmap map" to build the map first',
+        repoMapPath,
+        error
       );
     }
     throw error;
@@ -262,7 +269,7 @@ export async function queryByFile(
   // Find the file
   const file = findFileByPath(data.files, filePath);
   if (!file) {
-    throw new Error(`File not found in repository map: ${filePath}`);
+    throw new ValidationError(`File not found in repository map: ${filePath}`);
   }
 
   // Get dependencies (files this file imports)
@@ -303,7 +310,7 @@ export async function queryByPath(
   const filesInDir = filterFilesByPath(data.files, dirPath);
 
   if (filesInDir.length === 0) {
-    throw new Error(`No files found in directory: ${dirPath}`);
+    throw new ValidationError(`No files found in directory: ${dirPath}`);
   }
 
   // Rank files by relevance

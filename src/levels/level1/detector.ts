@@ -11,7 +11,7 @@ import * as fs from 'node:fs';
 import type { Level0Output, Level1Output, Module } from '../../core/types.js';
 import { validateLevel1Output, ValidationError } from './validation.js';
 import { DETECTION_MODEL, TOKEN } from '../../config/index.js';
-import { LLMClient, MetricsCollector } from '../../core/index.js';
+import { LLMClient, MetricsCollector, ConfigError } from '../../core/index.js';
 
 /**
  * Build a file tree structure for the LLM prompt
@@ -174,7 +174,7 @@ export async function detectStructure(
   // Check for API key
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY environment variable is not set');
+    throw new ConfigError('ANTHROPIC_API_KEY environment variable is not set');
   }
 
   // Initialize Anthropic client

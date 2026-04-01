@@ -5,16 +5,10 @@
  */
 
 import type { Level1Output, Module } from '../../core/types.js';
+import { ValidationError } from '../../core/index.js';
 
-/**
- * Validation error class
- */
-export class ValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ValidationError';
-  }
-}
+// Re-export ValidationError for backward compatibility
+export { ValidationError };
 
 /**
  * Check if value is a non-empty string
