@@ -12,6 +12,7 @@ import type {
   Level0Output,
   Level1Output,
   TaskDelegation,
+  DelegationTask,
   FileAnnotation,
 } from '../core/types.js';
 import { CHECKPOINT_FILES } from '../core/constants.js';
@@ -249,9 +250,9 @@ export class CheckpointOrchestrator {
    * @returns Remaining incomplete tasks
    */
   filterRemainingTasks(
-    tasks: Array<{ scope: string }>,
+    tasks: DelegationTask[],
     delegation: TaskDelegation
-  ): Array<{ scope: string }> {
+  ): DelegationTask[] {
     const completedIds = this.getCompletedTaskIds();
     if (completedIds.size === 0) {
       return tasks;
@@ -271,7 +272,7 @@ export class CheckpointOrchestrator {
    * @param completedIds - Current set of completed IDs
    */
   markTaskCompleted(
-    task: { scope: string },
+    task: DelegationTask,
     delegation: TaskDelegation,
     completedIds: Set<string>
   ): void {
@@ -293,7 +294,7 @@ export class CheckpointOrchestrator {
    * @param existingCompletedIds - Existing completed IDs
    */
   markTasksCompleted(
-    tasks: Array<{ scope: string }>,
+    tasks: DelegationTask[],
     delegation: TaskDelegation,
     existingCompletedIds: Set<string>
   ): void {
