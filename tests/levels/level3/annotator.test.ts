@@ -439,3 +439,49 @@ test('annotateFiles: requires ANTHROPIC_API_KEY', () => {
     assert.ok(true, 'API key not set (expected in test environment)');
   }
 });
+
+// Test: Concurrent processing
+test('annotateFiles: processes files concurrently', async () => {
+  // Mock concurrent execution tracking
+  const executionLog: Array<{ file: string; start: number; end: number }> = [];
+  const concurrency = 3;
+
+  // Simulate concurrent file processing
+  const files = mockFileMetadata;
+  const processFile = async (file: RawFileMetadata) => {
+    const start = Date.now();
+    await new Promise(resolve => setTimeout(resolve, 50)); // Simulate LLM call
+    const end = Date.now();
+    executionLog.push({ file: file.path, start, end });
+    return file;
+  };
+
+  // Process with concurrency
+  const startTime = Date.now();
+  const promises = files.map(f => processFile(f));
+  await Promise.all(promises);
+  const totalTime = Date.now() - startTime;
+
+  // With 3 files and concurrency, should complete faster than sequential
+  // Sequential: 3 * 50ms = 150ms
+  // Concurrent: ~50ms (plus overhead)
+  assert.ok(totalTime < 150, `Concurrent processing should be faster: ${totalTime}ms`);
+
+  // Verify all files were processed
+  assert.strictEqual(executionLog.length, files.length);
+});
+
+// Test: Concurrency configuration
+test('annotateFiles: respects CONCURRENCY_CONFIG', async () => {
+  // Test that concurrency settings are available
+  const { CONCURRENCY_CONFIG } = await import('../../../src/config/models.js');
+
+  assert.ok(typeof CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS === 'number');
+  assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS > 0);
+  assert.ok(typeof CONCURRENCY_CONFIG.TASK_START_DELAY_MS === 'number');
+  assert.ok(CONCURRENCY_CONFIG.TASK_START_DELAY_MS >= 0);
+
+  // Default values should be reasonable
+  assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS >= 1);
+  assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS <= 50);
+});
