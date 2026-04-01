@@ -11,6 +11,7 @@ import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { MetaJson } from '../core/types.js';
+import { UPDATE_THRESHOLDS } from '../core/constants.js';
 
 /**
  * Result of change detection analysis
@@ -94,15 +95,15 @@ export function detectChanges(
   if (hasNewTopLevelDir) {
     updateStrategy = 'full-rebuild';
     reason = 'New top-level directory detected';
-  } else if (totalChanges > 100) {
+  } else if (totalChanges > UPDATE_THRESHOLDS.MAX_DELTA_UPDATE) {
     updateStrategy = 'full-rebuild';
-    reason = `${totalChanges} files changed (>100)`;
-  } else if (totalChanges >= 20) {
+    reason = `${totalChanges} files changed (>${UPDATE_THRESHOLDS.MAX_DELTA_UPDATE})`;
+  } else if (totalChanges >= UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION) {
     updateStrategy = 'delta-with-validation';
-    reason = `${totalChanges} files changed (20-100)`;
+    reason = `${totalChanges} files changed (${UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION}-${UPDATE_THRESHOLDS.MAX_DELTA_UPDATE})`;
   } else {
     updateStrategy = 'delta';
-    reason = `${totalChanges} files changed (<20)`;
+    reason = `${totalChanges} files changed (<${UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION})`;
   }
 
   return {
