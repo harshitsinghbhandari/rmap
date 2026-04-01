@@ -96,6 +96,11 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
 
     // Basic validation of annotation structure
     for (const file of files) {
+      // Guard against null/undefined entries
+      if (!file || typeof file !== 'object') {
+        throw new Error('Invalid annotation entry: expected object');
+      }
+
       if (
         !file.path ||
         typeof file.path !== 'string' ||
