@@ -1,127 +1,175 @@
-# Checkpoint Integration - Task 2 Complete
+# Checkpoint Integration - Task 3 Complete
 
 ## What I Built
 
-Integrated the checkpoint system (from Task 1) into `src/coordinator/pipeline.ts` for Levels 0, 1, and 2:
+Implemented task-level checkpointing for Level 3 (Deep File Annotator) in `src/coordinator/pipeline.ts`. Level 3 is now fully resilient to interruption and can resume from any point of partial completion.
 
 ### Changes to `pipeline.ts`
-- **Added imports**: Imported checkpoint functions (`initCheckpoint`, `loadCheckpoint`, `validateCheckpoint`, `saveLevelOutput`, `loadLevelOutput`, `markLevelStarted`, `markLevelCompleted`) and `CheckpointState` type
-- **Added `resume` option**: Added optional `resume?: boolean` to `PipelineOptions` (defaults to `true`)
-- **Added `getGitCommit()` helper**: Utility function to get current git commit hash (extracted from level0 harvester pattern)
-- **Checkpoint initialization**: At pipeline start, loads existing checkpoint or creates new one with `initCheckpoint(repoPath, gitCommit)`
-- **Resume logic**: Validates checkpoint against current git commit, loads completed level outputs, skips completed work
-- **Level 0-2 checkpointing**: Each level now:
-  1. Checks if output already loaded from checkpoint
-  2. Calls `markLevelStarted()` before execution
-  3. Executes the level
-  4. Calls `saveLevelOutput()` to save results
-  5. Calls `markLevelCompleted()` to mark as done
+
+**Added helper functions** (lines 100-164):
+- `getTaskId(index, scope)`: Generates stable task IDs like `task_0_src_auth_`
+- `getLevel3ProgressPath(repoPath)`: Returns path to level3_progress.json
+- `loadLevel3Progress(repoPath)`: Loads saved annotations from checkpoint
+- `saveLevel3Progress(repoPath, annotations)`: Atomically saves annotations
+
+**Updated resume logic** (lines 188-228):
+- Added `level3Annotations` and `completedTaskIds` variables
+- Load Level 3 partial progress if status is 'in_progress'
+- Load completed annotations and task IDs from checkpoint
+- Log resume message with task count
+
+**Level 3 execution with checkpointing** (lines 284-376):
+- Skip entirely if Level 3 already completed (load from checkpoint)
+- Initialize task tracking on first run or resume
+- Filter out completed tasks using `completedTaskIds`
+- Sequential mode: checkpoint after each task completes
+- Parallel mode: checkpoint all tasks after Promise.all
+- Save final annotations and mark level completed
 
 ## Design Decisions
 
-### 1. Resume defaults to `true`
-**Why**: Makes checkpointing automatic without requiring user intervention. Pipeline auto-resumes if interrupted and re-run.
+### 1. Task ID generation from index + scope
+**Why**: Tasks don't have built-in IDs, so we generate stable ones. Using both index and scope prevents collisions and makes IDs human-readable for debugging.
 
-### 2. Variables declared as nullable at top level
-```typescript
-let level0: Level0Output | null = null;
-let level1: Level1Output | null = null;
-let delegation: TaskDelegation | null = null;
-```
-**Why**: Allows resume logic to populate them from checkpoint, then each level checks `if (!level0)` before running. Clean conditional execution pattern.
+### 2. Atomic writes for progress file
+**Why**: Uses temp file + rename pattern (same as checkpoint.ts) to prevent corruption if process dies mid-write.
 
-### 3. Git commit validation
-**Why**: Prevents resuming from stale checkpoint if code changed. If git commit differs, checkpoint is invalid and pipeline starts fresh.
+### 3. Filter tasks rather than track indices
+**Why**: More robust to task order changes. If delegation changes between runs (shouldn't happen but could), we still correctly identify completed work by scope.
 
-### 4. Checkpoint created even if resume is disabled
-**Why**: Even without resume, we still want to save checkpoints for potential future resume. The `resume` option only controls whether we *load* checkpoints, not whether we *create* them.
+### 4. Start with old annotations, append new ones
+**Why**: Simple and correct. We don't need to deduplicate because completed tasks are filtered out before execution.
 
-### 5. Used existing `getGitCommit()` pattern from level0
-**Why**: Consistency with existing codebase. Same error handling and fallback to 'unknown' if not a git repo.
+### 5. Parallel mode checkpoints at end, not incrementally
+**Why**: `Promise.all` doesn't give per-task completion hooks. Could refactor to use `Promise.allSettled` with manual tracking, but current approach is simpler and still prevents data loss (all-or-nothing for remaining tasks).
+
+### 6. Load full annotations on completed Level 3
+**Why**: If Level 3 finished, we skip execution entirely and load final result. Consistent with how Levels 0-2 work.
 
 ## Gotchas
 
-### 1. **Level ordering matters**
-The resume logic loads levels 0, 1, 2 in order. If you add checkpointing to Level 3, make sure to maintain this sequential check pattern.
+### 1. **Task ID stability matters**
+The `getTaskId` function uses `index` and `scope`. If task order changes between runs, task IDs change. This shouldn't happen in practice (Level 2 is deterministic), but if it does, resume would fail gracefully (restart Level 3 from scratch).
 
-### 2. **Checkpoint state is passed by reference**
-The `checkpoint` state object is passed to all `markLevel*()` functions and mutated in place. This means you don't need to reassign it after each call - the state is automatically updated.
+### 2. **Checkpoint state updates are in-place**
+The `updateLevelCheckpoint` function mutates the `checkpoint` object and saves it. No need to reassign the result.
 
-### 3. **LLM tracking still works**
-Even when skipping completed levels via resume, the `tracker.trackLLMCall()` calls are inside the conditional blocks, so we correctly don't track LLM usage for skipped work.
+### 3. **Sequential mode is fully incremental**
+Each task completion triggers a checkpoint. If interrupted after task 5 of 10, resume skips tasks 1-5 and continues from task 6.
 
-### 4. **Level 3 is not checkpointed yet**
-Level 3 has parallel task execution and needs task-level checkpointing (partial completion tracking). That's Task 3's job. Don't try to wrap it the same way as levels 0-2.
+### 4. **Parallel mode is all-or-nothing for remaining tasks**
+If 3 tasks were completed and 7 remain, and we interrupt during parallel execution of those 7, we lose progress on the partial work of those 7. They'll restart from scratch on resume. This is acceptable trade-off for simplicity.
 
-### 5. **Validation happens silently**
-If checkpoint validation fails (wrong version or git commit mismatch), we log a warning but continue with fresh checkpoint. No error thrown. This is intentional - failed resume should not block pipeline execution.
+### 5. **Annotations are saved to two files**
+- `level3_progress.json`: Incremental progress during execution
+- `level0.json`: Final output when level completes (via `saveLevelOutput`)
+This redundancy is intentional - progress file is for resume, level output is for completed state.
 
-## For the Next Agent (Task 3: Level 3 Task-Level Checkpointing)
+### 6. **Empty annotations array is valid**
+If no files match any task scope (unlikely but possible), Level 3 completes with empty array. This is handled correctly.
+
+## For the Next Agent (Task 4: Graceful Shutdown Handler)
+
+### What's Left to Do
+
+The checkpoint system now works for Levels 0-3, but it only saves on successful completion. If the process is killed (Ctrl+C, OOM, crash), Level 3 loses progress on the current task.
+
+**Task 4** is to add signal handlers that:
+1. Catch SIGINT (Ctrl+C) and SIGTERM
+2. Mark the current level as 'interrupted'
+3. Save partial progress
+4. Exit gracefully
 
 ### Where to Hook In
 
-Level 3 execution starts at line ~199 in `pipeline.ts`:
+You'll need to modify `src/coordinator/pipeline.ts`:
 
+1. **Add signal handlers at the start of `runPipeline`** (around line 172):
 ```typescript
-// ===== LEVEL 3: Deep File Annotator =====
-tracker.startLevel('Level 3: Deep File Annotator');
+// Set up graceful shutdown handlers
+const shutdown = (signal: string) => {
+  console.log(`\n⚠️  Received ${signal}, saving checkpoint...`);
 
-let annotations: FileAnnotation[];
+  // Mark current level as interrupted
+  if (checkpoint.current_level < 5) {
+    markLevelInterrupted(repoRoot, checkpoint, checkpoint.current_level);
+  }
 
-if (parallel && delegation.execution === 'parallel') {
-  // Run tasks in parallel
-  // ... Promise.all logic ...
-} else {
-  // Run tasks sequentially
-  // ... loop logic ...
-}
+  // For Level 3, save current progress
+  if (checkpoint.current_level === 3 && annotations.length > 0) {
+    saveLevel3Progress(repoRoot, annotations);
+  }
 
-tracker.completeLevel('Level 3: Deep File Annotator');
+  console.log('✓ Checkpoint saved. Run again to resume.');
+  process.exit(0);
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
 ```
 
-### What You Need to Do
+2. **Problem**: The `annotations` variable is scoped inside the Level 3 block. You'll need to hoist it to the top of `runPipeline` so the signal handler can access it.
 
-1. **Add task-level checkpoint tracking**:
-   - Use `checkpoint.levels[3].tasks_total`, `tasks_completed`, and `completed_task_ids` fields (already defined in `LevelCheckpoint` type in types.ts)
-   - Save partial results after each task completes (use `saveLevelOutput` for progress, or create new function for task outputs)
+3. **Problem**: Signal handlers are asynchronous, but `markLevelInterrupted` and `saveLevel3Progress` are synchronous. This should be fine, but test thoroughly.
 
-2. **Resume partial Level 3 work**:
-   - Check if Level 3 was interrupted (`status === 'in_progress'`)
-   - Load `completed_task_ids` from checkpoint
-   - Filter out completed tasks from `delegation.tasks`
-   - Only process remaining tasks
+4. **Edge case**: What if SIGINT arrives during Level 0-2? Those levels don't have partial progress to save. Just mark as interrupted and exit.
 
-3. **Checkpoint files**:
-   - Checkpoint infrastructure supports `CHECKPOINT_FILES.LEVEL3_PROGRESS` and `CHECKPOINT_FILES.LEVEL3_TASKS` (see constants.ts)
-   - Use these for tracking partial completion
+5. **Edge case**: What if SIGINT arrives during `Promise.all` in parallel mode? Some tasks might be mid-flight. You can't checkpoint them individually. Just save whatever's in `annotations` so far (which is from previous completed tasks only).
 
-4. **Parallel vs Sequential**:
-   - Sequential is easier - checkpoint after each task completes
-   - Parallel is harder - need to checkpoint as tasks complete (Promise.all doesn't give you per-task completion hooks)
-   - Consider using `Promise.allSettled()` or tracking completion with callbacks
+### Suggested Implementation Steps
+
+1. **Hoist variables**: Move `annotations` declaration to top-level in `runPipeline` so signal handlers can access it
+2. **Add signal handlers**: Register SIGINT and SIGTERM handlers at start of `runPipeline`
+3. **Implement graceful shutdown**:
+   - Log the signal
+   - Mark current level as interrupted
+   - Save Level 3 progress if applicable
+   - Exit cleanly
+4. **Test scenarios**:
+   - Ctrl+C during Level 0 (no partial progress)
+   - Ctrl+C during Level 3 sequential (should save completed tasks)
+   - Ctrl+C during Level 3 parallel (saves whatever's done)
+   - Kill -15 (SIGTERM) during Level 3
+5. **Remove handlers on completion**: Clean up handlers when pipeline completes normally
 
 ### Things to Watch Out For
 
-- **Don't break the existing resume flow**: Levels 0-2 resume is already working. Make sure your Level 3 changes integrate smoothly.
-- **Test both parallel and sequential modes**: The `parallel` option affects Level 3 execution.
-- **Annotations array**: Level 3 produces `FileAnnotation[]` by flattening task results. When resuming, you need to combine old annotations with new ones.
-- **Duplicate annotations**: Make sure you don't re-annotate files that were already completed. Track by task ID, not file path.
-- **checkpoint state updates**: Call `markLevelStarted(repoPath, checkpoint, 3)` before Level 3 starts, and update task counts as you go.
+- **Don't double-checkpoint**: If Level 3 completes normally, it already saves. Don't save again in cleanup.
+- **Handler cleanup**: Remove signal handlers when pipeline finishes, or they'll leak between test runs
+- **Process.exit timing**: Make sure all I/O is flushed before `process.exit(0)`. Node usually handles this, but test it.
+- **Partial parallel tasks**: You can't checkpoint mid-Promise.all. Document this limitation.
+- **Multiple signals**: If user spams Ctrl+C, handler might fire multiple times. Add a guard flag.
 
-### Suggested Approach
+### Files to Study
 
-1. Start by handling the **sequential case** first (simpler)
-2. Add checkpoint after each task in the loop
-3. Save task ID to `completed_task_ids` after each completion
-4. Update `tasks_completed` counter
-5. Then tackle **parallel case** (harder, needs concurrent checkpoint updates)
+- `src/coordinator/pipeline.ts` - where signal handlers go
+- `src/coordinator/checkpoint.ts` - `markLevelInterrupted` is already implemented
+- Node.js docs on process signals: https://nodejs.org/api/process.html#signal-events
 
 ### Testing Your Changes
 
-After implementing, test these scenarios:
-1. Fresh run (no checkpoint) - should work normally
-2. Interrupt during Level 3 sequential - resume should skip completed tasks
-3. Interrupt during Level 3 parallel - resume should skip completed tasks
-4. Complete Level 3, interrupt Level 4 - resume should skip Level 3 entirely
+After implementing:
+1. Run pipeline and press Ctrl+C during Level 3 sequential
+2. Verify checkpoint shows 'interrupted' status
+3. Re-run pipeline and verify it resumes from the checkpoint
+4. Run pipeline to completion and verify handlers don't interfere
+5. Test SIGTERM as well (kill -15 <pid>)
 
-Good luck! The infrastructure is all there in checkpoint.ts, you just need to wire it up for Level 3's task-based execution model.
+### Expected Output
+
+When interrupted:
+```
+⚠️  Received SIGINT, saving checkpoint...
+✓ Checkpoint saved. Run again to resume.
+```
+
+When resumed:
+```
+📋 Found valid checkpoint, resuming from last completed level...
+  ✓ Level 0 already completed
+  ✓ Level 1 already completed
+  ✓ Level 2 already completed
+  ⏸️  Level 3 partially completed: 5 tasks done
+```
+
+Good luck! The checkpoint infrastructure is solid, you just need to wire up the signal handlers.
