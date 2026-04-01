@@ -51,9 +51,32 @@ describe('Map Command', () => {
     );
   });
 
-  test('should have exactly three options', () => {
+  test('should support --resume option', () => {
     const options = mapCommand.options;
-    assert.strictEqual(options.length, 3, 'Command should have exactly 3 options');
+    const resumeOption = options.find((opt) => opt.long === '--resume');
+
+    assert(resumeOption, 'Should have --resume option');
+    assert(
+      resumeOption.description.toLowerCase().includes('resume'),
+      'Option description should mention resume'
+    );
+  });
+
+  test('should support --no-resume option', () => {
+    const options = mapCommand.options;
+    const noResumeOption = options.find((opt) => opt.long === '--no-resume');
+
+    assert(noResumeOption, 'Should have --no-resume option');
+    assert(
+      noResumeOption.description.toLowerCase().includes('checkpoint') ||
+        noResumeOption.description.toLowerCase().includes('fresh'),
+      'Option description should mention checkpoint or fresh'
+    );
+  });
+
+  test('should have exactly five options', () => {
+    const options = mapCommand.options;
+    assert.strictEqual(options.length, 5, 'Command should have exactly 5 options');
   });
 });
 
