@@ -9,7 +9,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { Level0Output, Level1Output, TaskDelegation, DelegationTask } from '../../core/types.js';
 import { MAX_FILES_PER_TASK } from '../../core/constants.js';
 import { buildWorkDivisionPrompt } from './prompt.js';
-import { DIVISION_MODEL, RETRY_CONFIG } from '../../config/models.js';
+import { DIVISION_MODEL } from '../../config/models.js';
+import { LLMClient } from '../../core/llm-client.js';
 
 /**
  * Validation error for task delegation
@@ -21,69 +22,6 @@ export class DivisionValidationError extends Error {
   }
 }
 
-/**
- * Sleep for specified milliseconds
- */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-/**
- * Call Claude API with retry logic for rate limits
- */
-async function callClaudeWithRetry(
-  client: Anthropic,
-  prompt: string,
-  maxRetries: number = RETRY_CONFIG.MAX_RETRIES
-): Promise<string> {
-  let lastError: Error | null = null;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      const response = await client.messages.create({
-        model: DIVISION_MODEL,
-        max_tokens: 4000,
-        temperature: 0,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      });
-
-      // Extract text from response
-      const content = response.content[0];
-      if (content.type !== 'text') {
-        throw new Error('Unexpected response type from Claude');
-      }
-
-      return content.text;
-    } catch (error) {
-      lastError = error as Error;
-
-      // Check if it's a rate limit error
-      if (error instanceof Anthropic.RateLimitError) {
-        if (attempt < maxRetries) {
-          const waitTime = Math.pow(2, attempt) * RETRY_CONFIG.BASE_BACKOFF_MS;
-          console.log(`Rate limit hit. Retrying in ${waitTime / 1000}s... (attempt ${attempt}/${maxRetries})`);
-          await sleep(waitTime);
-          continue;
-        }
-      }
-
-      // For other API errors, don't retry
-      if (error instanceof Anthropic.APIError) {
-        throw new Error(`Claude API error: ${error.message}`);
-      }
-
-      // For non-API errors, throw immediately
-      throw error;
-    }
-  }
-
-  throw new Error(`Failed after ${maxRetries} retries: ${lastError?.message}`);
-}
 
 /**
  * Validate a single delegation task
@@ -219,7 +157,8 @@ export async function divideWork(
   }
 
   // Initialize Anthropic client
-  const client = new Anthropic({ apiKey });
+  const anthropicClient = new Anthropic({ apiKey });
+  const llmClient = new LLMClient(anthropicClient);
 
   console.log('Starting Level 2 work division...');
   console.log('Using Claude Sonnet for intelligent task planning');
@@ -229,7 +168,10 @@ export async function divideWork(
   const prompt = buildWorkDivisionPrompt(level0, level1);
 
   // Call Claude with retry logic
-  const responseText = await callClaudeWithRetry(client, prompt);
+  const responseText = await llmClient.sendMessage(prompt, {
+    model: DIVISION_MODEL,
+    maxTokens: 4000,
+  });
 
   // Parse and validate response
   const delegation = parseAndValidateResponse(responseText, level0.total_files);
