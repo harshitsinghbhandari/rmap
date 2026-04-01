@@ -11,7 +11,7 @@ import * as fs from 'node:fs';
 import type { Level0Output, Level1Output, Module } from '../../core/types.js';
 import { validateLevel1Output, ValidationError } from './validation.js';
 import { DETECTION_MODEL } from '../../config/models.js';
-import { LLMClient } from '../../core/llm-client.js';
+import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
  * Build a file tree structure for the LLM prompt
@@ -163,11 +163,13 @@ function parseAndValidateResponse(responseText: string): Level1Output {
  *
  * @param level0 - Output from Level 0 metadata harvester
  * @param repoRoot - Absolute path to repository root
+ * @param metrics - Optional metrics collector for tracking token usage
  * @returns Level1Output with structure and conventions
  */
 export async function detectStructure(
   level0: Level0Output,
-  repoRoot: string
+  repoRoot: string,
+  metrics?: MetricsCollector
 ): Promise<Level1Output> {
   // Check for API key
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -186,13 +188,22 @@ export async function detectStructure(
   const prompt = buildPrompt(level0, repoRoot);
 
   // Call Claude with retry logic
-  const responseText = await llmClient.sendMessage(prompt, {
+  const response = await llmClient.sendMessage(prompt, {
     model: DETECTION_MODEL,
     maxTokens: 2000,
   });
 
+  // Record metrics if collector provided
+  if (metrics) {
+    metrics.recordLLMCall({
+      model: response.model,
+      inputTokens: response.inputTokens,
+      outputTokens: response.outputTokens,
+    });
+  }
+
   // Parse and validate response
-  const result = parseAndValidateResponse(responseText);
+  const result = parseAndValidateResponse(response.text);
 
   console.log('✓ Structure detection complete');
   console.log(`  Repository: ${result.repo_name}`);

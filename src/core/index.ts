@@ -55,6 +55,15 @@ export { ConcurrencyPool } from './concurrency.js';
 export type { ConcurrencyPoolOptions, TaskResult } from './concurrency.js';
 // Export LLM client with retry logic
 export { LLMClient, withRetry } from './llm-client.js';
-export type { RetryConfig, LLMCallOptions } from './llm-client.js';
+export type { RetryConfig, LLMCallOptions, LLMResponse } from './llm-client.js';
 // Export model configuration types
 export type { AgentSize } from '../config/models.js';
+// Export metrics collection and logging
+export { MetricsCollector, MODEL_PRICING } from './metrics.js';
+export type { LevelMetrics, MetricsSummary, LLMCallMetrics } from './metrics.js';
+export {
+  writeMetricsLog,
+  formatMetricsSummary,
+  printCompactSummary,
+  getLatestMetrics,
+} from './metrics-logger.js';

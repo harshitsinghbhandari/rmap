@@ -13,7 +13,7 @@ import { ConcurrencyPool } from '../../core/concurrency.js';
 import { buildAnnotationPrompt } from './prompt.js';
 import { parseAnnotationResponse, AnnotationValidationError } from './parser.js';
 import { ANNOTATION_MODEL_MAP, CONCURRENCY_CONFIG } from '../../config/models.js';
-import { LLMClient } from '../../core/llm-client.js';
+import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
  * Check if a file is binary
@@ -71,6 +71,7 @@ function readFileContent(filePath: string): string | null {
  * @param llmClient - LLM client with retry logic
  * @param model - Claude model to use
  * @param repoRoot - Repository root path
+ * @param metrics - Optional metrics collector for tracking token usage
  * @returns FileAnnotation or null if file cannot be annotated
  */
 async function annotateFile(
@@ -78,7 +79,8 @@ async function annotateFile(
   metadata: RawFileMetadata,
   llmClient: LLMClient,
   model: string,
-  repoRoot: string
+  repoRoot: string,
+  metrics?: MetricsCollector
 ): Promise<FileAnnotation | null> {
   // Read file content
   const content = readFileContent(filePath);
@@ -91,13 +93,22 @@ async function annotateFile(
     const prompt = buildAnnotationPrompt(metadata.path, content, metadata);
 
     // Call LLM with retry
-    const responseText = await llmClient.sendMessage(prompt, {
+    const response = await llmClient.sendMessage(prompt, {
       model,
       maxTokens: 2000,
     });
 
+    // Record metrics if collector provided
+    if (metrics) {
+      metrics.recordLLMCall({
+        model: response.model,
+        inputTokens: response.inputTokens,
+        outputTokens: response.outputTokens,
+      });
+    }
+
     // Parse and validate response
-    const annotation = parseAnnotationResponse(responseText, metadata, repoRoot);
+    const annotation = parseAnnotationResponse(response.text, metadata, repoRoot);
 
     return annotation;
   } catch (error) {
@@ -113,12 +124,22 @@ async function annotateFile(
         const prompt = buildAnnotationPrompt(metadata.path, content, metadata);
         const retryPrompt = prompt + '\n\nIMPORTANT: Your previous response was malformed. Please respond with valid JSON only.';
 
-        const responseText = await llmClient.sendMessage(retryPrompt, {
+        const retryResponse = await llmClient.sendMessage(retryPrompt, {
           model,
           maxTokens: 2000,
           retryConfig: { maxRetries: 1 },
         });
-        const annotation = parseAnnotationResponse(responseText, metadata, repoRoot);
+
+        // Record retry metrics
+        if (metrics) {
+          metrics.recordLLMCall({
+            model: retryResponse.model,
+            inputTokens: retryResponse.inputTokens,
+            outputTokens: retryResponse.outputTokens,
+          });
+        }
+
+        const annotation = parseAnnotationResponse(retryResponse.text, metadata, repoRoot);
 
         console.log(`✓ Retry successful for ${metadata.path}`);
         return annotation;
@@ -145,6 +166,9 @@ export interface AnnotationOptions {
 
   /** LLM client (optional, will be created if not provided) */
   llmClient?: LLMClient;
+
+  /** Metrics collector (optional, for tracking token usage) */
+  metrics?: MetricsCollector;
 }
 
 /**
@@ -158,7 +182,7 @@ export async function annotateFiles(
   files: RawFileMetadata[],
   options: AnnotationOptions
 ): Promise<FileAnnotation[]> {
-  const { agentSize, repoRoot, llmClient: providedLLMClient } = options;
+  const { agentSize, repoRoot, llmClient: providedLLMClient, metrics } = options;
 
   // Initialize client if not provided
   let llmClient = providedLLMClient;
@@ -197,7 +221,7 @@ export async function annotateFiles(
     async (metadata, index): Promise<FileAnnotation> => {
       const absolutePath = path.join(repoRoot, metadata.path);
 
-      const annotation = await annotateFile(absolutePath, metadata, llmClient, model, repoRoot);
+      const annotation = await annotateFile(absolutePath, metadata, llmClient, model, repoRoot, metrics);
 
       completedCount++;
       if (completedCount % 10 === 0 || completedCount === totalCount) {
@@ -227,12 +251,14 @@ export async function annotateFiles(
  * @param task - Delegation task from Level 2
  * @param allFiles - All file metadata from Level 0
  * @param repoRoot - Repository root path
+ * @param metrics - Optional metrics collector for tracking token usage
  * @returns Array of FileAnnotation
  */
 export async function annotateTask(
   task: DelegationTask,
   allFiles: RawFileMetadata[],
-  repoRoot: string
+  repoRoot: string,
+  metrics?: MetricsCollector
 ): Promise<FileAnnotation[]> {
   console.log(`\nProcessing task: ${task.scope}`);
   console.log(`Agent size: ${task.agent_size}`);
@@ -259,5 +285,6 @@ export async function annotateTask(
   return annotateFiles(scopeFiles, {
     agentSize: task.agent_size,
     repoRoot,
+    metrics,
   });
 }
