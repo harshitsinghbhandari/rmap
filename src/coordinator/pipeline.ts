@@ -38,6 +38,7 @@ import {
   loadLevelOutput,
   markLevelStarted,
   markLevelCompleted,
+  markLevelInterrupted,
   updateLevelCheckpoint,
 } from './checkpoint.js';
 import * as fs from 'node:fs';
