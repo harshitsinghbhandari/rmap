@@ -130,14 +130,17 @@ export const TAG_ALIASES: Record<string, Tag[]> = {
  *
  * Determines whether to do a delta update or full rebuild based on
  * the number of files changed since the last map.
+ *
+ * Strategy selection:
+ * - files < MIN_DELTA_WITH_VALIDATION: delta update only
+ * - files >= MIN_DELTA_WITH_VALIDATION and <= MAX_DELTA_UPDATE: delta update with validation
+ * - files > MAX_DELTA_UPDATE: force full rebuild
  */
 export const UPDATE_THRESHOLDS = {
-  /** Below this: delta update only */
-  DELTA_ONLY: 20,
-  /** Between DELTA_ONLY and FULL_REBUILD: delta update + validation */
-  DELTA_WITH_VALIDATION: 100,
-  /** Above FULL_REBUILD: force full rebuild */
-  FULL_REBUILD: 100,
+  /** Minimum files to trigger validation (delta-only if below this) */
+  MIN_DELTA_WITH_VALIDATION: 20,
+  /** Maximum files for delta update (full rebuild if above this) */
+  MAX_DELTA_UPDATE: 100,
 } as const;
 
 /**

@@ -61,9 +61,10 @@ test('TAG_ALIASES.auth expands to correct tags', () => {
 });
 
 test('UPDATE_THRESHOLDS has correct values', () => {
-  assert.strictEqual(UPDATE_THRESHOLDS.DELTA_ONLY, 20);
-  assert.strictEqual(UPDATE_THRESHOLDS.DELTA_WITH_VALIDATION, 100);
-  assert.strictEqual(UPDATE_THRESHOLDS.FULL_REBUILD, 100);
+  assert.strictEqual(UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION, 20);
+  assert.strictEqual(UPDATE_THRESHOLDS.MAX_DELTA_UPDATE, 100);
+  // Verify thresholds create distinct ranges
+  assert.ok(UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION < UPDATE_THRESHOLDS.MAX_DELTA_UPDATE);
 });
 
 test('MAX_TAGS_PER_FILE is correct', () => {
