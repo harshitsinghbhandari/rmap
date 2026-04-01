@@ -51,7 +51,9 @@ test('TokenBucket: allows multiple acquisitions up to capacity', async () => {
   await bucket.acquire(3);
   await bucket.acquire(4);
   await bucket.acquire(2);
-  assert.strictEqual(bucket.getCurrentTokens(), 1);
+  // Allow for small floating point variance due to continuous refill
+  const remaining = bucket.getCurrentTokens();
+  assert.ok(remaining >= 1 && remaining < 1.1, `Expected ~1 token, got ${remaining}`);
 });
 
 test('TokenBucket: throws error if requesting more than capacity', async () => {
@@ -164,8 +166,9 @@ test('RateLimiter: handles multiple acquisitions', async () => {
   await limiter.acquire(1500);
 
   const state = limiter.getState();
-  assert.strictEqual(state.requests.current, 27); // 30 - 3 requests
-  assert.strictEqual(state.tokens.current, 15000); // 18000 - 3000 tokens
+  // Allow for small floating point variance due to continuous refill
+  assert.ok(state.requests.current >= 27 && state.requests.current < 27.1);
+  assert.ok(state.tokens.current >= 15000 && state.tokens.current < 15010);
 });
 
 // Test: RateLimiter waiting behavior
@@ -225,8 +228,9 @@ test('RateLimiter: enforces both limits simultaneously', async () => {
   await limiter.acquire(3000);
 
   const state = limiter.getState();
-  assert.strictEqual(state.requests.current, 118); // 120 - 2
-  assert.strictEqual(state.tokens.current, 0); // 6000 - 6000
+  // Allow for small floating point variance due to continuous refill
+  assert.ok(state.requests.current >= 118 && state.requests.current < 118.1);
+  assert.ok(state.tokens.current >= 0 && state.tokens.current < 10);
 
   const startTime = Date.now();
 
