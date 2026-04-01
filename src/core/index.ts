@@ -42,6 +42,14 @@ export {
 // Export Tag type
 export type { Tag } from './constants.js';
 
+// Export git utilities
+export {
+  validateGitRef,
+  getGitDiffSafe,
+  getCommitTimestampSafe,
+  getCommitCountSafe,
+  getCurrentCommitSafe,
+} from './git-utils.js';
 // Export concurrency utilities
 export { ConcurrencyPool } from './concurrency.js';
 export type { ConcurrencyPoolOptions, TaskResult } from './concurrency.js';
