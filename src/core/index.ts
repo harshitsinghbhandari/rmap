@@ -67,3 +67,14 @@ export {
   printCompactSummary,
   getLatestMetrics,
 } from './metrics-logger.js';
+// Export error classes
+export {
+  RmapError,
+  ConfigError,
+  GitError,
+  LLMError,
+  ParseError,
+  ValidationError,
+  FileSystemError,
+  CheckpointError,
+} from './errors.js';
