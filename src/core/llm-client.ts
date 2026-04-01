@@ -37,6 +37,20 @@ export interface LLMCallOptions {
 }
 
 /**
+ * Response from LLM API call including usage metrics
+ */
+export interface LLMResponse {
+  /** Text content of the response */
+  text: string;
+  /** Number of input tokens consumed */
+  inputTokens: number;
+  /** Number of output tokens generated */
+  outputTokens: number;
+  /** Model used for this call */
+  model: string;
+}
+
+/**
  * Sleep for specified milliseconds
  */
 function sleep(ms: number): Promise<void> {
@@ -107,10 +121,10 @@ export class LLMClient {
    *
    * @param prompt - The user prompt to send
    * @param options - LLM call options (model, maxTokens, etc.)
-   * @returns The text response from the LLM
+   * @returns LLM response with text and usage metrics
    * @throws Error if all retries are exhausted or non-retryable error occurs
    */
-  async sendMessage(prompt: string, options: LLMCallOptions): Promise<string> {
+  async sendMessage(prompt: string, options: LLMCallOptions): Promise<LLMResponse> {
     const config = {
       ...this.defaultRetryConfig,
       ...(options.retryConfig || {}),
@@ -138,7 +152,13 @@ export class LLMClient {
           throw new Error('Unexpected response type from Claude');
         }
 
-        return content.text;
+        // Return response with usage metrics
+        return {
+          text: content.text,
+          inputTokens: response.usage.input_tokens,
+          outputTokens: response.usage.output_tokens,
+          model: options.model,
+        };
       } catch (error) {
         lastError = error as Error;
 
