@@ -9,6 +9,7 @@
  * 5. Level 4: Consistency validator (script + optional LLM)
  */
 
+import { execSync } from 'node:child_process';
 import type {
   Level0Output,
   Level1Output,
@@ -18,6 +19,7 @@ import type {
   MetaJson,
   StatsJson,
   ValidationJson,
+  CheckpointState,
 } from '../core/types.js';
 import { SCHEMA_VERSION } from '../core/constants.js';
 import { harvest } from '../levels/level0/index.js';
@@ -28,6 +30,15 @@ import { validateMap } from '../levels/level4/index.js';
 import { buildGraph } from './graph.js';
 import { ProgressTracker } from './progress.js';
 import { readExistingMeta } from './assembler.js';
+import {
+  initCheckpoint,
+  loadCheckpoint,
+  validateCheckpoint,
+  saveLevelOutput,
+  loadLevelOutput,
+  markLevelStarted,
+  markLevelCompleted,
+} from './checkpoint.js';
 
 /**
  * Pipeline options
@@ -41,6 +52,8 @@ export interface PipelineOptions {
   autofix?: boolean;
   /** Run Level 3 tasks in parallel (default: true) */
   parallel?: boolean;
+  /** Resume from checkpoint if available (default: true) */
+  resume?: boolean;
 }
 
 /**
@@ -62,35 +75,122 @@ export interface PipelineResult {
 }
 
 /**
+ * Get current git commit hash
+ *
+ * @param repoRoot - Absolute path to repository root
+ * @returns Git commit hash or 'unknown' if not a git repository
+ */
+function getGitCommit(repoRoot: string): string {
+  try {
+    const commit = execSync('git rev-parse HEAD', {
+      cwd: repoRoot,
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    }).trim();
+    return commit;
+  } catch (error) {
+    console.warn('Warning: Could not get git commit hash. Not a git repository?');
+    return 'unknown';
+  }
+}
+
+/**
  * Run the complete map building pipeline
  *
  * @param options - Pipeline options
  * @returns Pipeline result with all generated data
  */
 export async function runPipeline(options: PipelineOptions): Promise<PipelineResult> {
-  const { repoRoot, forceFullRebuild = false, autofix = true, parallel = true } = options;
+  const { repoRoot, forceFullRebuild = false, autofix = true, parallel = true, resume = true } = options;
   const tracker = new ProgressTracker();
 
   console.log('\n🗺️  Starting rmap pipeline...');
   console.log(`Repository: ${repoRoot}`);
   console.log(`Mode: ${forceFullRebuild ? 'FULL REBUILD' : 'AUTO'}`);
 
+  // Get current git commit for checkpoint
+  const currentCommit = getGitCommit(repoRoot);
+
+  // Try to load existing checkpoint
+  let checkpoint: CheckpointState | null = null;
+  let level0: Level0Output | null = null;
+  let level1: Level1Output | null = null;
+  let delegation: TaskDelegation | null = null;
+
+  if (resume) {
+    checkpoint = loadCheckpoint(repoRoot);
+
+    if (checkpoint) {
+      const validation = validateCheckpoint(checkpoint, currentCommit);
+
+      if (validation.valid) {
+        console.log('📋 Found valid checkpoint, resuming from last completed level...');
+
+        // Load completed levels
+        if (checkpoint.levels[0]?.status === 'completed') {
+          level0 = loadLevelOutput<Level0Output>(repoRoot, 0);
+          console.log('  ✓ Level 0 already completed');
+        }
+
+        if (checkpoint.levels[1]?.status === 'completed') {
+          level1 = loadLevelOutput<Level1Output>(repoRoot, 1);
+          console.log('  ✓ Level 1 already completed');
+        }
+
+        if (checkpoint.levels[2]?.status === 'completed') {
+          delegation = loadLevelOutput<TaskDelegation>(repoRoot, 2);
+          console.log('  ✓ Level 2 already completed');
+        }
+      } else {
+        console.log(`⚠️  Checkpoint invalid: ${validation.error}`);
+        console.log('   Starting fresh...');
+        checkpoint = null;
+      }
+    }
+  }
+
+  // Initialize new checkpoint if none exists or resume is disabled
+  if (!checkpoint) {
+    checkpoint = initCheckpoint(repoRoot, currentCommit);
+  }
+
   // ===== LEVEL 0: Metadata Harvester =====
-  tracker.startLevel('Level 0: Metadata Harvester');
-  const level0: Level0Output = await harvest(repoRoot);
-  tracker.completeLevel('Level 0: Metadata Harvester');
+  if (!level0) {
+    tracker.startLevel('Level 0: Metadata Harvester');
+    markLevelStarted(repoRoot, checkpoint, 0);
+
+    level0 = await harvest(repoRoot);
+
+    saveLevelOutput(repoRoot, 0, level0);
+    markLevelCompleted(repoRoot, checkpoint, 0, 'level0.json');
+    tracker.completeLevel('Level 0: Metadata Harvester');
+  }
 
   // ===== LEVEL 1: Structure Detector =====
-  tracker.startLevel('Level 1: Structure Detector');
-  const level1: Level1Output = await detectStructure(level0, repoRoot);
-  tracker.trackLLMCall(); // Track LLM usage (actual token count would come from API response)
-  tracker.completeLevel('Level 1: Structure Detector');
+  if (!level1) {
+    tracker.startLevel('Level 1: Structure Detector');
+    markLevelStarted(repoRoot, checkpoint, 1);
+
+    level1 = await detectStructure(level0, repoRoot);
+    tracker.trackLLMCall(); // Track LLM usage (actual token count would come from API response)
+
+    saveLevelOutput(repoRoot, 1, level1);
+    markLevelCompleted(repoRoot, checkpoint, 1, 'level1.json');
+    tracker.completeLevel('Level 1: Structure Detector');
+  }
 
   // ===== LEVEL 2: Work Divider =====
-  tracker.startLevel('Level 2: Work Divider');
-  const delegation: TaskDelegation = await divideWork(level0, level1);
-  tracker.trackLLMCall(); // Track LLM usage
-  tracker.completeLevel('Level 2: Work Divider');
+  if (!delegation) {
+    tracker.startLevel('Level 2: Work Divider');
+    markLevelStarted(repoRoot, checkpoint, 2);
+
+    delegation = await divideWork(level0, level1);
+    tracker.trackLLMCall(); // Track LLM usage
+
+    saveLevelOutput(repoRoot, 2, delegation);
+    markLevelCompleted(repoRoot, checkpoint, 2, 'level2.json');
+    tracker.completeLevel('Level 2: Work Divider');
+  }
 
   tracker.logProgress(
     `Work division: ${delegation.tasks.length} tasks, ${delegation.execution} execution`
