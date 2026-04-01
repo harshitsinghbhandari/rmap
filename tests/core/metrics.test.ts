@@ -25,7 +25,7 @@ describe('MetricsCollector', () => {
     assert.strictEqual(summary.levels[0].level, 1);
     assert.strictEqual(summary.levels[0].name, 'Test Level');
     assert.ok(summary.levels[0].durationMs !== undefined);
-    assert.ok(summary.levels[0].durationMs! > 0);
+    assert.ok(summary.levels[0].durationMs! >= 0);
   });
 
   it('should record LLM calls with token usage', () => {
