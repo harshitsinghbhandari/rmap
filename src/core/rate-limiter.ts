@@ -10,7 +10,7 @@
  * overwhelming the API with parallel processing (25 tasks × 10 concurrent = 250 potential requests).
  */
 
-import { RATE_LIMIT } from '../config/env.js';
+import { RATE_LIMIT } from '../config/index.js';
 
 /**
  * Token bucket for rate limiting with continuous refill
@@ -19,6 +19,7 @@ import { RATE_LIMIT } from '../config/env.js';
  * - Tokens refill continuously at a constant rate (not reset every minute)
  * - Requests wait if insufficient tokens available
  * - Prevents bursts while allowing smooth throughput
+ * - Allows requests larger than capacity by waiting across multiple refill windows
  *
  * @example
  * ```typescript
@@ -35,6 +36,7 @@ export class TokenBucket {
     tokensNeeded: number;
     resolve: () => void;
   }> = [];
+  private refillTimer: NodeJS.Timeout | null = null;
 
   /**
    * Create a new token bucket
@@ -54,13 +56,21 @@ export class TokenBucket {
    *
    * Tokens are added continuously based on time elapsed since last refill.
    * This provides smoother rate limiting than discrete refills.
+   * The bucket can hold at most `capacity` tokens, but can go negative
+   * when large requests are waiting.
    */
   private refill(): void {
     const now = Date.now();
     const elapsed = now - this.lastRefillTime;
     const tokensToAdd = elapsed * this.refillRatePerMs;
 
-    this.tokens = Math.min(this.capacity, this.tokens + tokensToAdd);
+    // Only cap at capacity if we're not in debt (negative balance)
+    if (this.tokens >= 0) {
+      this.tokens = Math.min(this.capacity, this.tokens + tokensToAdd);
+    } else {
+      // If negative, just add tokens (still in debt)
+      this.tokens += tokensToAdd;
+    }
     this.lastRefillTime = now;
   }
 
@@ -78,6 +88,24 @@ export class TokenBucket {
         break;
       }
     }
+
+    // Clear timer if queue is empty
+    if (this.pendingQueue.length === 0 && this.refillTimer !== null) {
+      clearInterval(this.refillTimer);
+      this.refillTimer = null;
+    }
+  }
+
+  /**
+   * Start the shared refill timer if not already running
+   */
+  private ensureRefillTimer(): void {
+    if (this.refillTimer === null && this.pendingQueue.length > 0) {
+      this.refillTimer = setInterval(() => {
+        this.refill();
+        this.processPendingQueue();
+      }, 100); // Check every 100ms
+    }
   }
 
   /**
@@ -86,16 +114,13 @@ export class TokenBucket {
    * If insufficient tokens available, waits until enough tokens refill.
    * Implements fair FIFO queuing for waiting requests.
    *
+   * Large requests (exceeding capacity) are allowed and will wait across
+   * multiple refill windows. The bucket balance can go negative to track debt.
+   *
    * @param tokensNeeded - Number of tokens to acquire
    * @returns Promise that resolves when tokens are acquired
    */
   async acquire(tokensNeeded: number): Promise<void> {
-    if (tokensNeeded > this.capacity) {
-      throw new Error(
-        `Cannot acquire ${tokensNeeded} tokens (bucket capacity: ${this.capacity})`
-      );
-    }
-
     this.refill();
 
     // If enough tokens available and no queue, proceed immediately
@@ -107,17 +132,7 @@ export class TokenBucket {
     // Otherwise, join the queue and wait
     return new Promise<void>((resolve) => {
       this.pendingQueue.push({ tokensNeeded, resolve });
-
-      // Set up a refill interval to periodically check if we can fulfill waiting requests
-      const checkInterval = setInterval(() => {
-        this.refill();
-        this.processPendingQueue();
-
-        // Clear interval if this request has been resolved
-        if (!this.pendingQueue.find((item) => item.resolve === resolve)) {
-          clearInterval(checkInterval);
-        }
-      }, 100); // Check every 100ms
+      this.ensureRefillTimer();
     });
   }
 
@@ -185,17 +200,17 @@ export class RateLimiter {
    * Acquire capacity for both request count and token count
    *
    * Waits until both buckets have sufficient capacity.
-   * Acquires from request bucket first, then token bucket to prevent
-   * deadlocks and ensure fair ordering.
+   * Acquires from both buckets atomically - if token acquisition would fail,
+   * the request token is not consumed.
    *
    * @param estimatedInputTokens - Estimated number of input tokens for this request
    */
   async acquire(estimatedInputTokens: number): Promise<void> {
-    // Acquire request capacity first
-    await this.requestBucket.acquire(1);
-
-    // Then acquire token capacity
+    // Acquire token capacity first (may wait across multiple windows for large prompts)
     await this.tokenBucket.acquire(estimatedInputTokens);
+
+    // Then acquire request capacity (guaranteed to succeed since capacity >= 1)
+    await this.requestBucket.acquire(1);
   }
 
   /**

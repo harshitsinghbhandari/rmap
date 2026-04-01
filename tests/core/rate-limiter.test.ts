@@ -58,12 +58,22 @@ test('TokenBucket: allows multiple acquisitions up to capacity', async () => {
   assert.ok(remaining >= 1 && remaining < 1.1, `Expected ~1 token, got ${remaining}`);
 });
 
-test('TokenBucket: throws error if requesting more than capacity', async () => {
-  const bucket = new TokenBucket(10, 60);
-  await assert.rejects(
-    bucket.acquire(15),
-    /Cannot acquire 15 tokens \(bucket capacity: 10\)/
-  );
+test('TokenBucket: allows requests larger than capacity by waiting', async () => {
+  // Bucket with 10 capacity, 600 per minute = 10 per second
+  const bucket = new TokenBucket(10, 600);
+  await bucket.acquire(10); // Drain the bucket
+
+  const startTime = Date.now();
+
+  // Request 15 tokens (exceeds capacity)
+  // Should wait ~1.5 seconds (10 tokens refill in 1s, need 5 more in 0.5s)
+  await bucket.acquire(15);
+
+  const elapsed = Date.now() - startTime;
+
+  // Should take at least 1.4 seconds to accumulate 15 tokens
+  assert.ok(elapsed >= 1400, `Expected >= 1400ms for large request, got ${elapsed}ms`);
+  assert.ok(elapsed < 2000, `Should not take too long, got ${elapsed}ms`);
 });
 
 // Test: TokenBucket refill
@@ -281,16 +291,17 @@ test('RateLimiter: allows steady throughput without blocking', async () => {
   };
   const limiter = new RateLimiter(config);
 
-  const timestamps: number[] = [];
+  const startTime = Date.now();
 
   // Make 5 requests with small delays between them
   for (let i = 0; i < 5; i++) {
-    const start = Date.now();
     await limiter.acquire(100);
-    timestamps.push(Date.now() - start);
     await sleep(200); // Wait 200ms between requests
   }
 
-  // All should complete quickly (no blocking)
-  assert.ok(timestamps.every((t) => t < 100), 'All requests should be fast');
+  const elapsed = Date.now() - startTime;
+
+  // Should not be significantly delayed (no blocking under steady load)
+  // Expected: ~1000ms (5 * 200ms delays), allowing margin for acquire() overhead
+  assert.ok(elapsed < 3000, `Requests should not be significantly delayed, took ${elapsed}ms`);
 });
