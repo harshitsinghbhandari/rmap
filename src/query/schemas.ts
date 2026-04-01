@@ -11,7 +11,7 @@ import { TAG_TAXONOMY } from '../core/constants.js';
 /**
  * Valid tag values from the taxonomy
  */
-const TagSchema = z.enum(TAG_TAXONOMY as [string, ...string[]]);
+const TagSchema = z.enum(TAG_TAXONOMY as unknown as [string, ...string[]]);
 
 /**
  * Module schema for top-level modules/directories
