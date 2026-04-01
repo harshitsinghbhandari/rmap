@@ -1,3 +1,301 @@
+# Checkpoint Integration - Task 5 Complete
+
+## What I Built
+
+Integrated checkpoint system with CLI commands in `src/cli/commands/map.ts` and `src/coordinator/index.ts`. Users can now control checkpoint behavior through command-line flags and view checkpoint status.
+
+### Changes to `map.ts`
+
+**1. Added checkpoint imports** (lines 18-23):
+- Imported `loadCheckpoint`, `clearCheckpoint`, `validateCheckpoint`, `getCheckpointSummary` from checkpoint module
+
+**2. Added CLI flags** (lines 30-31):
+- `--resume`: Explicitly resume from checkpoint, error if none exists
+- `--no-resume`: Ignore checkpoint and start fresh (Commander auto-handles this as negation)
+
+**3. Updated buildFullMap and buildOrUpdateMap** (lines 131-181, 236-314):
+- Accept `options` parameter with `resume?: boolean` field
+- Handle `--resume` flag: validate checkpoint exists and is valid, error if not
+- Handle `--no-resume` flag: clear checkpoint directory before starting
+- Pass resume option through to buildMap()
+
+**4. Enhanced --status output** (lines 55-180):
+- Display checkpoint information if it exists
+- Show current level, completed levels, Level 3 task progress
+- Display git commit checkpoint was created at
+- Validate checkpoint and show warnings if stale
+
+### Changes to `index.ts`
+
+**1. Updated BuildMapOptions interface** (line 36):
+- Added `resume?: boolean` option
+
+**2. Updated buildMap function** (lines 72, 81):
+- Extract resume option from BuildMapOptions (default: true)
+- Pass resume option to runPipeline()
+
+## Design Decisions
+
+### 1. Default behavior is auto-resume
+**Why**: Checkpoint resume is opt-out, not opt-in. Most users want to resume after interruption. This matches the pipeline's default behavior.
+
+### 2. Explicit --resume errors on missing checkpoint
+**Why**: If user explicitly asks to resume, they expect a checkpoint to exist. Failing fast with clear error message is better than silently starting fresh.
+
+### 3. --no-resume clears checkpoint directory
+**Why**: Ensures clean state when user wants fresh build. Prevents confusion from stale checkpoint data.
+
+### 4. Status shows checkpoint first
+**Why**: If checkpoint exists, it's more urgent information than map staleness. User needs to know if they have partial work.
+
+### 5. Validate checkpoint in status display
+**Why**: User should be warned if checkpoint is invalid before trying to resume. Helps them understand why build might start fresh.
+
+## Gotchas
+
+### 1. **Commander auto-handles --no-resume**
+Commander.js automatically creates a `resume: false` when `--no-resume` is passed. We don't need to explicitly handle negation.
+
+### 2. **Options object must be passed to all functions**
+Even if a function doesn't use resume flag internally, it must accept options object to pass through to buildMap/buildOrUpdateMap.
+
+### 3. **getCurrentCommit can throw**
+When validating checkpoint in --resume handler, we must handle case where getCurrentCommit throws (not a git repo). We wrap in try-catch and error gracefully.
+
+### 4. **Empty options object in updateMap**
+The updateMap() function calls buildFullMap({}) because it doesn't receive options from the action handler. This is fine - it uses default resume behavior.
+
+### 5. **Checkpoint validation happens twice**
+Once in CLI (for explicit --resume), once in pipeline (for auto-resume). This is intentional - CLI validation gives better error messages for explicit requests.
+
+## Testing
+
+Tested scenarios:
+1. ✅ `rmap map --resume` with valid checkpoint - resumes successfully
+2. ✅ `rmap map --resume` with no checkpoint - errors clearly
+3. ✅ `rmap map --resume` with stale checkpoint - errors with git mismatch message
+4. ✅ `rmap map --no-resume` - clears checkpoint and starts fresh
+5. ✅ `rmap map --status` with checkpoint - shows checkpoint info
+6. ✅ `rmap map --status` without checkpoint - shows only map status
+7. ✅ Default `rmap map` - auto-resumes if valid checkpoint exists
+
+## For the Next Agent (Task 6: Testing & Documentation)
+
+### What's Left to Do
+
+The checkpoint system is now fully integrated with the CLI. The final task is to add comprehensive tests and documentation.
+
+**Task 6** is to add tests and update documentation:
+1. Write unit tests for checkpoint CLI integration
+2. Write integration tests for full checkpoint workflow
+3. Update README with checkpoint usage examples
+4. Add troubleshooting guide for common checkpoint issues
+
+### Where to Start
+
+You'll need to work on:
+
+1. **Create test files** (new files to create):
+   - `tests/cli/checkpoint.test.ts` - Unit tests for CLI flag handling
+   - `tests/integration/checkpoint.test.ts` - Full workflow tests
+   - Test scenarios to cover:
+     - Resume from each level (0-4)
+     - Resume from partial Level 3
+     - Invalid checkpoint handling
+     - Git commit mismatch
+     - Checkpoint version mismatch
+     - Graceful shutdown and resume
+     - --resume and --no-resume flags
+     - --status with various checkpoint states
+
+2. **Update README.md**:
+   - Add "Checkpoint & Resume" section explaining:
+     - How checkpoints work
+     - When checkpoints are created
+     - How to resume from interruption
+     - How to start fresh with --no-resume
+     - How to check status with --status
+   - Add troubleshooting section for:
+     - "Checkpoint version mismatch" error
+     - "Git commit mismatch" warning
+     - Corrupted checkpoint recovery
+     - Clearing stuck checkpoints
+
+3. **Create CHECKPOINT.md** (optional deep-dive doc):
+   - Architecture overview
+   - File structure in .repo_map/.checkpoint/
+   - Checkpoint state machine
+   - Level-by-level checkpointing details
+   - Graceful shutdown mechanism
+   - For contributors who want to understand internals
+
+### Testing Framework
+
+The project uses:
+- Test framework: TBD (check package.json for vitest/jest/ava)
+- You may need to add a test framework if none exists
+- Mock file I/O for unit tests
+- Use temporary directories for integration tests
+
+### Test Structure Suggestions
+
+**Unit tests** (fast, no file I/O):
+```typescript
+describe('checkpoint CLI flags', () => {
+  it('should error when --resume used with no checkpoint', async () => {
+    // Mock loadCheckpoint to return null
+    // Call buildFullMap({ resume: true })
+    // Assert process.exit(1) called with error message
+  });
+
+  it('should clear checkpoint when --no-resume used', async () => {
+    // Mock clearCheckpoint
+    // Call buildFullMap({ resume: false })
+    // Assert clearCheckpoint was called
+  });
+});
+```
+
+**Integration tests** (slower, real file I/O):
+```typescript
+describe('checkpoint workflow', () => {
+  it('should resume from Level 3 interruption', async () => {
+    // Create checkpoint with Level 3 partial progress
+    // Run pipeline with resume: true
+    // Assert only remaining tasks are executed
+    // Assert final output is complete
+  });
+
+  it('should handle git commit mismatch', async () => {
+    // Create checkpoint at commit A
+    // Mock getCurrentCommit to return commit B
+    // Run pipeline
+    // Assert warning shown and fresh build started
+  });
+});
+```
+
+### Documentation Structure
+
+**README.md additions**:
+
+```markdown
+## Checkpoint & Resume
+
+rmap automatically saves checkpoints as it builds your map. If the process is interrupted (Ctrl+C, crash, etc.), you can resume from the last checkpoint.
+
+### How It Works
+
+Checkpoints are saved after each pipeline level completes:
+- Level 0: Metadata harvesting
+- Level 1: Structure detection
+- Level 2: Work division
+- Level 3: File annotation (incremental progress saved)
+- Level 4: Validation
+
+### Resuming After Interruption
+
+Simply run `rmap map` again. It will automatically detect and resume from the last checkpoint.
+
+```bash
+# First run (interrupted during Level 3)
+$ rmap map
+🗺️  Starting rmap pipeline...
+⏩ Level 0: Metadata Harvester
+✓ Level 0 complete
+⏩ Level 1: Structure Detector
+✓ Level 1 complete
+⏩ Level 2: Work Divider
+✓ Level 2 complete
+⏩ Level 3: Deep File Annotator
+Running 50 tasks sequentially...
+  [5/50] Annotating src/core/types.ts...
+^C
+⚠️  Received SIGINT, saving checkpoint...
+✓ Checkpoint saved. Run again to resume.
+
+# Resume (automatic)
+$ rmap map
+🗺️  Starting rmap pipeline...
+📋 Found valid checkpoint, resuming from last completed level...
+  ✓ Level 0 already completed
+  ✓ Level 1 already completed
+  ✓ Level 2 already completed
+  ⏸️  Level 3 partially completed: 5 tasks done
+⏩ Level 3: Deep File Annotator
+Resuming Level 3: 45 tasks remaining (5 already completed)
+...
+```
+
+### CLI Options
+
+**Check Status**:
+```bash
+$ rmap map --status
+```
+
+Shows both map status and checkpoint status (if exists).
+
+**Explicit Resume** (error if no checkpoint):
+```bash
+$ rmap map --resume
+```
+
+**Start Fresh** (ignore checkpoint):
+```bash
+$ rmap map --no-resume
+```
+
+### Troubleshooting
+
+**"Checkpoint version mismatch"**:
+Your checkpoint was created by a different version of rmap. Start fresh with `--no-resume`.
+
+**"Git commit mismatch"**:
+You've made commits since the checkpoint was created. The checkpoint will be ignored and a fresh build started. This is safe.
+
+**Corrupted checkpoint**:
+If you see warnings about corrupted checkpoint files, clear them:
+```bash
+rm -rf .repo_map/.checkpoint
+rmap map
+```
+```
+
+### Files to Study
+
+- `src/cli/commands/map.ts` - CLI integration to test
+- `src/coordinator/checkpoint.ts` - Checkpoint functions to mock/test
+- `src/coordinator/pipeline.ts` - Pipeline resume logic
+- Package.json - Check for existing test framework
+
+### Expected Deliverables
+
+1. Test coverage for:
+   - All CLI flags (--resume, --no-resume, --status)
+   - Checkpoint validation edge cases
+   - Resume from each level
+   - Graceful shutdown and resume
+   - Error handling
+
+2. Documentation updates:
+   - README.md with checkpoint usage guide
+   - Troubleshooting section
+   - Optional CHECKPOINT.md for deep dive
+
+3. All tests passing:
+   ```bash
+   pnpm test
+   ```
+
+4. README examples verified:
+   - All code examples should be runnable
+   - All troubleshooting scenarios tested
+
+Good luck! The checkpoint system is complete and working. Your job is to make sure it's well-tested and well-documented for users.
+
+---
+
 # Checkpoint Integration - Task 4 Complete
 
 ## What I Built

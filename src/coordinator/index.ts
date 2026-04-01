@@ -32,6 +32,8 @@ export interface BuildMapOptions {
   autofix?: boolean;
   /** Run Level 3 tasks in parallel (default: true) */
   parallel?: boolean;
+  /** Resume from checkpoint if available (default: true) */
+  resume?: boolean;
 }
 
 /**
@@ -67,6 +69,7 @@ export async function buildMap(options: BuildMapOptions): Promise<BuildMapResult
     forceFullRebuild = false,
     autofix = true,
     parallel = true,
+    resume = true,
   } = options;
 
   // Run the pipeline
@@ -75,6 +78,7 @@ export async function buildMap(options: BuildMapOptions): Promise<BuildMapResult
     forceFullRebuild,
     autofix,
     parallel,
+    resume,
   });
 
   // Assemble and write all map files
