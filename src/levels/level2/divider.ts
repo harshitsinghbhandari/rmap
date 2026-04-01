@@ -10,7 +10,7 @@ import type { Level0Output, Level1Output, TaskDelegation, DelegationTask } from 
 import { MAX_FILES_PER_TASK } from '../../core/constants.js';
 import { buildWorkDivisionPrompt } from './prompt.js';
 import { DIVISION_MODEL } from '../../config/models.js';
-import { LLMClient } from '../../core/llm-client.js';
+import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
  * Validation error for task delegation
@@ -144,11 +144,13 @@ function parseAndValidateResponse(responseText: string, totalFiles: number): Tas
  *
  * @param level0 - Output from Level 0 metadata harvester
  * @param level1 - Output from Level 1 structure detector
+ * @param metrics - Optional metrics collector for tracking token usage
  * @returns TaskDelegation plan for Level 3 agents
  */
 export async function divideWork(
   level0: Level0Output,
-  level1: Level1Output
+  level1: Level1Output,
+  metrics?: MetricsCollector
 ): Promise<TaskDelegation> {
   // Check for API key
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -168,13 +170,22 @@ export async function divideWork(
   const prompt = buildWorkDivisionPrompt(level0, level1);
 
   // Call Claude with retry logic
-  const responseText = await llmClient.sendMessage(prompt, {
+  const response = await llmClient.sendMessage(prompt, {
     model: DIVISION_MODEL,
     maxTokens: 4000,
   });
 
+  // Record metrics if collector provided
+  if (metrics) {
+    metrics.recordLLMCall({
+      model: response.model,
+      inputTokens: response.inputTokens,
+      outputTokens: response.outputTokens,
+    });
+  }
+
   // Parse and validate response
-  const delegation = parseAndValidateResponse(responseText, level0.total_files);
+  const delegation = parseAndValidateResponse(response.text, level0.total_files);
 
   console.log('✓ Work division complete');
   console.log(`  Tasks created: ${delegation.tasks.length}`);
