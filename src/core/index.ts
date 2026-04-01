@@ -50,5 +50,8 @@ export {
   getCommitCountSafe,
   getCurrentCommitSafe,
 } from './git-utils.js';
+// Export concurrency utilities
+export { ConcurrencyPool } from './concurrency.js';
+export type { ConcurrencyPoolOptions, TaskResult } from './concurrency.js';
 // Export model configuration types
 export type { AgentSize } from '../config/models.js';

@@ -9,9 +9,10 @@ import Anthropic from '@anthropic-ai/sdk';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { FileAnnotation, RawFileMetadata, DelegationTask } from '../../core/types.js';
+import { ConcurrencyPool } from '../../core/concurrency.js';
 import { buildAnnotationPrompt } from './prompt.js';
 import { parseAnnotationResponse, AnnotationValidationError } from './parser.js';
-import { ANNOTATION_MODEL_MAP, RETRY_CONFIG } from '../../config/models.js';
+import { ANNOTATION_MODEL_MAP, RETRY_CONFIG, CONCURRENCY_CONFIG } from '../../config/models.js';
 
 /**
  * Sleep for specified milliseconds
@@ -232,37 +233,45 @@ export async function annotateFiles(
   console.log(`Starting Level 3 annotation...`);
   console.log(`Agent size: ${agentSize} (${model})`);
   console.log(`Files to annotate: ${files.length}`);
+  console.log(`Concurrency: ${CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS} parallel tasks`);
 
-  const annotations: FileAnnotation[] = [];
-  let successCount = 0;
-  let failCount = 0;
+  // Create concurrency pool for parallel processing
+  // Type: ConcurrencyPool<input type, output type>
+  const pool = new ConcurrencyPool<RawFileMetadata, FileAnnotation>({
+    concurrency: CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS,
+    delayBetweenTasks: CONCURRENCY_CONFIG.TASK_START_DELAY_MS,
+    stopOnError: false, // Continue processing even if some files fail
+  });
 
-  // Process files sequentially (to avoid rate limits)
-  for (let i = 0; i < files.length; i++) {
-    const metadata = files[i];
-    const absolutePath = path.join(repoRoot, metadata.path);
+  // Track progress
+  let completedCount = 0;
+  const totalCount = files.length;
 
-    console.log(`[${i + 1}/${files.length}] Annotating ${metadata.path}...`);
+  // Process files concurrently
+  const { successes: annotations, failures } = await pool.runWithStats(
+    files,
+    async (metadata, index): Promise<FileAnnotation> => {
+      const absolutePath = path.join(repoRoot, metadata.path);
 
-    const annotation = await annotateFile(absolutePath, metadata, client, model, repoRoot);
+      const annotation = await annotateFile(absolutePath, metadata, client, model, repoRoot);
 
-    if (annotation) {
-      annotations.push(annotation);
-      successCount++;
-    } else {
-      failCount++;
+      completedCount++;
+      if (completedCount % 10 === 0 || completedCount === totalCount) {
+        console.log(`Progress: ${completedCount}/${totalCount} files processed`);
+      }
+
+      if (annotation === null) {
+        throw new Error(`Failed to annotate ${metadata.path}`);
+      }
+
+      return annotation;
     }
-
-    // Delay to avoid rate limits
-    if (i < files.length - 1) {
-      await sleep(RETRY_CONFIG.REQUEST_DELAY_MS);
-    }
-  }
+  );
 
   console.log(`✓ Level 3 annotation complete`);
-  console.log(`  Success: ${successCount}/${files.length}`);
-  if (failCount > 0) {
-    console.log(`  Failed: ${failCount}/${files.length}`);
+  console.log(`  Success: ${annotations.length}/${files.length}`);
+  if (failures.length > 0) {
+    console.log(`  Failed: ${failures.length}/${files.length}`);
   }
 
   return annotations;
