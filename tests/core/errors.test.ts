@@ -2,7 +2,8 @@
  * Tests for standardized error classes
  */
 
-import { describe, it, expect } from 'vitest';
+import { test } from 'node:test';
+import * as assert from 'node:assert';
 import {
   RmapError,
   ConfigError,
@@ -14,273 +15,253 @@ import {
   CheckpointError,
 } from '../../src/core/errors.js';
 
-describe('RmapError', () => {
-  it('should create error with message and code', () => {
-    const error = new RmapError('Test error', 'TEST_ERROR');
+test('RmapError: should create error with message and code', () => {
+  const error = new RmapError('Test error', 'TEST_ERROR');
 
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toBeInstanceOf(RmapError);
-    expect(error.message).toBe('Test error');
-    expect(error.code).toBe('TEST_ERROR');
-    expect(error.name).toBe('RmapError');
-    expect(error.cause).toBeUndefined();
-  });
-
-  it('should create error with cause', () => {
-    const cause = new Error('Original error');
-    const error = new RmapError('Wrapped error', 'TEST_ERROR', cause);
-
-    expect(error.message).toBe('Wrapped error');
-    expect(error.code).toBe('TEST_ERROR');
-    expect(error.cause).toBe(cause);
-  });
-
-  it('should provide full message including cause', () => {
-    const cause = new Error('Original error');
-    const error = new RmapError('Wrapped error', 'TEST_ERROR', cause);
-
-    expect(error.getFullMessage()).toBe('Wrapped error\nCaused by: Original error');
-  });
-
-  it('should provide message without cause if no cause exists', () => {
-    const error = new RmapError('Simple error', 'TEST_ERROR');
-
-    expect(error.getFullMessage()).toBe('Simple error');
-  });
+  assert.ok(error instanceof Error);
+  assert.ok(error instanceof RmapError);
+  assert.strictEqual(error.message, 'Test error');
+  assert.strictEqual(error.code, 'TEST_ERROR');
+  assert.strictEqual(error.name, 'RmapError');
+  assert.strictEqual(error.cause, undefined);
 });
 
-describe('ConfigError', () => {
-  it('should create config error', () => {
-    const error = new ConfigError('Missing API key');
+test('RmapError: should create error with cause', () => {
+  const cause = new Error('Original error');
+  const error = new RmapError('Wrapped error', 'TEST_ERROR', cause);
 
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toBeInstanceOf(RmapError);
-    expect(error).toBeInstanceOf(ConfigError);
-    expect(error.message).toBe('Missing API key');
-    expect(error.code).toBe('CONFIG_ERROR');
-    expect(error.name).toBe('ConfigError');
-  });
-
-  it('should create config error with cause', () => {
-    const cause = new Error('Invalid JSON');
-    const error = new ConfigError('Failed to load config', cause);
-
-    expect(error.message).toBe('Failed to load config');
-    expect(error.cause).toBe(cause);
-  });
+  assert.strictEqual(error.message, 'Wrapped error');
+  assert.strictEqual(error.code, 'TEST_ERROR');
+  assert.strictEqual(error.cause, cause);
 });
 
-describe('GitError', () => {
-  it('should create git error', () => {
-    const error = new GitError('Not a git repository');
+test('RmapError: should provide full message including cause', () => {
+  const cause = new Error('Original error');
+  const error = new RmapError('Wrapped error', 'TEST_ERROR', cause);
 
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toBeInstanceOf(RmapError);
-    expect(error).toBeInstanceOf(GitError);
-    expect(error.message).toBe('Not a git repository');
-    expect(error.code).toBe('GIT_ERROR');
-    expect(error.name).toBe('GitError');
-  });
-
-  it('should create git error with cause', () => {
-    const cause = new Error('git command failed');
-    const error = new GitError('Failed to get commit hash', cause);
-
-    expect(error.message).toBe('Failed to get commit hash');
-    expect(error.cause).toBe(cause);
-  });
+  assert.strictEqual(error.getFullMessage(), 'Wrapped error\nCaused by: Original error');
 });
 
-describe('LLMError', () => {
-  it('should create LLM error', () => {
-    const error = new LLMError('API rate limit exceeded');
+test('RmapError: should provide message without cause if no cause exists', () => {
+  const error = new RmapError('Simple error', 'TEST_ERROR');
 
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toBeInstanceOf(RmapError);
-    expect(error).toBeInstanceOf(LLMError);
-    expect(error.message).toBe('API rate limit exceeded');
-    expect(error.code).toBe('LLM_ERROR');
-    expect(error.name).toBe('LLMError');
-  });
-
-  it('should create LLM error with cause', () => {
-    const cause = new Error('Network timeout');
-    const error = new LLMError('Failed to call LLM API', cause);
-
-    expect(error.message).toBe('Failed to call LLM API');
-    expect(error.cause).toBe(cause);
-  });
+  assert.strictEqual(error.getFullMessage(), 'Simple error');
 });
 
-describe('ParseError', () => {
-  it('should create parse error with file path', () => {
-    const error = new ParseError('Invalid syntax', 'src/index.ts');
+test('ConfigError: should create config error', () => {
+  const error = new ConfigError('Missing API key');
 
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toBeInstanceOf(RmapError);
-    expect(error).toBeInstanceOf(ParseError);
-    expect(error.message).toBe('Invalid syntax in src/index.ts');
-    expect(error.code).toBe('PARSE_ERROR');
-    expect(error.name).toBe('ParseError');
-    expect(error.file).toBe('src/index.ts');
-  });
-
-  it('should create parse error with cause', () => {
-    const cause = new Error('Unexpected token');
-    const error = new ParseError('Failed to parse file', 'src/bad.js', cause);
-
-    expect(error.message).toBe('Failed to parse file in src/bad.js');
-    expect(error.file).toBe('src/bad.js');
-    expect(error.cause).toBe(cause);
-  });
+  assert.ok(error instanceof Error);
+  assert.ok(error instanceof RmapError);
+  assert.ok(error instanceof ConfigError);
+  assert.strictEqual(error.message, 'Missing API key');
+  assert.strictEqual(error.code, 'CONFIG_ERROR');
+  assert.strictEqual(error.name, 'ConfigError');
 });
 
-describe('ValidationError', () => {
-  it('should create validation error', () => {
-    const error = new ValidationError('Missing required field: name');
+test('ConfigError: should create config error with cause', () => {
+  const cause = new Error('Invalid JSON');
+  const error = new ConfigError('Failed to load config', cause);
 
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toBeInstanceOf(RmapError);
-    expect(error).toBeInstanceOf(ValidationError);
-    expect(error.message).toBe('Missing required field: name');
-    expect(error.code).toBe('VALIDATION_ERROR');
-    expect(error.name).toBe('ValidationError');
-  });
-
-  it('should create validation error with cause', () => {
-    const cause = new Error('Invalid type');
-    const error = new ValidationError('Schema validation failed', cause);
-
-    expect(error.message).toBe('Schema validation failed');
-    expect(error.cause).toBe(cause);
-  });
+  assert.strictEqual(error.message, 'Failed to load config');
+  assert.strictEqual(error.cause, cause);
 });
 
-describe('FileSystemError', () => {
-  it('should create filesystem error with path', () => {
-    const error = new FileSystemError('File not found', '/path/to/file.txt');
+test('GitError: should create git error', () => {
+  const error = new GitError('Not a git repository');
 
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toBeInstanceOf(RmapError);
-    expect(error).toBeInstanceOf(FileSystemError);
-    expect(error.message).toBe('File not found: /path/to/file.txt');
-    expect(error.code).toBe('FILESYSTEM_ERROR');
-    expect(error.name).toBe('FileSystemError');
-    expect(error.path).toBe('/path/to/file.txt');
-  });
-
-  it('should create filesystem error with cause', () => {
-    const cause = new Error('ENOENT');
-    const error = new FileSystemError('Cannot read directory', '/some/dir', cause);
-
-    expect(error.message).toBe('Cannot read directory: /some/dir');
-    expect(error.path).toBe('/some/dir');
-    expect(error.cause).toBe(cause);
-  });
+  assert.ok(error instanceof Error);
+  assert.ok(error instanceof RmapError);
+  assert.ok(error instanceof GitError);
+  assert.strictEqual(error.message, 'Not a git repository');
+  assert.strictEqual(error.code, 'GIT_ERROR');
+  assert.strictEqual(error.name, 'GitError');
 });
 
-describe('CheckpointError', () => {
-  it('should create checkpoint error', () => {
-    const error = new CheckpointError('Corrupted checkpoint file');
+test('GitError: should create git error with cause', () => {
+  const cause = new Error('git command failed');
+  const error = new GitError('Failed to get commit hash', cause);
 
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toBeInstanceOf(RmapError);
-    expect(error).toBeInstanceOf(CheckpointError);
-    expect(error.message).toBe('Corrupted checkpoint file');
-    expect(error.code).toBe('CHECKPOINT_ERROR');
-    expect(error.name).toBe('CheckpointError');
-  });
-
-  it('should create checkpoint error with cause', () => {
-    const cause = new Error('Invalid JSON');
-    const error = new CheckpointError('Failed to load checkpoint', cause);
-
-    expect(error.message).toBe('Failed to load checkpoint');
-    expect(error.cause).toBe(cause);
-  });
+  assert.strictEqual(error.message, 'Failed to get commit hash');
+  assert.strictEqual(error.cause, cause);
 });
 
-describe('Error inheritance chain', () => {
-  it('should maintain proper instanceof checks', () => {
-    const configError = new ConfigError('test');
-    const gitError = new GitError('test');
-    const llmError = new LLMError('test');
-    const parseError = new ParseError('test', 'file.ts');
-    const validationError = new ValidationError('test');
-    const fsError = new FileSystemError('test', '/path');
-    const checkpointError = new CheckpointError('test');
+test('LLMError: should create LLM error', () => {
+  const error = new LLMError('API rate limit exceeded');
 
-    // All should be instances of RmapError
-    expect(configError).toBeInstanceOf(RmapError);
-    expect(gitError).toBeInstanceOf(RmapError);
-    expect(llmError).toBeInstanceOf(RmapError);
-    expect(parseError).toBeInstanceOf(RmapError);
-    expect(validationError).toBeInstanceOf(RmapError);
-    expect(fsError).toBeInstanceOf(RmapError);
-    expect(checkpointError).toBeInstanceOf(RmapError);
-
-    // All should be instances of Error
-    expect(configError).toBeInstanceOf(Error);
-    expect(gitError).toBeInstanceOf(Error);
-    expect(llmError).toBeInstanceOf(Error);
-    expect(parseError).toBeInstanceOf(Error);
-    expect(validationError).toBeInstanceOf(Error);
-    expect(fsError).toBeInstanceOf(Error);
-    expect(checkpointError).toBeInstanceOf(Error);
-  });
-
-  it('should not cross-pollute instanceof checks', () => {
-    const configError = new ConfigError('test');
-
-    expect(configError).toBeInstanceOf(ConfigError);
-    expect(configError).not.toBeInstanceOf(GitError);
-    expect(configError).not.toBeInstanceOf(LLMError);
-    expect(configError).not.toBeInstanceOf(ParseError);
-    expect(configError).not.toBeInstanceOf(ValidationError);
-    expect(configError).not.toBeInstanceOf(FileSystemError);
-    expect(configError).not.toBeInstanceOf(CheckpointError);
-  });
+  assert.ok(error instanceof Error);
+  assert.ok(error instanceof RmapError);
+  assert.ok(error instanceof LLMError);
+  assert.strictEqual(error.message, 'API rate limit exceeded');
+  assert.strictEqual(error.code, 'LLM_ERROR');
+  assert.strictEqual(error.name, 'LLMError');
 });
 
-describe('Error handling patterns', () => {
-  it('should support try-catch with specific error types', () => {
-    const throwConfigError = () => {
-      throw new ConfigError('Missing config');
-    };
+test('LLMError: should create LLM error with cause', () => {
+  const cause = new Error('Network timeout');
+  const error = new LLMError('Failed to call LLM API', cause);
 
-    try {
-      throwConfigError();
-      expect.fail('Should have thrown');
-    } catch (error) {
-      expect(error).toBeInstanceOf(ConfigError);
-      if (error instanceof ConfigError) {
-        expect(error.code).toBe('CONFIG_ERROR');
-      }
+  assert.strictEqual(error.message, 'Failed to call LLM API');
+  assert.strictEqual(error.cause, cause);
+});
+
+test('ParseError: should create parse error with file path', () => {
+  const error = new ParseError('Invalid syntax', 'src/index.ts');
+
+  assert.ok(error instanceof Error);
+  assert.ok(error instanceof RmapError);
+  assert.ok(error instanceof ParseError);
+  assert.strictEqual(error.message, 'Invalid syntax in src/index.ts');
+  assert.strictEqual(error.code, 'PARSE_ERROR');
+  assert.strictEqual(error.name, 'ParseError');
+  assert.strictEqual(error.file, 'src/index.ts');
+});
+
+test('ParseError: should create parse error with cause', () => {
+  const cause = new Error('Unexpected token');
+  const error = new ParseError('Failed to parse file', 'src/bad.js', cause);
+
+  assert.strictEqual(error.message, 'Failed to parse file in src/bad.js');
+  assert.strictEqual(error.file, 'src/bad.js');
+  assert.strictEqual(error.cause, cause);
+});
+
+test('ValidationError: should create validation error', () => {
+  const error = new ValidationError('Missing required field: name');
+
+  assert.ok(error instanceof Error);
+  assert.ok(error instanceof RmapError);
+  assert.ok(error instanceof ValidationError);
+  assert.strictEqual(error.message, 'Missing required field: name');
+  assert.strictEqual(error.code, 'VALIDATION_ERROR');
+  assert.strictEqual(error.name, 'ValidationError');
+});
+
+test('ValidationError: should create validation error with cause', () => {
+  const cause = new Error('Invalid type');
+  const error = new ValidationError('Schema validation failed', cause);
+
+  assert.strictEqual(error.message, 'Schema validation failed');
+  assert.strictEqual(error.cause, cause);
+});
+
+test('FileSystemError: should create filesystem error with path', () => {
+  const error = new FileSystemError('File not found', '/path/to/file.txt');
+
+  assert.ok(error instanceof Error);
+  assert.ok(error instanceof RmapError);
+  assert.ok(error instanceof FileSystemError);
+  assert.strictEqual(error.message, 'File not found: /path/to/file.txt');
+  assert.strictEqual(error.code, 'FILESYSTEM_ERROR');
+  assert.strictEqual(error.name, 'FileSystemError');
+  assert.strictEqual(error.path, '/path/to/file.txt');
+});
+
+test('FileSystemError: should create filesystem error with cause', () => {
+  const cause = new Error('ENOENT');
+  const error = new FileSystemError('Cannot read directory', '/some/dir', cause);
+
+  assert.strictEqual(error.message, 'Cannot read directory: /some/dir');
+  assert.strictEqual(error.path, '/some/dir');
+  assert.strictEqual(error.cause, cause);
+});
+
+test('CheckpointError: should create checkpoint error', () => {
+  const error = new CheckpointError('Corrupted checkpoint file');
+
+  assert.ok(error instanceof Error);
+  assert.ok(error instanceof RmapError);
+  assert.ok(error instanceof CheckpointError);
+  assert.strictEqual(error.message, 'Corrupted checkpoint file');
+  assert.strictEqual(error.code, 'CHECKPOINT_ERROR');
+  assert.strictEqual(error.name, 'CheckpointError');
+});
+
+test('CheckpointError: should create checkpoint error with cause', () => {
+  const cause = new Error('Invalid JSON');
+  const error = new CheckpointError('Failed to load checkpoint', cause);
+
+  assert.strictEqual(error.message, 'Failed to load checkpoint');
+  assert.strictEqual(error.cause, cause);
+});
+
+test('Error inheritance: should maintain proper instanceof checks', () => {
+  const configError = new ConfigError('test');
+  const gitError = new GitError('test');
+  const llmError = new LLMError('test');
+  const parseError = new ParseError('test', 'file.ts');
+  const validationError = new ValidationError('test');
+  const fsError = new FileSystemError('test', '/path');
+  const checkpointError = new CheckpointError('test');
+
+  // All should be instances of RmapError
+  assert.ok(configError instanceof RmapError);
+  assert.ok(gitError instanceof RmapError);
+  assert.ok(llmError instanceof RmapError);
+  assert.ok(parseError instanceof RmapError);
+  assert.ok(validationError instanceof RmapError);
+  assert.ok(fsError instanceof RmapError);
+  assert.ok(checkpointError instanceof RmapError);
+
+  // All should be instances of Error
+  assert.ok(configError instanceof Error);
+  assert.ok(gitError instanceof Error);
+  assert.ok(llmError instanceof Error);
+  assert.ok(parseError instanceof Error);
+  assert.ok(validationError instanceof Error);
+  assert.ok(fsError instanceof Error);
+  assert.ok(checkpointError instanceof Error);
+});
+
+test('Error inheritance: should not cross-pollute instanceof checks', () => {
+  const configError = new ConfigError('test');
+
+  assert.ok(configError instanceof ConfigError);
+  assert.ok(!(configError instanceof GitError));
+  assert.ok(!(configError instanceof LLMError));
+  assert.ok(!(configError instanceof ParseError));
+  assert.ok(!(configError instanceof ValidationError));
+  assert.ok(!(configError instanceof FileSystemError));
+  assert.ok(!(configError instanceof CheckpointError));
+});
+
+test('Error handling patterns: should support try-catch with specific error types', () => {
+  const throwConfigError = () => {
+    throw new ConfigError('Missing config');
+  };
+
+  try {
+    throwConfigError();
+    assert.fail('Should have thrown');
+  } catch (error) {
+    assert.ok(error instanceof ConfigError);
+    if (error instanceof ConfigError) {
+      assert.strictEqual(error.code, 'CONFIG_ERROR');
     }
-  });
+  }
+});
 
-  it('should support error chaining', () => {
-    try {
-      throw new Error('Original error');
-    } catch (originalError) {
-      const wrappedError = new GitError(
-        'Failed git operation',
-        originalError instanceof Error ? originalError : undefined
-      );
+test('Error handling patterns: should support error chaining', () => {
+  try {
+    throw new Error('Original error');
+  } catch (originalError) {
+    const wrappedError = new GitError(
+      'Failed git operation',
+      originalError instanceof Error ? originalError : undefined
+    );
 
-      expect(wrappedError.cause).toBe(originalError);
-      expect(wrappedError.getFullMessage()).toContain('Original error');
-    }
-  });
+    assert.strictEqual(wrappedError.cause, originalError);
+    assert.ok(wrappedError.getFullMessage().includes('Original error'));
+  }
+});
 
-  it('should allow filtering errors by code', () => {
-    const errors: RmapError[] = [
-      new ConfigError('test1'),
-      new GitError('test2'),
-      new ConfigError('test3'),
-    ];
+test('Error handling patterns: should allow filtering errors by code', () => {
+  const errors: RmapError[] = [
+    new ConfigError('test1'),
+    new GitError('test2'),
+    new ConfigError('test3'),
+  ];
 
-    const configErrors = errors.filter(e => e.code === 'CONFIG_ERROR');
-    expect(configErrors).toHaveLength(2);
-  });
+  const configErrors = errors.filter(e => e.code === 'CONFIG_ERROR');
+  assert.strictEqual(configErrors.length, 2);
 });
