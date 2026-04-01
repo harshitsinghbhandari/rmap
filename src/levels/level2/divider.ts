@@ -9,7 +9,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { Level0Output, Level1Output, TaskDelegation, DelegationTask } from '../../core/types.js';
 import { MAX_FILES_PER_TASK } from '../../core/constants.js';
 import { buildWorkDivisionPrompt } from './prompt.js';
-import { DIVISION_MODEL } from '../../config/models.js';
+import { DIVISION_MODEL, RETRY_CONFIG } from '../../config/models.js';
 
 /**
  * Validation error for task delegation
@@ -34,7 +34,7 @@ function sleep(ms: number): Promise<void> {
 async function callClaudeWithRetry(
   client: Anthropic,
   prompt: string,
-  maxRetries: number = 3
+  maxRetries: number = RETRY_CONFIG.MAX_RETRIES
 ): Promise<string> {
   let lastError: Error | null = null;
 
@@ -65,7 +65,7 @@ async function callClaudeWithRetry(
       // Check if it's a rate limit error
       if (error instanceof Anthropic.RateLimitError) {
         if (attempt < maxRetries) {
-          const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff: 2s, 4s, 8s
+          const waitTime = Math.pow(2, attempt) * RETRY_CONFIG.BASE_BACKOFF_MS;
           console.log(`Rate limit hit. Retrying in ${waitTime / 1000}s... (attempt ${attempt}/${maxRetries})`);
           await sleep(waitTime);
           continue;

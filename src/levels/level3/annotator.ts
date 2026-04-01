@@ -11,7 +11,7 @@ import * as path from 'node:path';
 import type { FileAnnotation, RawFileMetadata, DelegationTask } from '../../core/types.js';
 import { buildAnnotationPrompt } from './prompt.js';
 import { parseAnnotationResponse, AnnotationValidationError } from './parser.js';
-import { ANNOTATION_MODEL_MAP } from '../../config/models.js';
+import { ANNOTATION_MODEL_MAP, RETRY_CONFIG } from '../../config/models.js';
 
 /**
  * Sleep for specified milliseconds
@@ -75,7 +75,7 @@ async function callClaudeWithRetry(
   client: Anthropic,
   prompt: string,
   model: string,
-  maxRetries: number = 3
+  maxRetries: number = RETRY_CONFIG.MAX_RETRIES
 ): Promise<string> {
   let lastError: Error | null = null;
 
@@ -106,7 +106,7 @@ async function callClaudeWithRetry(
       // Check if it's a rate limit error
       if (error instanceof Anthropic.RateLimitError) {
         if (attempt < maxRetries) {
-          const waitTime = Math.pow(2, attempt) * 1000; // Exponential backoff
+          const waitTime = Math.pow(2, attempt) * RETRY_CONFIG.BASE_BACKOFF_MS;
           console.log(`Rate limit hit. Retrying in ${waitTime / 1000}s... (attempt ${attempt}/${maxRetries})`);
           await sleep(waitTime);
           continue;
@@ -253,9 +253,9 @@ export async function annotateFiles(
       failCount++;
     }
 
-    // Small delay to avoid rate limits (100ms between requests)
+    // Delay to avoid rate limits
     if (i < files.length - 1) {
-      await sleep(100);
+      await sleep(RETRY_CONFIG.REQUEST_DELAY_MS);
     }
   }
 
