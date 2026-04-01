@@ -56,6 +56,14 @@ export type { ConcurrencyPoolOptions, TaskResult } from './concurrency.js';
 // Export LLM client with retry logic
 export { LLMClient, withRetry } from './llm-client.js';
 export type { RetryConfig, LLMCallOptions, LLMResponse } from './llm-client.js';
+// Export rate limiter
+export {
+  TokenBucket,
+  RateLimiter,
+  estimateTokens,
+  globalRateLimiter,
+} from './rate-limiter.js';
+export type { RateLimiterConfig } from './rate-limiter.js';
 // Export model configuration types
 export type { AgentSize } from '../config/models.js';
 // Export metrics collection and logging

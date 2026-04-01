@@ -14,6 +14,7 @@ import {
   OUTPUT_CONFIG,
   TOKEN_CONFIG,
   FILE_CONFIG,
+  RATE_LIMIT_CONFIG,
 } from './defaults.js';
 
 /**
@@ -437,6 +438,28 @@ export const FILE = {
 } as const;
 
 /**
+ * Rate limiting configuration with environment overrides
+ *
+ * Environment variables:
+ * - RMAP_RATE_LIMIT_RPM: Max requests per minute (default: 30)
+ * - RMAP_RATE_LIMIT_TPM: Max input tokens per minute (default: 18000)
+ */
+export const RATE_LIMIT = {
+  REQUESTS_PER_MINUTE: parseEnvInt(
+    process.env.RMAP_RATE_LIMIT_RPM,
+    RATE_LIMIT_CONFIG.REQUESTS_PER_MINUTE,
+    1,
+    1000,
+  ),
+  INPUT_TOKENS_PER_MINUTE: parseEnvInt(
+    process.env.RMAP_RATE_LIMIT_TPM,
+    RATE_LIMIT_CONFIG.INPUT_TOKENS_PER_MINUTE,
+    100,
+    1000000,
+  ),
+} as const;
+
+/**
  * Complete configuration object with all settings
  */
 export const CONFIG = {
@@ -448,4 +471,5 @@ export const CONFIG = {
   output: OUTPUT,
   token: TOKEN,
   file: FILE,
+  rateLimit: RATE_LIMIT,
 } as const;

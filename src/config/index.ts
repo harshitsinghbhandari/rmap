@@ -40,6 +40,7 @@ export {
   OUTPUT,
   TOKEN,
   FILE,
+  RATE_LIMIT,
 } from './env.js';
 
 // Import for validation

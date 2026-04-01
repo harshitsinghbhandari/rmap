@@ -316,6 +316,30 @@ export const FILE_CONFIG = {
 } as const;
 
 /**
+ * Rate limiting configuration for API calls
+ *
+ * Controls global rate limits to prevent hitting API quotas.
+ * Uses 60% of official limits as a safety buffer.
+ *
+ * Official Claude API limits (Tier 1):
+ * - 50 requests per minute (RPM)
+ * - 30,000 input tokens per minute (TPM)
+ */
+export const RATE_LIMIT_CONFIG = {
+  /**
+   * Maximum requests per minute (60% of official 50 RPM)
+   * @default 30
+   */
+  REQUESTS_PER_MINUTE: 30,
+
+  /**
+   * Maximum input tokens per minute (60% of official 30k TPM)
+   * @default 18000
+   */
+  INPUT_TOKENS_PER_MINUTE: 18000,
+} as const;
+
+/**
  * All configuration grouped for convenience
  */
 export const DEFAULT_CONFIG = {
@@ -327,4 +351,5 @@ export const DEFAULT_CONFIG = {
   output: OUTPUT_CONFIG,
   token: TOKEN_CONFIG,
   file: FILE_CONFIG,
+  rateLimit: RATE_LIMIT_CONFIG,
 } as const;
