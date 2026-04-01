@@ -33,3 +33,7 @@ export {
 
 // Export Tag type
 export type { Tag } from './constants.js';
+
+// Export concurrency utilities
+export { ConcurrencyPool } from './concurrency.js';
+export type { ConcurrencyPoolOptions, TaskResult } from './concurrency.js';
