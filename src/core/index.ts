@@ -32,6 +32,9 @@ export {
   UPDATE_THRESHOLDS,
   MAX_TAGS_PER_FILE,
   MAX_FILES_PER_TASK,
+  CHECKPOINT_DIR,
+  CHECKPOINT_VERSION,
+  CHECKPOINT_FILES,
 } from './constants.js';
 
 // Export Tag type
