@@ -8,6 +8,7 @@
 import { test, mock } from 'node:test';
 import assert from 'node:assert';
 import type { FileAnnotation, RawFileMetadata, DelegationTask } from '../../../src/core/types.js';
+import { ANNOTATION_MODEL_MAP, MODELS } from '../../../src/config/models.js';
 
 // Mock raw file metadata
 const mockFileMetadata: RawFileMetadata[] = [
@@ -121,16 +122,14 @@ test('annotateFiles: processes multiple files', () => {
 
 // Test: Model selection based on agent size
 test('annotateFiles: selects correct model for agent size', () => {
-  const modelMap = {
-    small: 'claude-haiku-4-20250318',
-    medium: 'claude-sonnet-4-20250514',
-    large: 'claude-sonnet-4-20250514',
-  };
+  // Should map to correct models from centralized config
+  assert.strictEqual(ANNOTATION_MODEL_MAP.small, MODELS.HAIKU);
+  assert.strictEqual(ANNOTATION_MODEL_MAP.medium, MODELS.SONNET);
+  assert.strictEqual(ANNOTATION_MODEL_MAP.large, MODELS.SONNET);
 
-  // Should map to correct models
-  assert.strictEqual(modelMap.small, 'claude-haiku-4-20250318');
-  assert.strictEqual(modelMap.medium, 'claude-sonnet-4-20250514');
-  assert.strictEqual(modelMap.large, 'claude-sonnet-4-20250514');
+  // Verify the actual model names are correct
+  assert.strictEqual(MODELS.HAIKU, 'claude-haiku-4-5-20251001');
+  assert.strictEqual(MODELS.SONNET, 'claude-sonnet-4-5-20250929');
 });
 
 // Test: Binary file handling

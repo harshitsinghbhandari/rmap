@@ -10,6 +10,7 @@ import * as path from 'node:path';
 import * as fs from 'node:fs';
 import type { Level0Output, Level1Output, Module } from '../../core/types.js';
 import { validateLevel1Output, ValidationError } from './validation.js';
+import { DETECTION_MODEL } from '../../config/models.js';
 
 /**
  * Build a file tree structure for the LLM prompt
@@ -148,7 +149,7 @@ async function callClaudeWithRetry(
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const response = await client.messages.create({
-        model: 'claude-haiku-4-20250318',
+        model: DETECTION_MODEL,
         max_tokens: 2000,
         temperature: 0,
         messages: [
