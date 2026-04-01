@@ -132,43 +132,54 @@ export function getTopFiles(
 }
 
 /**
- * Get blast radius for a set of files
+ * Get dependents for a set of files
  *
  * Returns all files that import the given files (dependents)
  *
- * @param filePaths - Paths of files to get blast radius for
+ * @param filePaths - Paths of files to get dependents for
  * @param graph - Dependency graph
  * @param allFiles - All file annotations (to get full file info)
  * @returns Files that import any of the input files
+ */
+export function getDependents(
+  filePaths: string[],
+  graph: GraphJson,
+  allFiles: FileAnnotation[]
+): FileAnnotation[] {
+  const dependentsSet = new Set<string>();
+
+  // Collect all files that import the target files
+  for (const filePath of filePaths) {
+    const graphNode = graph[filePath];
+    if (graphNode && graphNode.imported_by) {
+      graphNode.imported_by.forEach((path) => dependentsSet.add(path));
+    }
+  }
+
+  // Convert to file annotations
+  const fileMap = new Map(allFiles.map((f) => [f.path, f]));
+  const dependentFiles: FileAnnotation[] = [];
+
+  for (const path of dependentsSet) {
+    const file = fileMap.get(path);
+    if (file) {
+      dependentFiles.push(file);
+    }
+  }
+
+  // Sort by path for consistent ordering (simpler and faster than relevance ranking)
+  return dependentFiles.sort((a, b) => a.path.localeCompare(b.path));
+}
+
+/**
+ * @deprecated Use getDependents instead. This function returns dependents (importers), not a "blast radius".
  */
 export function getBlastRadius(
   filePaths: string[],
   graph: GraphJson,
   allFiles: FileAnnotation[]
 ): FileAnnotation[] {
-  const blastRadiusSet = new Set<string>();
-
-  // Collect all files that import the target files
-  for (const filePath of filePaths) {
-    const graphNode = graph[filePath];
-    if (graphNode && graphNode.imported_by) {
-      graphNode.imported_by.forEach((path) => blastRadiusSet.add(path));
-    }
-  }
-
-  // Convert to file annotations
-  const fileMap = new Map(allFiles.map((f) => [f.path, f]));
-  const blastRadiusFiles: FileAnnotation[] = [];
-
-  for (const path of blastRadiusSet) {
-    const file = fileMap.get(path);
-    if (file) {
-      blastRadiusFiles.push(file);
-    }
-  }
-
-  // Sort by connectivity for consistent ordering
-  return rankFilesByRelevance(blastRadiusFiles, graph).map((fs) => fs.file);
+  return getDependents(filePaths, graph, allFiles);
 }
 
 /**
