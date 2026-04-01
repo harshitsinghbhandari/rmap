@@ -31,6 +31,12 @@ import {
   getTopFiles,
   rankFilesByRelevance,
 } from './ranking.js';
+import {
+  MetaJsonSchema,
+  GraphJsonSchema,
+  TagsJsonSchema,
+  AnnotationsJsonSchema,
+} from './schemas.js';
 
 /**
  * Query engine configuration
@@ -82,43 +88,93 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
         }),
       ]);
 
-    const meta: MetaJson = JSON.parse(metaContent);
-    const graph: GraphJson = JSON.parse(graphContent);
-    const tags: TagsJson = JSON.parse(tagsContent);
-    const files: FileAnnotation[] = JSON.parse(annotationsContent);
+    // Parse JSON content
+    let metaRaw: unknown;
+    let graphRaw: unknown;
+    let tagsRaw: unknown;
+    let filesRaw: unknown;
 
-    // Validate that annotations is an array
-    if (!Array.isArray(files)) {
+    try {
+      metaRaw = JSON.parse(metaContent);
+    } catch (error) {
       throw new Error(
-        'Invalid annotations.json: expected an array of file annotations'
+        `Failed to parse meta.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`
       );
     }
 
-    // Basic validation of annotation structure
-    for (const file of files) {
-      // Guard against null/undefined entries
-      if (!file || typeof file !== 'object') {
-        throw new Error('Invalid annotation entry: expected object');
-      }
-
-      if (
-        !file.path ||
-        typeof file.path !== 'string' ||
-        typeof file.language !== 'string' ||
-        typeof file.purpose !== 'string' ||
-        typeof file.size_bytes !== 'number' ||
-        !Number.isFinite(file.size_bytes) ||
-        typeof file.line_count !== 'number' ||
-        !Number.isFinite(file.line_count) ||
-        !Array.isArray(file.tags) ||
-        !Array.isArray(file.exports) ||
-        !Array.isArray(file.imports)
-      ) {
-        throw new Error(
-          `Invalid annotation structure for file: ${file.path || 'unknown'}`
-        );
-      }
+    try {
+      graphRaw = JSON.parse(graphContent);
+    } catch (error) {
+      throw new Error(
+        `Failed to parse graph.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`
+      );
     }
+
+    try {
+      tagsRaw = JSON.parse(tagsContent);
+    } catch (error) {
+      throw new Error(
+        `Failed to parse tags.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`
+      );
+    }
+
+    try {
+      filesRaw = JSON.parse(annotationsContent);
+    } catch (error) {
+      throw new Error(
+        `Failed to parse annotations.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`
+      );
+    }
+
+    // Validate parsed JSON against schemas
+    const metaResult = MetaJsonSchema.safeParse(metaRaw);
+    if (!metaResult.success) {
+      const errors = metaResult.error.issues
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
+        .join('\n');
+      throw new Error(
+        `Invalid meta.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
+      );
+    }
+
+    const graphResult = GraphJsonSchema.safeParse(graphRaw);
+    if (!graphResult.success) {
+      const errors = graphResult.error.issues
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
+        .join('\n');
+      throw new Error(
+        `Invalid graph.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
+      );
+    }
+
+    const tagsResult = TagsJsonSchema.safeParse(tagsRaw);
+    if (!tagsResult.success) {
+      const errors = tagsResult.error.issues
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
+        .join('\n');
+      throw new Error(
+        `Invalid tags.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
+      );
+    }
+
+    const filesResult = AnnotationsJsonSchema.safeParse(filesRaw);
+    if (!filesResult.success) {
+      const errors = filesResult.error.issues
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
+        .join('\n');
+      throw new Error(
+        `Invalid annotations.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
+      );
+    }
+
+    const meta = metaResult.data as MetaJson;
+    const graph = graphResult.data as GraphJson;
+    const tags = tagsResult.data as TagsJson;
+    const files = filesResult.data as FileAnnotation[];
 
     return { meta, graph, tags, files };
   } catch (error) {
