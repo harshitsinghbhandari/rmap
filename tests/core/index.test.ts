@@ -36,10 +36,9 @@ describe('Core module exports', () => {
 
   it('should export UPDATE_THRESHOLDS with correct properties', () => {
     assert.ok(core.UPDATE_THRESHOLDS);
-    assert.strictEqual(typeof core.UPDATE_THRESHOLDS.DELTA_ONLY, 'number');
-    assert.strictEqual(typeof core.UPDATE_THRESHOLDS.DELTA_WITH_VALIDATION, 'number');
-    assert.strictEqual(typeof core.UPDATE_THRESHOLDS.FULL_REBUILD, 'number');
-    assert.ok(core.UPDATE_THRESHOLDS.DELTA_ONLY < core.UPDATE_THRESHOLDS.FULL_REBUILD);
+    assert.strictEqual(typeof core.UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION, 'number');
+    assert.strictEqual(typeof core.UPDATE_THRESHOLDS.MAX_DELTA_UPDATE, 'number');
+    assert.ok(core.UPDATE_THRESHOLDS.MIN_DELTA_WITH_VALIDATION < core.UPDATE_THRESHOLDS.MAX_DELTA_UPDATE);
   });
 
   it('should export valid MAX_TAGS_PER_FILE and MAX_FILES_PER_TASK', () => {

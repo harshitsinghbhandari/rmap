@@ -67,59 +67,58 @@ interface RepoMapData {
 async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
   try {
     // Read all map files
-    const [metaContent, graphContent, tagsContent] = await Promise.all([
-      readFile(join(repoMapPath, 'meta.json'), 'utf-8'),
-      readFile(join(repoMapPath, 'graph.json'), 'utf-8'),
-      readFile(join(repoMapPath, 'tags.json'), 'utf-8'),
-    ]);
+    const [metaContent, graphContent, tagsContent, annotationsContent] =
+      await Promise.all([
+        readFile(join(repoMapPath, 'meta.json'), 'utf-8'),
+        readFile(join(repoMapPath, 'graph.json'), 'utf-8'),
+        readFile(join(repoMapPath, 'tags.json'), 'utf-8'),
+        readFile(join(repoMapPath, 'annotations.json'), 'utf-8').catch((err) => {
+          if (err.code === 'ENOENT') {
+            throw new Error(
+              'annotations.json not found. Please rebuild the map with "rmap map --full" to generate complete annotations.'
+            );
+          }
+          throw err;
+        }),
+      ]);
 
     const meta: MetaJson = JSON.parse(metaContent);
     const graph: GraphJson = JSON.parse(graphContent);
     const tags: TagsJson = JSON.parse(tagsContent);
+    const files: FileAnnotation[] = JSON.parse(annotationsContent);
 
-    // Reconstruct file annotations from graph and tags
-    // For now, we'll build a minimal file list from the graph
-    // In the full implementation, this would load from a separate annotations.json
-    const fileMap = new Map<string, Partial<FileAnnotation>>();
-
-    // Collect files from graph
-    for (const [filePath, graphNode] of Object.entries(graph)) {
-      fileMap.set(filePath, {
-        path: filePath,
-        imports: graphNode.imports,
-        exports: [], // Will be populated from annotations
-        tags: [],
-        purpose: '',
-        language: '',
-        size_bytes: 0,
-        line_count: 0,
-      });
+    // Validate that annotations is an array
+    if (!Array.isArray(files)) {
+      throw new Error(
+        'Invalid annotations.json: expected an array of file annotations'
+      );
     }
 
-    // Populate tags from tag index
-    for (const [tag, filePaths] of Object.entries(tags.index)) {
-      for (const filePath of filePaths) {
-        const file = fileMap.get(filePath);
-        if (file && file.tags) {
-          file.tags.push(tag as any);
-        }
+    // Basic validation of annotation structure
+    for (const file of files) {
+      // Guard against null/undefined entries
+      if (!file || typeof file !== 'object') {
+        throw new Error('Invalid annotation entry: expected object');
+      }
+
+      if (
+        !file.path ||
+        typeof file.path !== 'string' ||
+        typeof file.language !== 'string' ||
+        typeof file.purpose !== 'string' ||
+        typeof file.size_bytes !== 'number' ||
+        !Number.isFinite(file.size_bytes) ||
+        typeof file.line_count !== 'number' ||
+        !Number.isFinite(file.line_count) ||
+        !Array.isArray(file.tags) ||
+        !Array.isArray(file.exports) ||
+        !Array.isArray(file.imports)
+      ) {
+        throw new Error(
+          `Invalid annotation structure for file: ${file.path || 'unknown'}`
+        );
       }
     }
-
-    // Convert to FileAnnotation array
-    // Note: In a real implementation, we'd load full annotations from a separate file
-    const files: FileAnnotation[] = Array.from(fileMap.values()).map(
-      (partial) => ({
-        path: partial.path!,
-        language: partial.language || 'unknown',
-        size_bytes: partial.size_bytes || 0,
-        line_count: partial.line_count || 0,
-        purpose: partial.purpose || '',
-        tags: partial.tags || [],
-        exports: partial.exports || [],
-        imports: partial.imports || [],
-      })
-    );
 
     return { meta, graph, tags, files };
   } catch (error) {
