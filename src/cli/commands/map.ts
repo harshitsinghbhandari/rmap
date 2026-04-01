@@ -15,24 +15,32 @@ import {
   getCommitCount,
 } from '../../coordinator/delta.js';
 import { formatVersionString } from '../../coordinator/versioning.js';
+import {
+  loadCheckpoint,
+  clearCheckpoint,
+  validateCheckpoint,
+  getCheckpointSummary,
+} from '../../coordinator/checkpoint.js';
 
 export const mapCommand = new Command('map')
   .description('Build or update repository map')
   .option('--full', 'Force full rebuild of the entire map')
   .option('--status', 'Show current map status and staleness')
   .option('--update', 'Update map based on git changes (delta update)')
+  .option('--resume', 'Explicitly resume from checkpoint (error if none exists)')
+  .option('--no-resume', 'Ignore checkpoint and start fresh')
   .action(async (options) => {
     try {
       // Determine which operation to perform
       if (options.status) {
         await showMapStatus();
       } else if (options.full) {
-        await buildFullMap();
+        await buildFullMap(options);
       } else if (options.update) {
         await updateMap();
       } else {
         // Default: delta update if map exists, otherwise full build
-        await buildOrUpdateMap();
+        await buildOrUpdateMap(options);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -52,13 +60,67 @@ async function showMapStatus(): Promise<void> {
 
   const repoRoot = process.cwd();
 
+  // Check for checkpoint first
+  const checkpoint = loadCheckpoint(repoRoot);
+  if (checkpoint) {
+    console.log('📋 Checkpoint Information:');
+    console.log('─────────────────────────────────────────');
+
+    // Get current commit for validation
+    let currentCommit: string;
+    try {
+      currentCommit = getCurrentCommit(repoRoot);
+    } catch (error) {
+      currentCommit = 'unknown';
+    }
+
+    // Display checkpoint summary
+    const completedLevels = Object.entries(checkpoint.levels)
+      .filter(([_, level]) => level.status === 'completed')
+      .map(([num]) => num);
+
+    console.log(`Current level: ${checkpoint.current_level} (${checkpoint.levels[checkpoint.current_level]?.status || 'unknown'})`);
+    console.log(`Completed levels: [${completedLevels.join(', ')}]`);
+    console.log(`Started: ${new Date(checkpoint.started_at).toLocaleString()}`);
+    console.log(`Git commit: ${checkpoint.git_commit.substring(0, 7)}`);
+
+    // Show Level 3 progress if applicable
+    const level3 = checkpoint.levels[3];
+    if (level3?.status === 'in_progress' || level3?.status === 'interrupted') {
+      const completedTasks = level3.completed_task_ids?.length || 0;
+      console.log();
+      console.log('Level 3: Deep File Annotator');
+      console.log(`  Status: ${level3.status}`);
+      console.log(`  Tasks completed: ${completedTasks}`);
+      if (level3.started_at) {
+        console.log(`  Started: ${new Date(level3.started_at).toLocaleString()}`);
+      }
+    }
+
+    // Validate checkpoint against current commit
+    const validation = validateCheckpoint(checkpoint, currentCommit);
+    if (!validation.valid) {
+      console.log();
+      console.log(`⚠️  Warning: ${validation.error}`);
+      console.log('   Run with --no-resume to start fresh.');
+    }
+
+    console.log();
+    console.log('─────────────────────────────────────────');
+    console.log();
+  }
+
   // Read existing map
   const existingMeta = readExistingMeta(repoRoot);
 
   if (!existingMeta) {
     console.log('❌ No map found');
     console.log();
-    console.log('Run `rmap map` to create a new map.');
+    if (checkpoint) {
+      console.log('Run `rmap map` to resume building the map.');
+    } else {
+      console.log('Run `rmap map` to create a new map.');
+    }
     return;
   }
 
@@ -120,7 +182,7 @@ async function showMapStatus(): Promise<void> {
 /**
  * Force a full rebuild of the map
  */
-async function buildFullMap(): Promise<void> {
+async function buildFullMap(options: { resume?: boolean }): Promise<void> {
   console.log('╔═══════════════════════════════════════╗');
   console.log('║       Building Repository Map         ║');
   console.log('╚═══════════════════════════════════════╝');
@@ -128,11 +190,39 @@ async function buildFullMap(): Promise<void> {
 
   const repoRoot = process.cwd();
 
+  // Handle resume flag logic
+  let resumeOption = true; // default
+
+  if (options.resume === true) {
+    // Explicit --resume: error if no checkpoint exists
+    const checkpoint = loadCheckpoint(repoRoot);
+    if (!checkpoint) {
+      console.error('❌ Error: No checkpoint found. Cannot resume.');
+      console.error('   Remove --resume flag to start fresh.');
+      process.exit(1);
+    }
+
+    const currentCommit = getCurrentCommit(repoRoot);
+    const validation = validateCheckpoint(checkpoint, currentCommit);
+    if (!validation.valid) {
+      console.error(`❌ Error: Checkpoint is invalid: ${validation.error}`);
+      console.error('   Remove --resume flag to start fresh.');
+      process.exit(1);
+    }
+    resumeOption = true;
+  } else if (options.resume === false) {
+    // --no-resume: clear checkpoint and start fresh
+    console.log('🗑️  Clearing existing checkpoint...');
+    clearCheckpoint(repoRoot);
+    resumeOption = false;
+  }
+
   const result = await buildMap({
     repoRoot,
     forceFullRebuild: true,
     autofix: true,
     parallel: true,
+    resume: resumeOption,
   });
 
   console.log('\n✨ Map build complete!');
@@ -180,7 +270,7 @@ async function updateMap(): Promise<void> {
   if (changes.updateStrategy === 'full-rebuild') {
     console.log('⚠️  Large changes detected, performing full rebuild...');
     console.log();
-    await buildFullMap();
+    await buildFullMap({});
   } else {
     console.log('🔄 Performing delta update...');
     console.log('   This feature requires integration with the pipeline.');
@@ -197,13 +287,40 @@ async function updateMap(): Promise<void> {
 /**
  * Default behavior: delta update if map exists, otherwise full build
  */
-async function buildOrUpdateMap(): Promise<void> {
+async function buildOrUpdateMap(options: { resume?: boolean }): Promise<void> {
   console.log('╔═══════════════════════════════════════╗');
   console.log('║       Repository Map Builder          ║');
   console.log('╚═══════════════════════════════════════╝');
   console.log();
 
   const repoRoot = process.cwd();
+
+  // Handle resume flag logic
+  let resumeOption = true; // default
+
+  if (options.resume === true) {
+    // Explicit --resume: error if no checkpoint exists
+    const checkpoint = loadCheckpoint(repoRoot);
+    if (!checkpoint) {
+      console.error('❌ Error: No checkpoint found. Cannot resume.');
+      console.error('   Remove --resume flag to start fresh.');
+      process.exit(1);
+    }
+
+    const currentCommit = getCurrentCommit(repoRoot);
+    const validation = validateCheckpoint(checkpoint, currentCommit);
+    if (!validation.valid) {
+      console.error(`❌ Error: Checkpoint is invalid: ${validation.error}`);
+      console.error('   Remove --resume flag to start fresh.');
+      process.exit(1);
+    }
+    resumeOption = true;
+  } else if (options.resume === false) {
+    // --no-resume: clear checkpoint and start fresh
+    console.log('🗑️  Clearing existing checkpoint...');
+    clearCheckpoint(repoRoot);
+    resumeOption = false;
+  }
 
   // Check if map exists
   const existingMeta = readExistingMeta(repoRoot);
@@ -238,6 +355,7 @@ async function buildOrUpdateMap(): Promise<void> {
     forceFullRebuild: false, // Will do delta if possible (when implemented)
     autofix: true,
     parallel: true,
+    resume: resumeOption,
   });
 
   console.log('\n✨ Map build complete!');
