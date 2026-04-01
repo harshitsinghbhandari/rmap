@@ -22,6 +22,8 @@ export type {
   CheckpointState,
   LevelCheckpoint,
   LevelStatus,
+  Level0Output,
+  Level1Output,
 } from './types.js';
 
 // Export all constants
