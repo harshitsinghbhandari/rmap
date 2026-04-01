@@ -39,6 +39,7 @@ const mockAnnotations: FileAnnotation[] = [
     path: 'src/index.ts',
     language: 'TypeScript',
     size_bytes: 1024,
+    line_count: 50,
     purpose: 'Main entry point',
     tags: ['entrypoint', 'initialization'],
     exports: ['main'],
@@ -48,6 +49,7 @@ const mockAnnotations: FileAnnotation[] = [
     path: 'src/auth.ts',
     language: 'TypeScript',
     size_bytes: 2048,
+    line_count: 80,
     purpose: 'Authentication logic',
     tags: ['authentication', 'security'],
     exports: ['login', 'logout'],
@@ -57,6 +59,7 @@ const mockAnnotations: FileAnnotation[] = [
     path: 'src/utils.ts',
     language: 'TypeScript',
     size_bytes: 512,
+    line_count: 30,
     purpose: 'Utility functions',
     tags: ['utility', 'helper'],
     exports: ['format', 'validate'],
@@ -66,6 +69,7 @@ const mockAnnotations: FileAnnotation[] = [
     path: 'tests/auth.test.ts',
     language: 'TypeScript',
     size_bytes: 1024,
+    line_count: 40,
     purpose: 'Auth tests',
     tags: ['testing'],
     exports: [],
@@ -284,6 +288,8 @@ test('assembleMap: creates valid annotations.json', () => {
     assert.ok(firstAnnotation);
     assert.strictEqual(firstAnnotation.language, 'TypeScript');
     assert.strictEqual(firstAnnotation.purpose, 'Main entry point');
+    assert.strictEqual(typeof firstAnnotation.line_count, 'number');
+    assert.strictEqual(typeof firstAnnotation.size_bytes, 'number');
     assert.ok(Array.isArray(firstAnnotation.tags));
     assert.ok(Array.isArray(firstAnnotation.exports));
     assert.ok(Array.isArray(firstAnnotation.imports));
