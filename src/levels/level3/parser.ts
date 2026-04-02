@@ -128,6 +128,25 @@ function normalizeImports(
 }
 
 /**
+ * Process raw_imports from Level 0 parsers into normalized internal imports
+ *
+ * This function takes the imports extracted by Level 0 parsers (Babel AST or regex)
+ * and filters/normalizes them to produce repo-root-relative paths for internal files only.
+ *
+ * @param rawImports - Import strings from Level 0 (raw_imports field)
+ * @param currentFilePath - Path of the file being processed (for resolving relative imports)
+ * @param repoRoot - Repository root path
+ * @returns Array of normalized internal import paths
+ */
+export function processRawImports(
+  rawImports: string[],
+  currentFilePath: string,
+  repoRoot: string
+): string[] {
+  return normalizeImports(rawImports, currentFilePath, repoRoot);
+}
+
+/**
  * Validate the structure of raw annotation
  */
 function validateRawAnnotation(data: unknown): RawAnnotation {
@@ -193,12 +212,14 @@ function validateRawAnnotation(data: unknown): RawAnnotation {
  * @param responseText - Raw text response from LLM
  * @param metadata - File metadata from Level 0
  * @param repoRoot - Repository root path (for normalizing imports)
+ * @param preExtractedImports - Optional pre-extracted imports from Level 0 parsers (overrides LLM-extracted imports)
  * @returns Parse result with annotation and validation details
  */
 export function parseAnnotationResponseWithDetails(
   responseText: string,
   metadata: RawFileMetadata,
-  repoRoot: string = '.'
+  repoRoot: string = '.',
+  preExtractedImports?: string[]
 ): AnnotationParseResult {
   // Remove markdown code blocks if present
   let jsonText = responseText.trim();
@@ -234,8 +255,10 @@ export function parseAnnotationResponseWithDetails(
     };
   }
 
-  // Normalize imports
-  const normalizedImports = normalizeImports(raw.imports, metadata.path, repoRoot);
+  // Use pre-extracted imports from Level 0 if available, otherwise use LLM-extracted imports
+  const normalizedImports = preExtractedImports !== undefined
+    ? preExtractedImports
+    : normalizeImports(raw.imports, metadata.path, repoRoot);
 
   // Build FileAnnotation
   const annotation: FileAnnotation = {
@@ -262,14 +285,16 @@ export function parseAnnotationResponseWithDetails(
  * @param responseText - Raw text response from LLM
  * @param metadata - File metadata from Level 0
  * @param repoRoot - Repository root path (for normalizing imports)
+ * @param preExtractedImports - Optional pre-extracted imports from Level 0 parsers
  * @returns Validated FileAnnotation
  */
 export function parseAnnotationResponse(
   responseText: string,
   metadata: RawFileMetadata,
-  repoRoot: string = '.'
+  repoRoot: string = '.',
+  preExtractedImports?: string[]
 ): FileAnnotation {
-  const result = parseAnnotationResponseWithDetails(responseText, metadata, repoRoot);
+  const result = parseAnnotationResponseWithDetails(responseText, metadata, repoRoot, preExtractedImports);
 
   if (result.annotation === null) {
     throw new AnnotationValidationError(

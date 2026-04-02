@@ -14,6 +14,7 @@ import { buildAnnotationPrompt } from './prompt.js';
 import {
   parseAnnotationResponse,
   parseAnnotationResponseWithDetails,
+  processRawImports,
   AnnotationValidationError,
 } from './parser.js';
 import { buildTagCorrectionPrompt } from './tag-validator.js';
@@ -104,6 +105,10 @@ async function annotateFile(
   let lastInvalidTags: string[] = [];
   let lastResponse = '';
 
+  // Process raw imports from Level 0 parsers
+  // This uses the accurate Babel AST or regex-based extraction instead of asking the LLM
+  const processedImports = processRawImports(metadata.raw_imports, metadata.path, repoRoot);
+
   // Each iteration makes exactly one LLM call
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -139,10 +144,12 @@ async function annotateFile(
       lastResponse = response.text;
 
       // Parse and validate response with detailed tag validation
+      // Pass processedImports from Level 0 to override LLM-extracted imports
       const parseResult = parseAnnotationResponseWithDetails(
         response.text,
         metadata,
-        repoRoot
+        repoRoot,
+        processedImports
       );
 
       // Check if we have invalid tags
@@ -217,7 +224,7 @@ async function annotateFile(
               });
             }
 
-            const annotation = parseAnnotationResponse(retryResponse.text, metadata, repoRoot);
+            const annotation = parseAnnotationResponse(retryResponse.text, metadata, repoRoot, processedImports);
 
             console.log(`✓ Structural validation retry successful for ${metadata.path}`);
             return annotation;
