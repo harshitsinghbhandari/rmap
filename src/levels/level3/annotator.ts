@@ -217,49 +217,58 @@ export async function annotateFiles(
 
   console.log(`Starting Level 3 annotation...`);
   console.log(`Agent size: ${agentSize} (${model})`);
-  console.log(`Files to annotate: ${files.length}`);
-  console.log(`Concurrency: ${CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS} parallel tasks`);
+  console.log(`Concurrency: ${CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS} parallel tasks\n`);
 
-  // Create concurrency pool for parallel processing
-  // Type: ConcurrencyPool<input type, output type>
-  const pool = new ConcurrencyPool<RawFileMetadata, FileAnnotation>({
-    concurrency: CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS,
-    delayBetweenTasks: CONCURRENCY_CONFIG.TASK_START_DELAY_MS,
-    stopOnError: false, // Continue processing even if some files fail
-  });
+  // Import progress UI (dynamic to avoid issues if not available)
+  const { PercentageProgressBar } = await import('../../cli/progress-ui.js');
 
-  // Track progress
-  let completedCount = 0;
-  const totalCount = files.length;
+  // Create progress bar showing percentage only
+  const progressBar = new PercentageProgressBar(files.length, 'Level 3: Deep File Annotator');
 
-  // Process files concurrently
-  const { successes: annotations, failures } = await pool.runWithStats(
-    files,
-    async (metadata, index): Promise<FileAnnotation> => {
-      const absolutePath = path.join(repoRoot, metadata.path);
+  try {
+    // Create concurrency pool for parallel processing
+    // Type: ConcurrencyPool<input type, output type>
+    const pool = new ConcurrencyPool<RawFileMetadata, FileAnnotation>({
+      concurrency: CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS,
+      delayBetweenTasks: CONCURRENCY_CONFIG.TASK_START_DELAY_MS,
+      stopOnError: false, // Continue processing even if some files fail
+    });
 
-      const annotation = await annotateFile(absolutePath, metadata, llmClient, model, repoRoot, metrics);
+    // Track progress
+    let completedCount = 0;
+    const totalCount = files.length;
 
-      completedCount++;
-      if (completedCount % OUTPUT.PROGRESS_UPDATE_INTERVAL_L3 === 0 || completedCount === totalCount) {
-        console.log(`Progress: ${completedCount}/${totalCount} files processed`);
+    // Process files concurrently
+    const { successes: annotations, failures } = await pool.runWithStats(
+      files,
+      async (metadata, index): Promise<FileAnnotation> => {
+        const absolutePath = path.join(repoRoot, metadata.path);
+
+        const annotation = await annotateFile(absolutePath, metadata, llmClient, model, repoRoot, metrics);
+
+        completedCount++;
+        // Update progress bar (shows percentage only)
+        progressBar.increment();
+
+        if (annotation === null) {
+          throw new Error(`Failed to annotate ${metadata.path}`);
+        }
+
+        return annotation;
       }
+    );
 
-      if (annotation === null) {
-        throw new Error(`Failed to annotate ${metadata.path}`);
-      }
-
-      return annotation;
+    console.log(`\n✓ Level 3 annotation complete`);
+    console.log(`  Success: ${annotations.length}/${files.length}`);
+    if (failures.length > 0) {
+      console.log(`  Failed: ${failures.length}/${files.length}`);
     }
-  );
 
-  console.log(`✓ Level 3 annotation complete`);
-  console.log(`  Success: ${annotations.length}/${files.length}`);
-  if (failures.length > 0) {
-    console.log(`  Failed: ${failures.length}/${files.length}`);
+    return annotations;
+  } finally {
+    // Always stop progress bar to restore cursor
+    progressBar.stop();
   }
-
-  return annotations;
 }
 
 /**
@@ -277,9 +286,12 @@ export async function annotateTask(
   repoRoot: string,
   metrics?: MetricsCollector
 ): Promise<FileAnnotation[]> {
-  console.log(`\nProcessing task: ${task.scope}`);
-  console.log(`Agent size: ${task.agent_size}`);
-  console.log(`Estimated files: ${task.estimated_files}`);
+  // Import UI constants for consistent emoji/plain-text handling
+  const { getUI } = await import('../../cli/ui-constants.js');
+  const UI = getUI();
+
+  console.log(`\n${UI.EMOJI.FOLDER} Processing task: ${task.scope}`);
+  console.log(`   Agent size: ${task.agent_size}`);
 
   // Filter files that match the task scope
   const scopeFiles = allFiles.filter((file) => {
@@ -291,10 +303,8 @@ export async function annotateTask(
     return file.path.includes(task.scope);
   });
 
-  console.log(`Actual files in scope: ${scopeFiles.length}`);
-
   if (scopeFiles.length === 0) {
-    console.warn(`Warning: No files found for scope ${task.scope}`);
+    console.warn(`${UI.EMOJI.WARNING} Warning: No files found for scope ${task.scope}`);
     return [];
   }
 

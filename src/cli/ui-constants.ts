@@ -100,9 +100,14 @@ export interface UIConstants {
  * Check if NO_COLOR environment variable is set
  * @see https://no-color.org/
  */
-function shouldUsePlainText(): boolean {
+export function shouldUsePlainText(): boolean {
   return process.env.NO_COLOR !== undefined;
 }
+
+/**
+ * Whether NO_COLOR mode is enabled
+ */
+export const NO_COLOR_ENABLED = shouldUsePlainText();
 
 /**
  * Get the appropriate UI constants based on environment

@@ -61,11 +61,15 @@
     "@babel/parser": "^7.29.2",
     "@babel/traverse": "^7.29.0",
     "@babel/types": "^7.29.0",
+    "@clack/prompts": "^1.2.0",
+    "cli-progress": "^3.12.0",
     "commander": "^12.1.0",
+    "log-update": "^7.2.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/babel__traverse": "^7.28.0",
+    "@types/cli-progress": "^3.11.6",
     "@types/node": "^20.17.15",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
