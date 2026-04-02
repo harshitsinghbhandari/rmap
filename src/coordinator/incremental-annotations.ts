@@ -5,8 +5,8 @@
  * to enable resilient checkpoint-resume behavior.
  */
 
-import { promises as fs } from 'fs';
-import path from 'path';
+import * as fs from 'node:fs/promises';
+import path from 'node:path';
 import type { FileAnnotation } from '../core/types.js';
 import { CHECKPOINT_DIR, CHECKPOINT_FILES } from '../core/constants.js';
 
@@ -57,6 +57,9 @@ export async function appendAnnotationsToFile(
 /**
  * Load all annotations from incremental JSONL file
  *
+ * Parses each line individually and skips malformed lines (e.g., from interrupted writes)
+ * to ensure resume remains robust even if the file is corrupted.
+ *
  * @param repoRoot - Repository root directory
  * @returns Array of annotations, or empty array if file doesn't exist
  */
@@ -72,7 +75,20 @@ export async function loadIncrementalAnnotations(repoRoot: string): Promise<File
     }
 
     const lines = trimmed.split('\n');
-    return lines.map((line) => JSON.parse(line) as FileAnnotation);
+    const annotations: FileAnnotation[] = [];
+
+    // Parse each line individually with error handling for robustness
+    for (const line of lines) {
+      try {
+        const annotation = JSON.parse(line) as FileAnnotation;
+        annotations.push(annotation);
+      } catch (parseErr) {
+        // Skip malformed lines (e.g., truncated final line from interrupted write)
+        console.warn(`Skipping malformed line in incremental annotations: ${parseErr}`);
+      }
+    }
+
+    return annotations;
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
       return [];
@@ -119,7 +135,7 @@ export async function clearIncrementalAnnotations(repoRoot: string): Promise<voi
 /**
  * Get count of annotations in incremental file
  *
- * Efficiently counts lines without loading all data into memory.
+ * Reads the file and counts valid JSONL lines.
  *
  * @param repoRoot - Repository root directory
  * @returns Number of annotations saved

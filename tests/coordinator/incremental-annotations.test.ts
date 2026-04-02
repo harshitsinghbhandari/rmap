@@ -6,6 +6,7 @@ import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   appendAnnotationsToFile,
   loadIncrementalAnnotations,
@@ -14,6 +15,9 @@ import {
   getIncrementalAnnotationCount,
 } from '../../src/coordinator/incremental-annotations.js';
 import type { FileAnnotation } from '../../src/core/types.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 describe('Incremental Annotations', () => {
   const testRepoRoot = path.join(__dirname, '..', '..', 'test-temp-incremental');

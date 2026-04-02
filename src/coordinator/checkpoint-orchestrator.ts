@@ -32,7 +32,6 @@ import {
   loadIncrementalAnnotations,
   clearIncrementalAnnotations,
   finalizeAnnotations,
-  getIncrementalAnnotationCount,
 } from './incremental-annotations.js';
 
 /**
@@ -323,6 +322,7 @@ export class CheckpointOrchestrator {
    * Save annotations incrementally to JSONL file
    *
    * Appends annotations to the incremental file and updates checkpoint metadata.
+   * Tracks count in memory to avoid O(n²) I/O from re-reading the file on every save.
    *
    * @param annotations - Annotations to save
    */
@@ -334,10 +334,12 @@ export class CheckpointOrchestrator {
     // Append to JSONL file
     await appendAnnotationsToFile(this.repoRoot, annotations);
 
-    // Get total count and update checkpoint
-    const totalCount = await getIncrementalAnnotationCount(this.repoRoot);
+    // Track count in memory by incrementing from current checkpoint value
+    const currentCount = this.checkpoint.levels[3]?.annotations_saved ?? 0;
+    const newCount = currentCount + annotations.length;
+
     updateLevelCheckpoint(this.repoRoot, this.checkpoint, 3, {
-      annotations_saved: totalCount,
+      annotations_saved: newCount,
       last_saved_at: new Date().toISOString(),
     });
   }

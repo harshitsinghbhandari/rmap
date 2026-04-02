@@ -132,17 +132,33 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     delegation = checkpointer.loadCompletedLevel<TaskDelegation>(2);
     if (delegation) console.log('  ✓ Level 2 already completed');
 
-    // Load Level 3 partial progress if interrupted
+    // Load Level 3 partial progress if interrupted or in progress
     const checkpoint = checkpointer.getCheckpoint();
-    if (checkpoint.levels[3]?.status === 'in_progress') {
+    const level3Status = checkpoint.levels[3]?.status;
+
+    if (level3Status === 'in_progress' || level3Status === 'interrupted') {
       // Load incremental annotations from JSONL file
       level3Annotations = await checkpointer.loadIncrementalProgress();
+
+      // Backward compatibility: if JSONL is empty but we have completed tasks,
+      // fall back to loading from level3_progress.json (from older checkpoints)
+      if (level3Annotations.length === 0) {
+        const legacyAnnotations = checkpointer.loadLevel3Progress();
+        if (legacyAnnotations.length > 0) {
+          level3Annotations = legacyAnnotations;
+          console.log(`  📦 Loaded ${level3Annotations.length} annotations from legacy checkpoint`);
+          // Migrate to JSONL format for future saves
+          await checkpointer.clearIncrementalProgress();
+          await checkpointer.saveAnnotationsIncremental(level3Annotations);
+        }
+      }
+
       completedTaskIds = checkpointer.getCompletedTaskIds();
       if (completedTaskIds.size > 0) {
         console.log(`  ⏸️  Level 3 partially completed: ${completedTaskIds.size} tasks done`);
         console.log(`  📦 Loaded ${level3Annotations.length} previously saved annotations`);
       }
-    } else if (checkpoint.levels[3]?.status === 'completed') {
+    } else if (level3Status === 'completed') {
       console.log('  ✓ Level 3 already completed');
     }
   } else if (resume) {
@@ -229,12 +245,15 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     tracker.startLevel('Level 3: Deep File Annotator');
     metrics.startLevel(3, 'Level 3: Deep File Annotator');
 
-    // Initialize Level 3 checkpoint if not already started
-    if (checkpoint.levels[3]?.status !== 'in_progress') {
+    // Initialize Level 3 checkpoint if not already started or interrupted
+    const level3Status = checkpoint.levels[3]?.status;
+
+    if (level3Status !== 'in_progress' && level3Status !== 'interrupted') {
+      // Fresh start: initialize and clear old data
       checkpointer.initializeLevel3(delegation.tasks.length);
-      // Clear any old incremental data when starting fresh
       await checkpointer.clearIncrementalProgress();
     }
+    // For interrupted/in_progress, keep existing incremental data
 
     // Filter out completed tasks for resume
     const remainingTasks = checkpointer.filterRemainingTasks(delegation.tasks, delegation);
