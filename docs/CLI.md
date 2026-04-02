@@ -67,11 +67,14 @@ Output:
 [Level 3] Annotating files... ████████████████████ 100%
 [Level 4] Validating map... ✓ (3 issues auto-fixed)
 
-✨ Map built successfully!
-   Files: 523
-   Time: 4.2 minutes
-   Version: 1
-   Location: .repo_map/
+Map created successfully (4m 12s)
+  Files: 523 processed
+  Tokens: 68,450 (input: 54,200, output: 14,250)
+  Cost: $0.16
+  Log: .repo_map/logs/run-2026-04-01T15-30-22.json
+
+✓ Map written to: .repo_map/
+✓ Files written: 5
 ```
 
 **Delta update (automatic):**
@@ -152,10 +155,79 @@ After running `rmap map`, the `.repo_map/` directory contains:
 ├── graph.json         # Dependency graph
 ├── tags.json          # Tag index
 ├── stats.json         # Build statistics
-└── validation.json    # Validation results
+├── validation.json    # Validation results
+└── logs/              # Performance & cost metrics
+    ├── run-{timestamp}.json  # Detailed metrics for each run
+    └── latest.json           # Most recent run metrics
 ```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed file format specifications.
+
+#### Performance Metrics & Logging
+
+Every `rmap map` run automatically tracks and logs detailed performance metrics:
+
+**Console Output:**
+```
+Map created successfully (2m 34s)
+  Files: 523 processed
+  Tokens: 65,432 (input: 52,100, output: 13,332)
+  Cost: $0.14
+  Log: .repo_map/logs/run-2026-04-01T12-30-00.json
+```
+
+**Metrics Tracked:**
+- **Per-level timing** - Duration of each pipeline level (0-4)
+- **Token usage** - Input and output tokens for each LLM call
+- **API calls** - Total number of API requests per model
+- **Cost estimation** - Actual cost based on model pricing
+- **Files processed** - Number of files annotated
+
+**Log Files:**
+- `run-{timestamp}.json` - Complete metrics for a specific run, including:
+  - Per-level token usage and timing
+  - Model-specific cost breakdowns
+  - Total duration and throughput
+- `latest.json` - Symlink to most recent run (useful for quick access)
+
+**Example Log File:**
+```json
+{
+  "startedAt": "2026-04-01T12:30:00.000Z",
+  "completedAt": "2026-04-01T12:32:34.521Z",
+  "totalDurationMs": 154521,
+  "totalDurationMin": 2.6,
+  "levels": [
+    {
+      "level": 1,
+      "name": "Level 1: Structure Detector",
+      "startedAt": "2026-04-01T12:30:05.000Z",
+      "completedAt": "2026-04-01T12:30:08.120Z",
+      "durationMs": 3120,
+      "inputTokens": 2450,
+      "outputTokens": 680,
+      "apiCalls": 1,
+      "model": "claude-haiku-4-5-20251001",
+      "estimatedCost": 0.0015
+    }
+  ],
+  "totalInputTokens": 52100,
+  "totalOutputTokens": 13332,
+  "totalApiCalls": 124,
+  "totalFilesProcessed": 523,
+  "totalEstimatedCost": 0.14,
+  "costByModel": {
+    "claude-haiku-4-5-20251001": 0.08,
+    "claude-sonnet-4-5-20250929": 0.06
+  }
+}
+```
+
+**Use Cases:**
+- **Cost tracking** - Monitor API costs across runs
+- **Performance optimization** - Identify slow levels or files
+- **Debugging** - Review token usage and timing for troubleshooting
+- **Billing** - Export metrics for cost attribution
 
 ---
 
