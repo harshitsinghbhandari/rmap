@@ -26,6 +26,13 @@ export class ProgressTracker {
    */
   startLevel(level: string): void {
     this.levelStartTimes.set(level, Date.now());
+
+    // Stop any existing spinner before starting a new one
+    if (this.currentSpinner) {
+      this.currentSpinner.stop();
+      this.currentSpinner = null;
+    }
+
     printLevelHeader(level);
     this.currentSpinner = new LevelSpinner(level);
   }

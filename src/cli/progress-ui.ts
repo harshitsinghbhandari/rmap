@@ -39,12 +39,8 @@ export class LevelSpinner {
     if (!NO_COLOR_ENABLED) {
       this.spinner = clack.spinner();
       this.spinner.start(level);
-    } else {
-      // Plain text fallback for NO_COLOR
-      console.log(`\n${'='.repeat(60)}`);
-      console.log(`Starting ${level}`);
-      console.log('='.repeat(60));
     }
+    // NO_COLOR mode: printLevelHeader handles the header, spinner is silent
   }
 
   /**
@@ -210,7 +206,8 @@ export class RollingLogViewport {
    */
   log(message: string): void {
     if (!this.enabled) {
-      // In NO_COLOR mode, just print directly (but limit verbosity)
+      // In NO_COLOR mode, print directly without rolling viewport
+      console.log(message);
       return;
     }
 
@@ -231,7 +228,7 @@ export class RollingLogViewport {
     if (!this.enabled) return;
 
     const width = 60;
-    const topBorder = `┌─ ${this.title} ${'\u2500'.repeat(Math.max(0, width - this.title.length - 4))}┐`;
+    const topBorder = `┌─ ${this.title} ${'\u2500'.repeat(Math.max(0, width - this.title.length - 3))}┐`;
     const bottomBorder = `└${'─'.repeat(width)}┘`;
 
     const content = this.logs
@@ -276,12 +273,14 @@ export function printLevelHeader(level: string): void {
   if (IS_TEST_ENV) return;
 
   if (!NO_COLOR_ENABLED) {
-    console.log('\n' + clack.intro(level));
+    console.log();
+    clack.intro(level);
   } else {
+    // Use plain ASCII box drawing for NO_COLOR mode
     const width = 60;
-    console.log(`\n${'╔'}${'═'.repeat(width)}${'╗'}`);
-    console.log(`${'║'}  ${level.padEnd(width - 2)}${'║'}`);
-    console.log(`${'╚'}${'═'.repeat(width)}${'╝'}`);
+    console.log(`\n${'+'}${'='.repeat(width)}${'+'}`);
+    console.log(`${'|'}  ${level.padEnd(width - 2)}${'|'}`);
+    console.log(`${'+'}${'='.repeat(width)}${'+'}`);
   }
 }
 
@@ -300,23 +299,25 @@ export function printFinalSummary(stats: {
   if (IS_TEST_ENV) return;
 
   if (!NO_COLOR_ENABLED) {
-    console.log('\n' + clack.outro('MAP BUILD COMPLETE'));
-    console.log(`\nFiles annotated: ${stats.filesAnnotated}`);
-    console.log(`Agents used: ${stats.agentsUsed}`);
-    console.log(`LLM calls: ${stats.llmCalls}`);
-    console.log(`Tokens used: ${stats.tokens.toLocaleString()}`);
-    console.log(`Validation issues: ${stats.validationIssues}`);
-    console.log(`Build time: ${stats.buildTime} minutes`);
-  } else {
-    console.log(`\n${'═'.repeat(60)}`);
-    console.log('MAP BUILD COMPLETE');
-    console.log('═'.repeat(60));
+    console.log();
+    clack.outro('MAP BUILD COMPLETE');
     console.log(`Files annotated: ${stats.filesAnnotated}`);
     console.log(`Agents used: ${stats.agentsUsed}`);
     console.log(`LLM calls: ${stats.llmCalls}`);
     console.log(`Tokens used: ${stats.tokens.toLocaleString()}`);
     console.log(`Validation issues: ${stats.validationIssues}`);
     console.log(`Build time: ${stats.buildTime} minutes`);
-    console.log('═'.repeat(60));
+  } else {
+    // Use plain ASCII for NO_COLOR mode
+    console.log(`\n${'='.repeat(60)}`);
+    console.log('MAP BUILD COMPLETE');
+    console.log('='.repeat(60));
+    console.log(`Files annotated: ${stats.filesAnnotated}`);
+    console.log(`Agents used: ${stats.agentsUsed}`);
+    console.log(`LLM calls: ${stats.llmCalls}`);
+    console.log(`Tokens used: ${stats.tokens.toLocaleString()}`);
+    console.log(`Validation issues: ${stats.validationIssues}`);
+    console.log(`Build time: ${stats.buildTime} minutes`);
+    console.log('='.repeat(60));
   }
 }
