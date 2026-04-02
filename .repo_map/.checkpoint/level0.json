@@ -1,11 +1,11 @@
 {
   "files": [
     {
-      "name": ".env",
-      "path": ".env",
+      "name": ".git",
+      "path": ".git",
       "extension": "",
-      "size_bytes": 126,
-      "line_count": 1,
+      "size_bytes": 86,
+      "line_count": 2,
       "raw_imports": []
     },
     {
@@ -20,8 +20,8 @@
       "name": "CHANGELOG.md",
       "path": "CHANGELOG.md",
       "extension": ".md",
-      "size_bytes": 4195,
-      "line_count": 110,
+      "size_bytes": 4721,
+      "line_count": 123,
       "language": "Markdown",
       "raw_imports": []
     },
@@ -55,8 +55,8 @@
       "name": "README.md",
       "path": "README.md",
       "extension": ".md",
-      "size_bytes": 10491,
-      "line_count": 397,
+      "size_bytes": 12238,
+      "line_count": 445,
       "language": "Markdown",
       "raw_imports": []
     },
@@ -67,15 +67,6 @@
       "size_bytes": 14065,
       "line_count": 428,
       "language": "Markdown",
-      "raw_imports": []
-    },
-    {
-      "name": "agent-orchestrator.yaml",
-      "path": "agent-orchestrator.yaml",
-      "extension": ".yaml",
-      "size_bytes": 720,
-      "line_count": 28,
-      "language": "YAML",
       "raw_imports": []
     },
     {
@@ -199,8 +190,8 @@
       "name": "CLI.md",
       "path": "docs/CLI.md",
       "extension": ".md",
-      "size_bytes": 13738,
-      "line_count": 605,
+      "size_bytes": 15991,
+      "line_count": 677,
       "language": "Markdown",
       "raw_imports": []
     },
@@ -231,20 +222,20 @@
       "raw_imports": []
     },
     {
-      "name": "idea.md",
-      "path": "idea.md",
-      "extension": ".md",
-      "size_bytes": 23169,
-      "line_count": 626,
-      "language": "Markdown",
+      "name": "package-lock.json",
+      "path": "package-lock.json",
+      "extension": ".json",
+      "size_bytes": 85474,
+      "line_count": 2517,
+      "language": "JSON",
       "raw_imports": []
     },
     {
       "name": "package.json",
       "path": "package.json",
       "extension": ".json",
-      "size_bytes": 1821,
-      "line_count": 74,
+      "size_bytes": 1981,
+      "line_count": 79,
       "language": "JSON",
       "raw_imports": []
     },
@@ -252,8 +243,8 @@
       "name": "pnpm-lock.yaml",
       "path": "pnpm-lock.yaml",
       "extension": ".yaml",
-      "size_bytes": 42754,
-      "line_count": 1357,
+      "size_bytes": 50009,
+      "line_count": 1589,
       "language": "YAML",
       "raw_imports": []
     },
@@ -328,13 +319,28 @@
       "name": "index.ts",
       "path": "src/cli/index.ts",
       "extension": ".ts",
-      "size_bytes": 1352,
-      "line_count": 52,
+      "size_bytes": 2097,
+      "line_count": 69,
       "language": "TypeScript",
       "raw_imports": [
         "commander",
         "../version.js",
-        "./commands/index.js"
+        "./commands/index.js",
+        "../core/prompt-logger.js"
+      ]
+    },
+    {
+      "name": "progress-ui.ts",
+      "path": "src/cli/progress-ui.ts",
+      "extension": ".ts",
+      "size_bytes": 8238,
+      "line_count": 324,
+      "language": "TypeScript",
+      "raw_imports": [
+        "@clack/prompts",
+        "cli-progress",
+        "log-update",
+        "./ui-constants.js"
       ]
     },
     {
@@ -350,8 +356,8 @@
       "name": "ui-constants.ts",
       "path": "src/cli/ui-constants.ts",
       "extension": ".ts",
-      "size_bytes": 2340,
-      "line_count": 126,
+      "size_bytes": 2446,
+      "line_count": 131,
       "language": "TypeScript",
       "raw_imports": []
     },
@@ -359,8 +365,8 @@
       "name": "defaults.ts",
       "path": "src/config/defaults.ts",
       "extension": ".ts",
-      "size_bytes": 6885,
-      "line_count": 331,
+      "size_bytes": 7695,
+      "line_count": 363,
       "language": "TypeScript",
       "raw_imports": []
     },
@@ -368,8 +374,8 @@
       "name": "env.ts",
       "path": "src/config/env.ts",
       "extension": ".ts",
-      "size_bytes": 11446,
-      "line_count": 452,
+      "size_bytes": 12336,
+      "line_count": 484,
       "language": "TypeScript",
       "raw_imports": [
         "./defaults.js"
@@ -379,8 +385,8 @@
       "name": "index.ts",
       "path": "src/config/index.ts",
       "extension": ".ts",
-      "size_bytes": 1904,
-      "line_count": 77,
+      "size_bytes": 1918,
+      "line_count": 78,
       "language": "TypeScript",
       "raw_imports": [
         "./models.js",
@@ -539,10 +545,12 @@
       "name": "progress.ts",
       "path": "src/coordinator/progress.ts",
       "extension": ".ts",
-      "size_bytes": 2731,
-      "line_count": 118,
+      "size_bytes": 3103,
+      "line_count": 139,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [
+        "../cli/progress-ui.js"
+      ]
     },
     {
       "name": "shutdown-handler.ts",
@@ -609,8 +617,8 @@
       "name": "index.ts",
       "path": "src/core/index.ts",
       "extension": ".ts",
-      "size_bytes": 2005,
-      "line_count": 90,
+      "size_bytes": 2413,
+      "line_count": 106,
       "language": "TypeScript",
       "raw_imports": [
         "./types.js",
@@ -618,23 +626,27 @@
         "./git-utils.js",
         "./concurrency.js",
         "./llm-client.js",
+        "./rate-limiter.js",
         "../config/models.js",
         "./metrics.js",
         "./metrics-logger.js",
         "./errors.js",
-        "./validation.js"
+        "./validation.js",
+        "./prompt-logger.js"
       ]
     },
     {
       "name": "llm-client.ts",
       "path": "src/core/llm-client.ts",
       "extension": ".ts",
-      "size_bytes": 7633,
-      "line_count": 267,
+      "size_bytes": 8387,
+      "line_count": 288,
       "language": "TypeScript",
       "raw_imports": [
         "@anthropic-ai/sdk",
-        "../config/models.js"
+        "../config/models.js",
+        "./rate-limiter.js",
+        "./prompt-logger.js"
       ]
     },
     {
@@ -658,6 +670,29 @@
       "line_count": 265,
       "language": "TypeScript",
       "raw_imports": []
+    },
+    {
+      "name": "prompt-logger.ts",
+      "path": "src/core/prompt-logger.ts",
+      "extension": ".ts",
+      "size_bytes": 4899,
+      "line_count": 185,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "name": "rate-limiter.ts",
+      "path": "src/core/rate-limiter.ts",
+      "extension": ".ts",
+      "size_bytes": 7786,
+      "line_count": 262,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../config/index.js"
+      ]
     },
     {
       "name": "types.ts",
@@ -759,12 +794,13 @@
       "name": "javascript.ts",
       "path": "src/levels/level0/parsers/javascript.ts",
       "extension": ".ts",
-      "size_bytes": 3832,
-      "line_count": 128,
+      "size_bytes": 4121,
+      "line_count": 135,
       "language": "TypeScript",
       "raw_imports": [
         "@babel/parser",
         "@babel/traverse",
+        "@babel/types",
         "./types.js"
       ]
     },
@@ -781,8 +817,8 @@
       "name": "detector.ts",
       "path": "src/levels/level1/detector.ts",
       "extension": ".ts",
-      "size_bytes": 6885,
-      "line_count": 216,
+      "size_bytes": 7102,
+      "line_count": 221,
       "language": "TypeScript",
       "raw_imports": [
         "@anthropic-ai/sdk",
@@ -822,8 +858,8 @@
       "name": "divider.ts",
       "path": "src/levels/level2/divider.ts",
       "extension": ".ts",
-      "size_bytes": 6445,
-      "line_count": 203,
+      "size_bytes": 6642,
+      "line_count": 208,
       "language": "TypeScript",
       "raw_imports": [
         "@anthropic-ai/sdk",
@@ -875,8 +911,8 @@
       "name": "annotator.ts",
       "path": "src/levels/level3/annotator.ts",
       "extension": ".ts",
-      "size_bytes": 9136,
-      "line_count": 298,
+      "size_bytes": 12667,
+      "line_count": 391,
       "language": "TypeScript",
       "raw_imports": [
         "@anthropic-ai/sdk",
@@ -886,8 +922,11 @@
         "../../core/concurrency.js",
         "./prompt.js",
         "./parser.js",
+        "./tag-validator.js",
         "../../config/index.js",
-        "../../core/index.js"
+        "../../core/index.js",
+        "../../cli/progress-ui.js",
+        "../../cli/ui-constants.js"
       ]
     },
     {
@@ -907,14 +946,15 @@
       "name": "parser.ts",
       "path": "src/levels/level3/parser.ts",
       "extension": ".ts",
-      "size_bytes": 7786,
-      "line_count": 285,
+      "size_bytes": 7970,
+      "line_count": 282,
       "language": "TypeScript",
       "raw_imports": [
         "../../core/types.js",
         "../../core/constants.js",
         "../../config/index.js",
-        "node:path"
+        "node:path",
+        "./tag-validator.js"
       ]
     },
     {
@@ -926,6 +966,18 @@
       "language": "TypeScript",
       "raw_imports": [
         "../../core/types.js",
+        "../../core/constants.js",
+        "../../config/index.js"
+      ]
+    },
+    {
+      "name": "tag-validator.ts",
+      "path": "src/levels/level3/tag-validator.ts",
+      "extension": ".ts",
+      "size_bytes": 3361,
+      "line_count": 119,
+      "language": "TypeScript",
+      "raw_imports": [
         "../../core/constants.js",
         "../../config/index.js"
       ]
@@ -1295,6 +1347,19 @@
       ]
     },
     {
+      "name": "rate-limiter.test.ts",
+      "path": "tests/core/rate-limiter.test.ts",
+      "extension": ".ts",
+      "size_bytes": 10203,
+      "line_count": 308,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/rate-limiter.js"
+      ]
+    },
+    {
       "name": "types.test.ts",
       "path": "tests/core/types.test.ts",
       "extension": ".ts",
@@ -1518,6 +1583,20 @@
       ]
     },
     {
+      "name": "tag-validator.test.ts",
+      "path": "tests/levels/level3/tag-validator.test.ts",
+      "extension": ".ts",
+      "size_bytes": 8697,
+      "line_count": 254,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level3/tag-validator.js",
+        "../../../src/core/constants.js"
+      ]
+    },
+    {
       "name": "autofix.test.ts",
       "path": "tests/levels/level4/autofix.test.ts",
       "extension": ".ts",
@@ -1680,8 +1759,8 @@
       ]
     }
   ],
-  "git_commit": "bea61bf02943602b2866e8273e757ad300e9f98b",
-  "timestamp": "2026-04-01T16:08:06.662Z",
-  "total_files": 135,
-  "total_size_bytes": 1240777
+  "git_commit": "70e9545c6210ec86703f3c6c3d406716b583999f",
+  "timestamp": "2026-04-02T10:29:44.575Z",
+  "total_files": 140,
+  "total_size_bytes": 1365964
 }
