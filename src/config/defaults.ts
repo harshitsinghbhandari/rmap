@@ -114,6 +114,13 @@ export const RETRY_CONFIG = {
    * @default 1
    */
   VALIDATION_ERROR_RETRIES: 1,
+
+  /**
+   * Maximum retry attempts for tag validation errors
+   * When LLM outputs invalid tags, retry with corrected prompt up to this many times
+   * @default 2
+   */
+  TAG_VALIDATION_RETRIES: 2,
 } as const;
 
 /**

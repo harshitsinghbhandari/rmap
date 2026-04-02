@@ -5,9 +5,10 @@
  */
 
 import type { FileAnnotation, RawFileMetadata } from '../../core/types.js';
-import { TAG_TAXONOMY, type Tag } from '../../core/constants.js';
+import type { Tag } from '../../core/constants.js';
 import { FILE } from '../../config/index.js';
 import * as path from 'node:path';
+import { validateTagsWithDetails, type TagValidationResult } from './tag-validator.js';
 
 /**
  * Validation error for annotation parsing
@@ -17,6 +18,18 @@ export class AnnotationValidationError extends Error {
     super(message);
     this.name = 'AnnotationValidationError';
   }
+}
+
+/**
+ * Result of parsing annotation with validation details
+ */
+export interface AnnotationParseResult {
+  /** The parsed file annotation (may have only partial tags if some were invalid) */
+  annotation: FileAnnotation | null;
+  /** Tag validation result with valid and invalid tags */
+  tagValidation: TagValidationResult;
+  /** The raw response text from the LLM */
+  rawResponse: string;
 }
 
 /**
@@ -55,53 +68,6 @@ export function normalizeImportPath(
   return normalized.startsWith('./') ? normalized.slice(2) : normalized;
 }
 
-/**
- * Validate a tag is in the taxonomy
- *
- * @param tag - Tag to validate
- * @returns The tag if valid, or null if invalid
- */
-function validateTag(tag: string): Tag | null {
-  // Check if tag exists in taxonomy (case-insensitive)
-  const lowerTag = tag.toLowerCase();
-  const validTag = TAG_TAXONOMY.find((t) => t.toLowerCase() === lowerTag);
-
-  return validTag || null;
-}
-
-/**
- * Filter and validate tags from LLM response
- *
- * - Removes tags not in taxonomy
- * - Limits to FILE.MAX_TAGS_PER_FILE
- * - Warns about dropped tags
- */
-function validateTags(tags: string[], filePath: string): Tag[] {
-  const validTags: Tag[] = [];
-
-  for (const tag of tags) {
-    const validTag = validateTag(tag);
-
-    if (validTag) {
-      // Avoid duplicates
-      if (!validTags.includes(validTag)) {
-        validTags.push(validTag);
-      }
-    } else {
-      console.warn(`Warning: Tag "${tag}" not in taxonomy for file ${filePath}, skipping`);
-    }
-  }
-
-  // Limit to max tags
-  if (validTags.length > FILE.MAX_TAGS_PER_FILE) {
-    console.warn(
-      `Warning: File ${filePath} has ${validTags.length} tags, limiting to ${FILE.MAX_TAGS_PER_FILE}`
-    );
-    return validTags.slice(0, FILE.MAX_TAGS_PER_FILE);
-  }
-
-  return validTags;
-}
 
 /**
  * Filter out external package imports
@@ -222,18 +188,18 @@ function validateRawAnnotation(data: unknown): RawAnnotation {
 }
 
 /**
- * Parse and validate LLM response into FileAnnotation
+ * Parse and validate LLM response into FileAnnotation with detailed validation
  *
  * @param responseText - Raw text response from LLM
  * @param metadata - File metadata from Level 0
  * @param repoRoot - Repository root path (for normalizing imports)
- * @returns Validated FileAnnotation
+ * @returns Parse result with annotation and validation details
  */
-export function parseAnnotationResponse(
+export function parseAnnotationResponseWithDetails(
   responseText: string,
   metadata: RawFileMetadata,
   repoRoot: string = '.'
-): FileAnnotation {
+): AnnotationParseResult {
   // Remove markdown code blocks if present
   let jsonText = responseText.trim();
 
@@ -256,13 +222,16 @@ export function parseAnnotationResponse(
   // Validate structure
   const raw = validateRawAnnotation(parsed);
 
-  // Validate and filter tags
-  const validTags = validateTags(raw.tags, metadata.path);
+  // Validate and filter tags with detailed results
+  const tagValidation = validateTagsWithDetails(raw.tags, metadata.path);
 
-  if (validTags.length === 0) {
-    throw new AnnotationValidationError(
-      `No valid tags found for file ${metadata.path}. Tags provided: ${raw.tags.join(', ')}`
-    );
+  // If no valid tags, return null annotation with validation details
+  if (tagValidation.valid.length === 0) {
+    return {
+      annotation: null,
+      tagValidation,
+      rawResponse: responseText,
+    };
   }
 
   // Normalize imports
@@ -275,10 +244,38 @@ export function parseAnnotationResponse(
     size_bytes: metadata.size_bytes,
     line_count: metadata.line_count,
     purpose: raw.purpose.trim(),
-    tags: validTags,
+    tags: tagValidation.valid,
     exports: raw.exports.map((e) => e.trim()).filter((e) => e.length > 0),
     imports: normalizedImports,
   };
 
-  return annotation;
+  return {
+    annotation,
+    tagValidation,
+    rawResponse: responseText,
+  };
+}
+
+/**
+ * Parse and validate LLM response into FileAnnotation
+ *
+ * @param responseText - Raw text response from LLM
+ * @param metadata - File metadata from Level 0
+ * @param repoRoot - Repository root path (for normalizing imports)
+ * @returns Validated FileAnnotation
+ */
+export function parseAnnotationResponse(
+  responseText: string,
+  metadata: RawFileMetadata,
+  repoRoot: string = '.'
+): FileAnnotation {
+  const result = parseAnnotationResponseWithDetails(responseText, metadata, repoRoot);
+
+  if (result.annotation === null) {
+    throw new AnnotationValidationError(
+      `No valid tags found for file ${metadata.path}. Tags provided: ${result.tagValidation.invalid.join(', ')}`
+    );
+  }
+
+  return result.annotation;
 }
