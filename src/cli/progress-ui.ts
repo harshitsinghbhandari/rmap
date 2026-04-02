@@ -3,6 +3,7 @@
  *
  * Provides modern terminal UI with spinners, progress bars, and rolling logs.
  * Respects NO_COLOR environment variable.
+ * Automatically disables interactive UI in test environments.
  */
 
 import * as clack from '@clack/prompts';
@@ -11,16 +12,29 @@ import logUpdate from 'log-update';
 import { NO_COLOR_ENABLED } from './ui-constants.js';
 
 /**
+ * Check if we're running in a test environment
+ * In tests, we want to disable spinners and progress bars to avoid excessive output
+ */
+const IS_TEST_ENV = process.env.NODE_ENV === 'test';
+
+/**
  * Level spinner for showing progress of a pipeline level
  */
 export class LevelSpinner {
   private spinner: ReturnType<typeof clack.spinner> | null = null;
   private level: string;
   private startTime: number;
+  private isTestMode: boolean;
 
   constructor(level: string) {
     this.level = level;
     this.startTime = Date.now();
+    this.isTestMode = IS_TEST_ENV;
+
+    // In test mode, be completely silent
+    if (this.isTestMode) {
+      return;
+    }
 
     if (!NO_COLOR_ENABLED) {
       this.spinner = clack.spinner();
@@ -37,6 +51,8 @@ export class LevelSpinner {
    * Update spinner message
    */
   message(msg: string): void {
+    if (this.isTestMode) return;
+
     if (this.spinner) {
       this.spinner.message(msg);
     } else {
@@ -49,6 +65,8 @@ export class LevelSpinner {
    * Stop spinner with success
    */
   stop(message?: string): void {
+    if (this.isTestMode) return;
+
     const duration = ((Date.now() - this.startTime) / 1000).toFixed(1);
     const finalMessage = message || `${this.level} complete (${duration}s)`;
 
@@ -63,6 +81,8 @@ export class LevelSpinner {
    * Stop spinner with error
    */
   error(message: string): void {
+    if (this.isTestMode) return;
+
     if (this.spinner) {
       this.spinner.stop(message);
     } else {
@@ -80,9 +100,16 @@ export class PercentageProgressBar {
   private current: number = 0;
   private lastUpdateTime: number = 0;
   private readonly UPDATE_INTERVAL_MS = 200; // Update at most every 200ms
+  private isTestMode: boolean;
 
   constructor(total: number, title: string = 'Progress') {
     this.total = total;
+    this.isTestMode = IS_TEST_ENV;
+
+    // In test mode, be completely silent
+    if (this.isTestMode) {
+      return;
+    }
 
     if (!NO_COLOR_ENABLED) {
       this.bar = new cliProgress.SingleBar({
@@ -105,7 +132,9 @@ export class PercentageProgressBar {
    */
   increment(): void {
     this.current++;
-    this.update();
+    if (!this.isTestMode) {
+      this.update();
+    }
   }
 
   /**
@@ -113,13 +142,17 @@ export class PercentageProgressBar {
    */
   setProgress(current: number): void {
     this.current = current;
-    this.update();
+    if (!this.isTestMode) {
+      this.update();
+    }
   }
 
   /**
    * Update the progress bar display
    */
   private update(): void {
+    if (this.isTestMode) return;
+
     const now = Date.now();
 
     // Throttle updates to avoid terminal flickering
@@ -144,6 +177,8 @@ export class PercentageProgressBar {
    * Complete the progress bar
    */
   stop(): void {
+    if (this.isTestMode) return;
+
     if (this.bar) {
       this.bar.update(100);
       this.bar.stop();
@@ -237,6 +272,9 @@ export class RollingLogViewport {
  * Print a visual header for a pipeline level
  */
 export function printLevelHeader(level: string): void {
+  // In test mode, be completely silent
+  if (IS_TEST_ENV) return;
+
   if (!NO_COLOR_ENABLED) {
     console.log('\n' + clack.intro(level));
   } else {
@@ -258,6 +296,9 @@ export function printFinalSummary(stats: {
   validationIssues: number;
   buildTime: string;
 }): void {
+  // In test mode, be completely silent
+  if (IS_TEST_ENV) return;
+
   if (!NO_COLOR_ENABLED) {
     console.log('\n' + clack.outro('MAP BUILD COMPLETE'));
     console.log(`\nFiles annotated: ${stats.filesAnnotated}`);
