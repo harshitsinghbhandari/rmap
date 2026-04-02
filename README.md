@@ -270,6 +270,23 @@ Works with:
 - Rust
 - And more...
 
+### 📊 Performance & Cost Tracking
+
+Automatically logs detailed metrics for every map build:
+- **Token usage** - Input/output tokens per level and total
+- **Cost estimation** - Real-time cost tracking based on model pricing
+- **Performance metrics** - Per-level timing and API call counts
+- **Log files** - Detailed JSON logs in `.repo_map/logs/` for analysis
+
+Example output:
+```
+Map created successfully (2m 34s)
+  Files: 523 processed
+  Tokens: 68,450 (input: 54,200, output: 14,250)
+  Cost: $0.16
+  Log: .repo_map/logs/run-2026-04-01T15-30-22.json
+```
+
 ## Requirements
 
 - **Node.js** >= 20.0.0
