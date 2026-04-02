@@ -27,6 +27,13 @@ import {
   markLevelInterrupted,
   updateLevelCheckpoint,
 } from './checkpoint.js';
+import {
+  appendAnnotationsToFile,
+  loadIncrementalAnnotations,
+  clearIncrementalAnnotations,
+  finalizeAnnotations,
+  getIncrementalAnnotationCount,
+} from './incremental-annotations.js';
 
 /**
  * Level outputs union type for type-safe checkpoint loading
@@ -310,5 +317,53 @@ export class CheckpointOrchestrator {
       tasks_completed: allCompletedIds.size,
       completed_task_ids: Array.from(allCompletedIds),
     });
+  }
+
+  /**
+   * Save annotations incrementally to JSONL file
+   *
+   * Appends annotations to the incremental file and updates checkpoint metadata.
+   *
+   * @param annotations - Annotations to save
+   */
+  async saveAnnotationsIncremental(annotations: FileAnnotation[]): Promise<void> {
+    if (annotations.length === 0) {
+      return;
+    }
+
+    // Append to JSONL file
+    await appendAnnotationsToFile(this.repoRoot, annotations);
+
+    // Get total count and update checkpoint
+    const totalCount = await getIncrementalAnnotationCount(this.repoRoot);
+    updateLevelCheckpoint(this.repoRoot, this.checkpoint, 3, {
+      annotations_saved: totalCount,
+      last_saved_at: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Load incremental annotations from JSONL file
+   *
+   * @returns Array of previously saved annotations
+   */
+  async loadIncrementalProgress(): Promise<FileAnnotation[]> {
+    return await loadIncrementalAnnotations(this.repoRoot);
+  }
+
+  /**
+   * Clear incremental annotations file
+   *
+   * Called when starting fresh Level 3 run.
+   */
+  async clearIncrementalProgress(): Promise<void> {
+    await clearIncrementalAnnotations(this.repoRoot);
+  }
+
+  /**
+   * Finalize annotations by consolidating JSONL into annotations.json
+   */
+  async finalizeLevel3Annotations(): Promise<void> {
+    await finalizeAnnotations(this.repoRoot);
   }
 }

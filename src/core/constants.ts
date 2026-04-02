@@ -194,4 +194,5 @@ export const CHECKPOINT_FILES = {
   LEVEL2: 'level2.json',
   LEVEL3_PROGRESS: 'level3_progress.json',
   LEVEL3_TASKS: 'level3_tasks.json',
+  LEVEL3_INCREMENTAL: 'level3_annotations.jsonl',
 } as const;
