@@ -48,6 +48,7 @@ export function validateTagsWithDetails(
 ): TagValidationResult {
   const validTags: Tag[] = [];
   const invalidTags: string[] = [];
+  const seenInvalidLower = new Set<string>();
 
   for (const tag of tags) {
     const validTag = validateTag(tag);
@@ -58,8 +59,10 @@ export function validateTagsWithDetails(
         validTags.push(validTag);
       }
     } else {
-      // Track invalid tags (avoid duplicates)
-      if (!invalidTags.includes(tag)) {
+      // Track invalid tags (avoid case-insensitive duplicates while preserving original spelling)
+      const lowerTag = tag.toLowerCase();
+      if (!seenInvalidLower.has(lowerTag)) {
+        seenInvalidLower.add(lowerTag);
         invalidTags.push(tag);
       }
     }

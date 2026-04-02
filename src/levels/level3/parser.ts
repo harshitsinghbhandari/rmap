@@ -5,7 +5,7 @@
  */
 
 import type { FileAnnotation, RawFileMetadata } from '../../core/types.js';
-import { TAG_TAXONOMY, type Tag } from '../../core/constants.js';
+import type { Tag } from '../../core/constants.js';
 import { FILE } from '../../config/index.js';
 import * as path from 'node:path';
 import { validateTagsWithDetails, type TagValidationResult } from './tag-validator.js';
@@ -68,26 +68,6 @@ export function normalizeImportPath(
   return normalized.startsWith('./') ? normalized.slice(2) : normalized;
 }
 
-/**
- * Filter and validate tags from LLM response (legacy version)
- *
- * This function is maintained for backward compatibility.
- * For new code, use validateTagsWithDetails from tag-validator.ts
- *
- * - Removes tags not in taxonomy
- * - Limits to FILE.MAX_TAGS_PER_FILE
- * - Warns about dropped tags
- */
-function validateTags(tags: string[], filePath: string): Tag[] {
-  const result = validateTagsWithDetails(tags, filePath);
-
-  // Log warnings for invalid tags
-  for (const invalidTag of result.invalid) {
-    console.warn(`Warning: Tag "${invalidTag}" not in taxonomy for file ${filePath}, skipping`);
-  }
-
-  return result.valid;
-}
 
 /**
  * Filter out external package imports
@@ -244,11 +224,6 @@ export function parseAnnotationResponseWithDetails(
 
   // Validate and filter tags with detailed results
   const tagValidation = validateTagsWithDetails(raw.tags, metadata.path);
-
-  // Log warnings for invalid tags
-  for (const invalidTag of tagValidation.invalid) {
-    console.warn(`Warning: Tag "${invalidTag}" not in taxonomy for file ${metadata.path}`);
-  }
 
   // If no valid tags, return null annotation with validation details
   if (tagValidation.valid.length === 0) {

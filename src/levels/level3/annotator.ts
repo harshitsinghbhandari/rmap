@@ -100,38 +100,34 @@ async function annotateFile(
     return null; // Skip binary or unreadable files
   }
 
-  let retryCount = 0;
   const maxRetries = RETRY.TAG_VALIDATION_RETRIES;
-  let lastResponse: string | null = null;
+  let lastInvalidTags: string[] = [];
+  let lastResponse = '';
 
-  while (retryCount <= maxRetries) {
+  // Each iteration makes exactly one LLM call
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      // Build prompt (initial or correction)
-      let prompt: string;
-      if (retryCount === 0 || lastResponse === null) {
-        // Initial attempt
-        prompt = buildAnnotationPrompt(metadata.path, content, metadata);
-      } else {
-        // This is a retry due to invalid tags - shouldn't happen in this flow
-        // as we handle it below, but keeping for safety
-        prompt = buildAnnotationPrompt(metadata.path, content, metadata);
-      }
+      // Build prompt: initial annotation or correction based on last attempt
+      const prompt =
+        attempt === 0
+          ? buildAnnotationPrompt(metadata.path, content, metadata)
+          : buildTagCorrectionPrompt(lastInvalidTags, lastResponse);
 
-      // Call LLM with retry
+      // Call LLM once per attempt
       const response = await llmClient.sendMessage(prompt, {
         model,
         maxTokens: TOKEN.MAX_TOKENS_LEVEL3,
         logContext: {
           level: 'level3',
           purpose:
-            retryCount === 0
+            attempt === 0
               ? `File annotation - extracts purpose, tags, exports, and imports for: ${metadata.path}`
-              : `File annotation (tag validation retry ${retryCount}/${maxRetries}) for: ${metadata.path}`,
+              : `Tag correction retry ${attempt}/${maxRetries} for: ${metadata.path}`,
           model,
         },
       });
 
-      // Record metrics if collector provided
+      // Record metrics
       if (metrics) {
         metrics.recordLLMCall({
           model: response.model,
@@ -155,8 +151,8 @@ async function annotateFile(
           `Invalid tags detected for ${metadata.path}: ${parseResult.tagValidation.invalid.join(', ')}`
         );
 
-        // If we have some valid tags and have exhausted retries, use what we have
-        if (retryCount >= maxRetries) {
+        // If we've exhausted retries, use valid tags if we have any
+        if (attempt >= maxRetries) {
           if (parseResult.annotation !== null) {
             console.warn(
               `Max retries (${maxRetries}) exceeded for ${metadata.path}. Using ${parseResult.tagValidation.valid.length} valid tags.`
@@ -170,74 +166,18 @@ async function annotateFile(
           }
         }
 
-        // We have invalid tags and retries left - retry with correction prompt
+        // Store invalid tags for next correction prompt
+        lastInvalidTags = parseResult.tagValidation.invalid;
         console.log(
-          `Retrying ${metadata.path} (attempt ${retryCount + 2}/${maxRetries + 1}) with tag correction feedback...`
+          `Retrying ${metadata.path} (attempt ${attempt + 2}/${maxRetries + 1}) with tag correction feedback...`
         );
-
-        const correctionPrompt = buildTagCorrectionPrompt(
-          parseResult.tagValidation.invalid,
-          response.text
-        );
-
-        retryCount++;
-
-        // Call LLM with correction prompt
-        const retryResponse = await llmClient.sendMessage(correctionPrompt, {
-          model,
-          maxTokens: TOKEN.MAX_TOKENS_LEVEL3,
-          logContext: {
-            level: 'level3',
-            purpose: `Tag correction retry ${retryCount}/${maxRetries} for: ${metadata.path}`,
-            model,
-          },
-        });
-
-        // Record retry metrics
-        if (metrics) {
-          metrics.recordLLMCall({
-            model: retryResponse.model,
-            inputTokens: retryResponse.inputTokens,
-            outputTokens: retryResponse.outputTokens,
-          });
-        }
-
-        lastResponse = retryResponse.text;
-
-        // Parse retry response
-        const retryParseResult = parseAnnotationResponseWithDetails(
-          retryResponse.text,
-          metadata,
-          repoRoot
-        );
-
-        // Check if retry was successful
-        if (retryParseResult.tagValidation.invalid.length === 0) {
-          console.log(`✓ Tag validation retry successful for ${metadata.path}`);
-          return retryParseResult.annotation;
-        }
-
-        // Still have invalid tags - continue loop
-        if (retryParseResult.annotation !== null) {
-          // Update parse result for next iteration
-          if (retryCount >= maxRetries) {
-            console.warn(
-              `Max retries (${maxRetries}) exceeded for ${metadata.path}. Using ${retryParseResult.tagValidation.valid.length} valid tags.`
-            );
-            return retryParseResult.annotation;
-          }
-          // Continue loop for another retry
-          continue;
-        } else {
-          // No valid tags at all - continue to try again
-          continue;
-        }
+        continue; // Next iteration will use correction prompt
       }
 
       // No invalid tags - success!
       if (parseResult.annotation !== null) {
-        if (retryCount > 0) {
-          console.log(`✓ Annotation successful after ${retryCount} retries for ${metadata.path}`);
+        if (attempt > 0) {
+          console.log(`✓ Tag validation retry successful for ${metadata.path}`);
         }
         return parseResult.annotation;
       } else {
@@ -249,8 +189,8 @@ async function annotateFile(
         console.error(`Validation error for ${metadata.path}: ${error.message}`);
 
         // For structural validation errors (malformed JSON, missing fields, etc.)
-        // retry once with stricter prompt
-        if (retryCount === 0) {
+        // retry once with stricter prompt (only on first attempt)
+        if (attempt === 0) {
           try {
             console.log(`Retrying with stricter prompt for structural validation error...`);
             const stricterPrompt =
