@@ -194,6 +194,8 @@ export const VALIDATION = {
  * - RMAP_RETRY_BASE_BACKOFF_MS: Base backoff in ms (default: 2000)
  * - RMAP_RETRY_REQUEST_DELAY_MS: Request delay in ms (default: 500)
  * - RMAP_RETRY_MAX_BACKOFF_MS: Max backoff cap in ms (default: 32000)
+ * - RMAP_RETRY_VALIDATION_ERRORS: Validation error retries (default: 1)
+ * - RMAP_RETRY_TAG_VALIDATION: Tag validation retries (default: 2)
  */
 export const RETRY = {
   MAX_RETRIES: parseEnvInt(
@@ -223,6 +225,12 @@ export const RETRY = {
   VALIDATION_ERROR_RETRIES: parseEnvInt(
     process.env.RMAP_RETRY_VALIDATION_ERRORS,
     RETRY_CONFIG.VALIDATION_ERROR_RETRIES,
+    0,
+    10,
+  ),
+  TAG_VALIDATION_RETRIES: parseEnvInt(
+    process.env.RMAP_RETRY_TAG_VALIDATION,
+    RETRY_CONFIG.TAG_VALIDATION_RETRIES,
     0,
     10,
   ),
