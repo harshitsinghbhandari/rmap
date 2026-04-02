@@ -344,6 +344,12 @@ export interface LevelCheckpoint {
 
   /** IDs of completed tasks (Level 3 only) */
   completed_task_ids?: string[];
+
+  /** Number of annotations saved to incremental file (Level 3 only) */
+  annotations_saved?: number;
+
+  /** ISO 8601 timestamp when annotations were last saved (Level 3 only) */
+  last_saved_at?: string;
 }
 
 /**

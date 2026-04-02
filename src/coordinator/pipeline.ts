@@ -132,15 +132,33 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     delegation = checkpointer.loadCompletedLevel<TaskDelegation>(2);
     if (delegation) console.log('  ✓ Level 2 already completed');
 
-    // Load Level 3 partial progress if interrupted
+    // Load Level 3 partial progress if interrupted or in progress
     const checkpoint = checkpointer.getCheckpoint();
-    if (checkpoint.levels[3]?.status === 'in_progress') {
-      level3Annotations = checkpointer.loadLevel3Progress();
+    const level3Status = checkpoint.levels[3]?.status;
+
+    if (level3Status === 'in_progress' || level3Status === 'interrupted') {
+      // Load incremental annotations from JSONL file
+      level3Annotations = await checkpointer.loadIncrementalProgress();
+
+      // Backward compatibility: if JSONL is empty but we have completed tasks,
+      // fall back to loading from level3_progress.json (from older checkpoints)
+      if (level3Annotations.length === 0) {
+        const legacyAnnotations = checkpointer.loadLevel3Progress();
+        if (legacyAnnotations.length > 0) {
+          level3Annotations = legacyAnnotations;
+          console.log(`  📦 Loaded ${level3Annotations.length} annotations from legacy checkpoint`);
+          // Migrate to JSONL format for future saves
+          await checkpointer.clearIncrementalProgress();
+          await checkpointer.saveAnnotationsIncremental(level3Annotations);
+        }
+      }
+
       completedTaskIds = checkpointer.getCompletedTaskIds();
       if (completedTaskIds.size > 0) {
         console.log(`  ⏸️  Level 3 partially completed: ${completedTaskIds.size} tasks done`);
+        console.log(`  📦 Loaded ${level3Annotations.length} previously saved annotations`);
       }
-    } else if (checkpoint.levels[3]?.status === 'completed') {
+    } else if (level3Status === 'completed') {
       console.log('  ✓ Level 3 already completed');
     }
   } else if (resume) {
@@ -154,7 +172,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   // Note: Hoisted to function scope so shutdown handler can access it
   let annotations: FileAnnotation[] = [];
 
-  shutdownHandler.onShutdown(() => {
+  shutdownHandler.onShutdown(async () => {
     // Mark current level as interrupted
     const currentLevel = checkpointer.getCurrentLevel();
     if (currentLevel < 5) {
@@ -164,7 +182,8 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     // For Level 3, save partial progress if we have annotations
     if (currentLevel === 3 && annotations.length > 0) {
       checkpointer.saveLevel3Progress(annotations);
-      console.log(`  Saved ${annotations.length} partial annotations`);
+      const totalSaved = await checkpointer.loadIncrementalProgress();
+      console.log(`✓ Saved ${totalSaved.length} annotations from ${completedTaskIds.size} completed tasks`);
     }
   });
 
@@ -226,10 +245,15 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     tracker.startLevel('Level 3: Deep File Annotator');
     metrics.startLevel(3, 'Level 3: Deep File Annotator');
 
-    // Initialize Level 3 checkpoint if not already started
-    if (checkpoint.levels[3]?.status !== 'in_progress') {
+    // Initialize Level 3 checkpoint if not already started or interrupted
+    const level3Status = checkpoint.levels[3]?.status;
+
+    if (level3Status !== 'in_progress' && level3Status !== 'interrupted') {
+      // Fresh start: initialize and clear old data
       checkpointer.initializeLevel3(delegation.tasks.length);
+      await checkpointer.clearIncrementalProgress();
     }
+    // For interrupted/in_progress, keep existing incremental data
 
     // Filter out completed tasks for resume
     const remainingTasks = checkpointer.filterRemainingTasks(delegation.tasks, delegation);
@@ -244,17 +268,31 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     annotations = [...level3Annotations];
 
     if (parallel && delegation.execution === 'parallel') {
-      // Run remaining tasks in parallel
+      // Run remaining tasks in parallel with incremental saves
       tracker.logProgress(`Running ${remainingTasks.length} tasks in parallel...`);
-      const taskPromises = remainingTasks.map((task) =>
-        annotateTask(task, level0.files, repoRoot, metrics)
-      );
+
+      // Process tasks in parallel but save incrementally as each completes
+      const taskPromises = remainingTasks.map(async (task) => {
+        const taskAnnotations = await annotateTask(task, level0.files, repoRoot, metrics);
+
+        // Save this task's annotations incrementally
+        await checkpointer.saveAnnotationsIncremental(taskAnnotations);
+
+        // Mark this task as completed
+        checkpointer.markTaskCompleted(task, delegation, completedTaskIds);
+
+        tracker.logProgress(
+          `Completed task ${completedTaskIds.size}/${delegation.tasks.length} (${taskAnnotations.length} files)`
+        );
+
+        return taskAnnotations;
+      });
+
       const results = await Promise.all(taskPromises);
       const newAnnotations = results.flat();
       annotations.push(...newAnnotations);
 
-      // Update checkpoint with all completed tasks
-      checkpointer.markTasksCompleted(remainingTasks, delegation, completedTaskIds);
+      // Also save to level3_progress.json for backward compatibility
       checkpointer.saveLevel3Progress(annotations);
 
       tracker.trackLLMCall(remainingTasks.length);
@@ -265,6 +303,9 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       for (const task of remainingTasks) {
         const taskAnnotations = await annotateTask(task, level0.files, repoRoot, metrics);
         annotations.push(...taskAnnotations);
+
+        // Save annotations incrementally
+        await checkpointer.saveAnnotationsIncremental(taskAnnotations);
 
         // Checkpoint this task's completion
         checkpointer.markTaskCompleted(task, delegation, completedTaskIds);
@@ -279,6 +320,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
 
     // Mark Level 3 as completed and save final output
     checkpointer.completeLevel(3, annotations, CHECKPOINT_FILES.LEVEL3_PROGRESS);
+
+    // Clean up incremental file - no longer needed after successful completion
+    // annotations.json will be written by assembler with the final annotations array
+    await checkpointer.clearIncrementalProgress();
+
     metrics.recordFilesProcessed(3, annotations.length);
     metrics.endLevel(3);
     tracker.completeLevel('Level 3: Deep File Annotator');

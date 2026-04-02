@@ -27,6 +27,12 @@ import {
   markLevelInterrupted,
   updateLevelCheckpoint,
 } from './checkpoint.js';
+import {
+  appendAnnotationsToFile,
+  loadIncrementalAnnotations,
+  clearIncrementalAnnotations,
+  finalizeAnnotations,
+} from './incremental-annotations.js';
 
 /**
  * Level outputs union type for type-safe checkpoint loading
@@ -310,5 +316,56 @@ export class CheckpointOrchestrator {
       tasks_completed: allCompletedIds.size,
       completed_task_ids: Array.from(allCompletedIds),
     });
+  }
+
+  /**
+   * Save annotations incrementally to JSONL file
+   *
+   * Appends annotations to the incremental file and updates checkpoint metadata.
+   * Tracks count in memory to avoid O(n²) I/O from re-reading the file on every save.
+   *
+   * @param annotations - Annotations to save
+   */
+  async saveAnnotationsIncremental(annotations: FileAnnotation[]): Promise<void> {
+    if (annotations.length === 0) {
+      return;
+    }
+
+    // Append to JSONL file
+    await appendAnnotationsToFile(this.repoRoot, annotations);
+
+    // Track count in memory by incrementing from current checkpoint value
+    const currentCount = this.checkpoint.levels[3]?.annotations_saved ?? 0;
+    const newCount = currentCount + annotations.length;
+
+    updateLevelCheckpoint(this.repoRoot, this.checkpoint, 3, {
+      annotations_saved: newCount,
+      last_saved_at: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Load incremental annotations from JSONL file
+   *
+   * @returns Array of previously saved annotations
+   */
+  async loadIncrementalProgress(): Promise<FileAnnotation[]> {
+    return await loadIncrementalAnnotations(this.repoRoot);
+  }
+
+  /**
+   * Clear incremental annotations file
+   *
+   * Called when starting fresh Level 3 run.
+   */
+  async clearIncrementalProgress(): Promise<void> {
+    await clearIncrementalAnnotations(this.repoRoot);
+  }
+
+  /**
+   * Finalize annotations by consolidating JSONL into annotations.json
+   */
+  async finalizeLevel3Annotations(): Promise<void> {
+    await finalizeAnnotations(this.repoRoot);
   }
 }
