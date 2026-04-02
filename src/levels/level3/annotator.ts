@@ -105,9 +105,14 @@ async function annotateFile(
   let lastInvalidTags: string[] = [];
   let lastResponse = '';
 
-  // Process raw imports from Level 0 parsers
+  // Process raw imports from Level 0 parsers (only if available)
   // This uses the accurate Babel AST or regex-based extraction instead of asking the LLM
-  const processedImports = processRawImports(metadata.raw_imports, metadata.path, repoRoot);
+  // If raw_imports is empty/missing, fall back to LLM-extracted imports
+  const hasRawImports =
+    Array.isArray(metadata.raw_imports) && metadata.raw_imports.length > 0;
+  const processedImports = hasRawImports
+    ? processRawImports(metadata.raw_imports, metadata.path, repoRoot)
+    : undefined;
 
   // Each iteration makes exactly one LLM call
   for (let attempt = 0; attempt <= maxRetries; attempt++) {

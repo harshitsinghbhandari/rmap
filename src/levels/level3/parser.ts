@@ -123,6 +123,10 @@ function normalizeImports(
       }
     }
 
+    // Normalize to forward slashes for cross-platform consistency
+    // Graph keys and queries use POSIX-style paths, so backslashes would break lookups on Windows
+    normalized = normalized.replace(/\\/g, '/');
+
     return normalized;
   });
 }
@@ -189,20 +193,26 @@ function validateRawAnnotation(data: unknown): RawAnnotation {
     throw new AnnotationValidationError('All exports must be strings');
   }
 
-  // Validate imports
-  if (!Array.isArray(obj.imports)) {
-    throw new AnnotationValidationError('Field "imports" must be an array');
-  }
+  // Validate imports (optional, since imports are now extracted by Level 0 parsers)
+  // If provided by LLM, validate the structure
+  let imports: string[] = [];
+  if (obj.imports !== undefined) {
+    if (!Array.isArray(obj.imports)) {
+      throw new AnnotationValidationError('Field "imports" must be an array if provided');
+    }
 
-  if (!obj.imports.every((imp) => typeof imp === 'string')) {
-    throw new AnnotationValidationError('All imports must be strings');
+    if (!obj.imports.every((imp) => typeof imp === 'string')) {
+      throw new AnnotationValidationError('All imports must be strings');
+    }
+
+    imports = obj.imports as string[];
   }
 
   return {
     purpose,
     tags: obj.tags as string[],
     exports: obj.exports as string[],
-    imports: obj.imports as string[],
+    imports,
   };
 }
 

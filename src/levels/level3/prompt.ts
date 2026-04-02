@@ -87,20 +87,7 @@ Your task is to analyze this file and extract:
    - Exclude private/internal symbols that aren't exported
    - For languages without explicit exports, list main public symbols
 
-4. **imports**: Internal imports ONLY (files within this repository)
-   - Extract import paths for files in the same repository
-   - Convert relative imports to repo-root-relative paths
-   - EXCLUDE external packages/libraries (e.g., no "express", "react", "numpy")
-   - EXCLUDE standard library imports
-   - Examples of VALID imports:
-     * "src/utils/logger.ts"
-     * "lib/database/connection.py"
-   - Examples of INVALID imports (exclude these):
-     * "express"
-     * "react"
-     * "@anthropic-ai/sdk"
-     * "os"
-     * "node:fs"
+Note: Import information is extracted separately via static analysis, so you do not need to provide imports.
 
 Available Tag Taxonomy (pick 1-${FILE.MAX_TAGS_PER_FILE}):
 ${taxonomyList}
@@ -108,7 +95,6 @@ ${taxonomyList}
 Guidelines:
 - Be precise and consistent
 - Only use tags from the taxonomy above
-- Internal imports must be repo-root-relative paths (no "./" or "../")
 - Skip binary files, generated files, or files with no semantic content
 - If a file is primarily configuration, use "config" tag
 - If a file is primarily types/interfaces, use "types" tag
@@ -117,13 +103,10 @@ Respond with valid JSON in this exact structure:
 {
   "purpose": "string (max ${TOKEN.MAX_PURPOSE_CHARS} chars)",
   "tags": ["tag1", "tag2"],
-  "exports": ["symbol1", "symbol2"],
-  "imports": ["path/to/file1.ts", "path/to/file2.ts"]
+  "exports": ["symbol1", "symbol2"]
 }
 
 Important:
 - tags array must contain 1-${FILE.MAX_TAGS_PER_FILE} items, all from the taxonomy
-- imports should ONLY include internal repository files
-- All paths in imports should be relative to repository root
 - Respond with valid JSON only (no markdown, no explanation)`;
 }

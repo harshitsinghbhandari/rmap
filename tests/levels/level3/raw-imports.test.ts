@@ -102,9 +102,9 @@ describe('Level 3: raw_imports integration', () => {
     it('uses preExtractedImports instead of LLM-extracted imports', () => {
       const llmResponse = JSON.stringify({
         purpose: 'Validates data structures',
-        tags: ['validation', 'core'],
+        tags: ['validation'],
         exports: ['validateSchema', 'ValidationError'],
-        imports: ['wrong/path/from/llm'], // This should be ignored
+        // Note: imports field no longer requested in prompt (saves tokens)
       });
 
       const preExtractedImports = ['src/core/constants', 'src/config/defaults'];
@@ -120,17 +120,18 @@ describe('Level 3: raw_imports integration', () => {
       assert.deepStrictEqual(
         result.annotation.imports,
         preExtractedImports,
-        'Should use preExtractedImports, not LLM imports'
+        'Should use preExtractedImports from Level 0'
       );
     });
 
-    it('falls back to LLM imports when preExtractedImports not provided', () => {
+    it('falls back to LLM imports when preExtractedImports not provided (backward compat)', () => {
+      // This test ensures backward compatibility if LLM still provides imports
       const llmImports = ['src/utils/helper', 'src/lib/formatter'];
       const llmResponse = JSON.stringify({
         purpose: 'Helper utilities',
         tags: ['utility'],
         exports: ['formatData'],
-        imports: llmImports,
+        imports: llmImports, // Optional field, for backward compatibility
       });
 
       // Don't pass preExtractedImports
@@ -140,7 +141,27 @@ describe('Level 3: raw_imports integration', () => {
       // LLM imports should be normalized (paths without extensions)
       assert.ok(
         result.annotation.imports.includes('src/utils/helper'),
-        'Should include normalized LLM import'
+        'Should include normalized LLM import when provided'
+      );
+    });
+
+    it('handles empty imports when neither preExtracted nor LLM imports provided', () => {
+      // New prompt doesn't request imports, so LLM won't provide them
+      const llmResponse = JSON.stringify({
+        purpose: 'Simple utility',
+        tags: ['utility'],
+        exports: ['doSomething'],
+        // No imports field
+      });
+
+      // Don't pass preExtractedImports
+      const result = parseAnnotationResponseWithDetails(llmResponse, metadata, '.');
+
+      assert.ok(result.annotation !== null);
+      assert.deepStrictEqual(
+        result.annotation.imports,
+        [],
+        'Should have empty imports array when neither source provides imports'
       );
     });
 
@@ -216,12 +237,12 @@ describe('Level 3: raw_imports integration', () => {
       assert.ok(processedImports.includes('src/coordinator/assembler'), 'Should include assembler');
       assert.ok(processedImports.includes('src/core/types'), 'Should include types');
 
-      // Step 3: LLM returns annotation (imports will be overridden)
+      // Step 3: LLM returns annotation (no imports field, per updated prompt)
       const llmResponse = JSON.stringify({
         purpose: 'Orchestrates the map building pipeline',
         tags: ['build', 'utility'], // Use valid taxonomy tags
         exports: ['runPipeline', 'resumeFromCheckpoint'],
-        imports: ['ignored/llm/path'], // This will be ignored
+        // Note: imports field omitted (not requested by prompt anymore)
       });
 
       // Step 4: Parse with preExtractedImports
