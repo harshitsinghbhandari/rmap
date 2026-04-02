@@ -5,6 +5,8 @@
  * during the map building process.
  */
 
+import { LevelSpinner, printLevelHeader, printFinalSummary } from '../cli/progress-ui.js';
+
 /**
  * Progress tracking for the pipeline
  */
@@ -13,6 +15,7 @@ export class ProgressTracker {
   private levelStartTimes: Map<string, number> = new Map();
   private tokenCount: number = 0;
   private llmCallCount: number = 0;
+  private currentSpinner: LevelSpinner | null = null;
 
   constructor() {
     this.startTime = Date.now();
@@ -23,9 +26,8 @@ export class ProgressTracker {
    */
   startLevel(level: string): void {
     this.levelStartTimes.set(level, Date.now());
-    console.log(`\n${'═'.repeat(60)}`);
-    console.log(`Starting ${level}`);
-    console.log('═'.repeat(60));
+    printLevelHeader(level);
+    this.currentSpinner = new LevelSpinner(level);
   }
 
   /**
@@ -35,7 +37,21 @@ export class ProgressTracker {
     const startTime = this.levelStartTimes.get(level);
     if (startTime) {
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.log(`✓ ${level} complete (${duration}s)`);
+      if (this.currentSpinner) {
+        this.currentSpinner.stop(`${level} complete (${duration}s)`);
+        this.currentSpinner = null;
+      } else {
+        console.log(`✓ ${level} complete (${duration}s)`);
+      }
+    }
+  }
+
+  /**
+   * Update current level spinner message
+   */
+  updateSpinner(message: string): void {
+    if (this.currentSpinner) {
+      this.currentSpinner.message(message);
     }
   }
 
@@ -103,15 +119,13 @@ export class ProgressTracker {
     validationIssues: number;
   }): void {
     const elapsed = this.getElapsedMinutes().toFixed(1);
-    console.log(`\n${'═'.repeat(60)}`);
-    console.log('MAP BUILD COMPLETE');
-    console.log('═'.repeat(60));
-    console.log(`Files annotated: ${stats.filesAnnotated}`);
-    console.log(`Agents used: ${stats.agentsUsed}`);
-    console.log(`LLM calls: ${this.llmCallCount}`);
-    console.log(`Tokens used: ${this.tokenCount.toLocaleString()}`);
-    console.log(`Validation issues: ${stats.validationIssues}`);
-    console.log(`Build time: ${elapsed} minutes`);
-    console.log('═'.repeat(60));
+    printFinalSummary({
+      filesAnnotated: stats.filesAnnotated,
+      agentsUsed: stats.agentsUsed,
+      llmCalls: this.llmCallCount,
+      tokens: this.tokenCount,
+      validationIssues: stats.validationIssues,
+      buildTime: elapsed,
+    });
   }
 }
