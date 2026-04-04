@@ -9,7 +9,7 @@
 import * as clack from '@clack/prompts';
 import cliProgress from 'cli-progress';
 import logUpdate from 'log-update';
-import { NO_COLOR_ENABLED } from './ui-constants.js';
+import { NO_COLOR_ENABLED, getUI } from './ui-constants.js';
 
 /**
  * Check if we're running in a test environment
@@ -319,5 +319,174 @@ export function printFinalSummary(stats: {
     console.log(`Validation issues: ${stats.validationIssues}`);
     console.log(`Build time: ${stats.buildTime} minutes`);
     console.log('='.repeat(60));
+  }
+}
+
+/**
+ * Task status for tracking progress
+ */
+export type TaskStatus = 'pending' | 'working' | 'done' | 'error';
+
+/**
+ * Task info for rolling progress display
+ */
+export interface TaskInfo {
+  name: string;
+  status: TaskStatus;
+}
+
+/**
+ * TaskProgressTracker - Rolling progress view for Level 3 tasks
+ *
+ * Compresses all task activity into a single rolling progress section
+ * that updates in place, preventing terminal flooding.
+ *
+ * Features:
+ * - Shows last N tasks in a rolling viewport
+ * - Displays overall progress bar with percentage
+ * - Respects NO_COLOR environment variable
+ * - Automatically disabled in test environments
+ */
+export class TaskProgressTracker {
+  private tasks: TaskInfo[] = [];
+  private maxVisibleTasks: number;
+  private completedCount: number = 0;
+  private totalCount: number;
+  private enabled: boolean;
+  private isTestMode: boolean;
+  private UI = getUI();
+
+  constructor(totalTasks: number, maxVisibleTasks: number = 5) {
+    this.totalCount = totalTasks;
+    this.maxVisibleTasks = maxVisibleTasks;
+    this.isTestMode = IS_TEST_ENV;
+    // Enable rolling viewport only when not in test mode and not in NO_COLOR mode
+    this.enabled = !IS_TEST_ENV && !NO_COLOR_ENABLED;
+  }
+
+  /**
+   * Start a new task (marks it as working)
+   */
+  startTask(name: string): void {
+    const task: TaskInfo = { name, status: 'working' };
+    this.tasks.push(task);
+    this.render();
+  }
+
+  /**
+   * Mark the current working task as complete
+   */
+  completeTask(name: string): void {
+    const task = this.tasks.find(t => t.name === name && t.status === 'working');
+    if (task) {
+      task.status = 'done';
+      this.completedCount++;
+    }
+    this.render();
+  }
+
+  /**
+   * Mark a task as errored
+   */
+  errorTask(name: string): void {
+    const task = this.tasks.find(t => t.name === name && t.status === 'working');
+    if (task) {
+      task.status = 'error';
+      this.completedCount++;
+    }
+    this.render();
+  }
+
+  /**
+   * Get the status icon for a task
+   */
+  private getStatusIcon(status: TaskStatus): string {
+    switch (status) {
+      case 'pending':
+        return this.UI.EMOJI.PENDING;
+      case 'working':
+        return this.UI.EMOJI.WORKING;
+      case 'done':
+        return this.UI.EMOJI.DONE;
+      case 'error':
+        return this.UI.EMOJI.ERROR;
+    }
+  }
+
+  /**
+   * Build a visual progress bar
+   */
+  private buildProgressBar(width: number = 12): string {
+    const percentage = this.totalCount > 0 ? this.completedCount / this.totalCount : 0;
+    const filled = Math.floor(percentage * width);
+    const empty = width - filled;
+    const bar = '█'.repeat(filled) + '░'.repeat(empty);
+    const pct = Math.floor(percentage * 100);
+    return `${bar} ${pct}% (${this.completedCount}/${this.totalCount} tasks)`;
+  }
+
+  /**
+   * Render the rolling progress view
+   */
+  private render(): void {
+    if (this.isTestMode) return;
+
+    if (!this.enabled) {
+      // NO_COLOR mode: print simple one-line updates
+      const latestTask = this.tasks[this.tasks.length - 1];
+      if (latestTask) {
+        const icon = this.getStatusIcon(latestTask.status);
+        console.log(`  ${this.UI.EMOJI.PACKAGE} ${latestTask.name} ... ${icon}`);
+      }
+      return;
+    }
+
+    // Get the last N tasks to display
+    const visibleTasks = this.tasks.slice(-this.maxVisibleTasks);
+
+    // Build the output
+    const lines: string[] = [];
+
+    // Add task lines with tree-like structure
+    visibleTasks.forEach((task, index) => {
+      const isLast = index === visibleTasks.length - 1;
+      const prefix = isLast ? '└─' : '├─';
+      const icon = this.getStatusIcon(task.status);
+
+      // Truncate long task names
+      const maxNameLength = 45;
+      const displayName =
+        task.name.length > maxNameLength ? task.name.slice(0, maxNameLength - 3) + '...' : task.name;
+
+      lines.push(`  ${prefix} ${this.UI.EMOJI.PACKAGE} ${displayName} ... ${icon}`);
+    });
+
+    // Add progress bar
+    lines.push(`  └─ Progress: ${this.buildProgressBar()}`);
+
+    // Update in place
+    logUpdate(lines.join('\n'));
+  }
+
+  /**
+   * Finalize the progress display
+   */
+  done(): void {
+    if (this.isTestMode) return;
+
+    if (this.enabled) {
+      logUpdate.done();
+    }
+  }
+
+  /**
+   * Clear the progress display
+   */
+  clear(): void {
+    if (this.isTestMode) return;
+
+    if (this.enabled) {
+      logUpdate.clear();
+    }
   }
 }

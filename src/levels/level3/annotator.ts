@@ -271,6 +271,12 @@ export interface AnnotationOptions {
 
   /** Metrics collector (optional, for tracking token usage) */
   metrics?: MetricsCollector;
+
+  /**
+   * Quiet mode - suppresses header/footer logging.
+   * Used when called from annotateTask() to avoid redundant output.
+   */
+  quiet?: boolean;
 }
 
 /**
@@ -284,7 +290,7 @@ export async function annotateFiles(
   files: RawFileMetadata[],
   options: AnnotationOptions
 ): Promise<FileAnnotation[]> {
-  const { agentSize, repoRoot, llmClient: providedLLMClient, metrics } = options;
+  const { agentSize, repoRoot, llmClient: providedLLMClient, metrics, quiet = false } = options;
 
   // Initialize client if not provided
   let llmClient = providedLLMClient;
@@ -300,15 +306,18 @@ export async function annotateFiles(
   // Select model
   const model = ANNOTATION_MODEL_MAP[agentSize];
 
-  console.log(`Starting Level 3 annotation...`);
-  console.log(`Agent size: ${agentSize} (${model})`);
-  console.log(`Concurrency: ${CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS} parallel tasks\n`);
+  // Only print header when not in quiet mode (not called from annotateTask)
+  if (!quiet) {
+    console.log(`Starting Level 3 annotation...`);
+    console.log(`Agent size: ${agentSize} (${model})`);
+    console.log(`Concurrency: ${CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS} parallel tasks\n`);
+  }
 
   // Import progress UI (dynamic to avoid issues if not available)
   const { PercentageProgressBar } = await import('../../cli/progress-ui.js');
 
-  // Create progress bar showing percentage only
-  const progressBar = new PercentageProgressBar(files.length, 'Level 3: Deep File Annotator');
+  // Create progress bar showing percentage only (only when not in quiet mode)
+  const progressBar = quiet ? null : new PercentageProgressBar(files.length, 'Level 3: Deep File Annotator');
 
   try {
     // Create concurrency pool for parallel processing
@@ -333,7 +342,7 @@ export async function annotateFiles(
 
         completedCount++;
         // Update progress bar (shows percentage only)
-        progressBar.increment();
+        progressBar?.increment();
 
         if (annotation === null) {
           throw new Error(`Failed to annotate ${metadata.path}`);
@@ -343,17 +352,39 @@ export async function annotateFiles(
       }
     );
 
-    console.log(`\n✓ Level 3 annotation complete`);
-    console.log(`  Success: ${annotations.length}/${files.length}`);
-    if (failures.length > 0) {
-      console.log(`  Failed: ${failures.length}/${files.length}`);
+    // Only print summary when not in quiet mode
+    if (!quiet) {
+      console.log(`\n✓ Level 3 annotation complete`);
+      console.log(`  Success: ${annotations.length}/${files.length}`);
+      if (failures.length > 0) {
+        console.log(`  Failed: ${failures.length}/${files.length}`);
+      }
     }
 
     return annotations;
   } finally {
     // Always stop progress bar to restore cursor
-    progressBar.stop();
+    progressBar?.stop();
   }
+}
+
+/**
+ * Task annotation options
+ */
+export interface TaskAnnotationOptions {
+  /** Delegation task from Level 2 */
+  task: DelegationTask;
+  /** All file metadata from Level 0 */
+  allFiles: RawFileMetadata[];
+  /** Repository root path */
+  repoRoot: string;
+  /** Optional metrics collector for tracking token usage */
+  metrics?: MetricsCollector;
+  /**
+   * Optional callback for progress tracking.
+   * Called with status updates during task processing.
+   */
+  onProgress?: (status: 'start' | 'complete' | 'error', taskName: string) => void;
 }
 
 /**
@@ -370,16 +401,57 @@ export async function annotateTask(
   allFiles: RawFileMetadata[],
   repoRoot: string,
   metrics?: MetricsCollector
+): Promise<FileAnnotation[]>;
+
+/**
+ * Annotate files based on a delegation task (with options object)
+ *
+ * @param options - Task annotation options
+ * @returns Array of FileAnnotation
+ */
+export async function annotateTask(options: TaskAnnotationOptions): Promise<FileAnnotation[]>;
+
+/**
+ * Annotate files based on a delegation task
+ * Supports both legacy positional args and new options object
+ */
+export async function annotateTask(
+  taskOrOptions: DelegationTask | TaskAnnotationOptions,
+  allFiles?: RawFileMetadata[],
+  repoRoot?: string,
+  metrics?: MetricsCollector
 ): Promise<FileAnnotation[]> {
+  // Handle both call signatures
+  let task: DelegationTask;
+  let files: RawFileMetadata[];
+  let root: string;
+  let metricsCollector: MetricsCollector | undefined;
+  let onProgress: ((status: 'start' | 'complete' | 'error', taskName: string) => void) | undefined;
+
+  if ('task' in taskOrOptions) {
+    // New options object signature
+    task = taskOrOptions.task;
+    files = taskOrOptions.allFiles;
+    root = taskOrOptions.repoRoot;
+    metricsCollector = taskOrOptions.metrics;
+    onProgress = taskOrOptions.onProgress;
+  } else {
+    // Legacy positional args signature
+    task = taskOrOptions;
+    files = allFiles!;
+    root = repoRoot!;
+    metricsCollector = metrics;
+  }
+
   // Import UI constants for consistent emoji/plain-text handling
   const { getUI } = await import('../../cli/ui-constants.js');
   const UI = getUI();
 
-  console.log(`\n${UI.EMOJI.FOLDER} Processing task: ${task.scope}`);
-  console.log(`   Agent size: ${task.agent_size}`);
+  // Notify progress callback if provided
+  onProgress?.('start', task.scope);
 
   // Filter files that match the task scope
-  const scopeFiles = allFiles.filter((file) => {
+  const scopeFiles = files.filter((file) => {
     // If scope is a directory, match files in that directory
     if (task.scope.endsWith('/')) {
       return file.path.startsWith(task.scope);
@@ -389,14 +461,27 @@ export async function annotateTask(
   });
 
   if (scopeFiles.length === 0) {
-    console.warn(`${UI.EMOJI.WARNING} Warning: No files found for scope ${task.scope}`);
+    // Only log warning if no progress callback (backward compatibility)
+    if (!onProgress) {
+      console.warn(`${UI.EMOJI.WARNING} Warning: No files found for scope ${task.scope}`);
+    }
+    onProgress?.('complete', task.scope);
     return [];
   }
 
-  // Annotate the files
-  return annotateFiles(scopeFiles, {
-    agentSize: task.agent_size,
-    repoRoot,
-    metrics,
-  });
+  try {
+    // Annotate the files in quiet mode (no duplicate headers)
+    const result = await annotateFiles(scopeFiles, {
+      agentSize: task.agent_size,
+      repoRoot: root,
+      metrics: metricsCollector,
+      quiet: !!onProgress, // Quiet mode when progress callback is provided
+    });
+
+    onProgress?.('complete', task.scope);
+    return result;
+  } catch (error) {
+    onProgress?.('error', task.scope);
+    throw error;
+  }
 }
