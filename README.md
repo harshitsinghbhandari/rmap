@@ -327,24 +327,67 @@ RMAP_RETRY_BASE_BACKOFF_MS=2000  # Base backoff in ms (default: 2000)
 
 See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for complete configuration reference with all available options, defaults, and tuning guidance.
 
-## Development
+## Build from Source
 
-### Setup
+The quickest way to build rmap from source is using the setup script:
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/rmap.git
+git clone https://github.com/harshitsinghbhandari/rmap.git
+cd rmap
+bash scripts/setup.sh
+```
+
+The setup script will:
+1. Check for required tools (Node.js >= 20, pnpm)
+2. Install dependencies
+3. Run type checking
+4. Build the project
+5. Run tests
+6. Link globally for CLI access
+7. Verify the build with a smoke test
+
+### Setup Script Options
+
+```bash
+# Show help
+bash scripts/setup.sh --help
+
+# Skip tests for faster setup
+bash scripts/setup.sh --skip-tests
+
+# Skip global linking
+bash scripts/setup.sh --skip-link
+
+# Verbose output
+bash scripts/setup.sh --verbose
+```
+
+### Manual Setup
+
+If you prefer manual setup:
+
+```bash
+# Clone and enter the repository
+git clone https://github.com/harshitsinghbhandari/rmap.git
 cd rmap
 
-# Install dependencies
+# Install dependencies (requires pnpm)
 pnpm install
+
+# Type check
+pnpm lint
 
 # Build the project
 pnpm build
 
-# Link for local testing
+# Run tests
+pnpm test
+
+# Link for global CLI access (optional)
 pnpm link --global
 ```
+
+## Development
 
 ### Development Commands
 
