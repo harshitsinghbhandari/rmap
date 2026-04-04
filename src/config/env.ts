@@ -409,7 +409,7 @@ export const TOKEN = {
  *
  * Environment variables:
  * - RMAP_FILE_MAX_LINE_COUNT: Max line count for files (default: 10000)
- * - RMAP_FILE_MAX_TAGS: Max tags per file (default: 5)
+ * - RMAP_FILE_MAX_TAGS: Max tags per file (default: 3)
  * - RMAP_FILE_MAX_PER_TASK: Max files per task (default: 50)
  */
 export const FILE = {

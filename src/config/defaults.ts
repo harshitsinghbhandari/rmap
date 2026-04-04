@@ -311,9 +311,10 @@ export const FILE_CONFIG = {
 
   /**
    * Maximum number of tags per file
-   * @default 5
+   * Reduced to 3 to improve tag precision and reduce over-tagging
+   * @default 3
    */
-  MAX_TAGS_PER_FILE: 5,
+  MAX_TAGS_PER_FILE: 3,
 
   /**
    * Maximum number of files per Level 3 annotation task

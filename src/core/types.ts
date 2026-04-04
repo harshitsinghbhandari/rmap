@@ -28,7 +28,7 @@ export interface FileAnnotation {
   /** One-line description of what this file does */
   purpose: string;
 
-  /** 1-5 tags from TAG_TAXONOMY describing the file's role */
+  /** 1-3 tags from TAG_TAXONOMY describing the file's role (reduced for precision) */
   tags: Tag[];
 
   /** Exported functions, classes, types, or constants */

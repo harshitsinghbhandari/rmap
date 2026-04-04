@@ -201,8 +201,10 @@ test('annotateFiles: purpose should be concise', () => {
 });
 
 // Test: Tags validation
-test('annotateFiles: validates tags are from taxonomy', () => {
-  const validTags = ['authentication', 'jwt', 'database', 'api_endpoint'];
+test('annotateFiles: validates tags are from taxonomy', async () => {
+  const { FILE } = await import('../../../src/config/index.js');
+
+  const validTags = ['authentication', 'jwt', 'database'];
   const annotation: FileAnnotation = {
     path: 'src/test.ts',
     language: 'TypeScript',
@@ -216,7 +218,7 @@ test('annotateFiles: validates tags are from taxonomy', () => {
 
   // All tags should be from TAG_TAXONOMY
   assert.ok(annotation.tags.length >= 1);
-  assert.ok(annotation.tags.length <= 5); // MAX_TAGS_PER_FILE
+  assert.ok(annotation.tags.length <= FILE.MAX_TAGS_PER_FILE); // MAX_TAGS_PER_FILE is now 3
 });
 
 // Test: Exports extraction

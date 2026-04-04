@@ -245,7 +245,7 @@ interface DelegationTask {
    - Project context
 3. LLM extracts:
    - **Purpose**: 1-line description of what this file does
-   - **Tags**: 1-5 tags from taxonomy
+   - **Tags**: 1-3 tags from taxonomy (reduced for precision)
    - **Exports**: Functions, classes, types exported
    - **Imports**: Internal imports (repo-relative paths)
 
@@ -735,7 +735,7 @@ Predefined set of semantic tags used for file annotation.
 ### Design Principles
 
 1. **Closed taxonomy**: No freeform tags (ensures consistency)
-2. **1-5 tags per file**: Prevents over-tagging
+2. **1-3 tags per file**: Prevents over-tagging and improves precision
 3. **Semantic, not syntactic**: Tags describe purpose, not syntax
 4. **Language-agnostic**: Same tags work for all languages
 5. **Aliases for UX**: Shortcuts like `auth` expand to multiple tags

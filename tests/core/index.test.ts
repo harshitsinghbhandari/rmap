@@ -44,7 +44,8 @@ describe('Core module exports', () => {
   it('should export valid MAX_TAGS_PER_FILE and MAX_FILES_PER_TASK', () => {
     assert.ok(core.MAX_TAGS_PER_FILE > 0);
     assert.ok(core.MAX_FILES_PER_TASK > 0);
-    assert.strictEqual(core.MAX_TAGS_PER_FILE, 5);
+    // MAX_TAGS_PER_FILE reduced from 5 to 3 for improved tag precision
+    assert.strictEqual(core.MAX_TAGS_PER_FILE, 3);
     assert.strictEqual(core.MAX_FILES_PER_TASK, 50);
   });
 
