@@ -18,14 +18,16 @@ Complete reference for configuring `rmap` via environment variables.
 - [Model Configuration](#model-configuration)
 - [Configuration Examples](#configuration-examples)
 - [Performance Tuning](#performance-tuning)
+- [File Exclusion (.rmapignore)](#file-exclusion-rmapignore)
 
 ## Overview
 
-`rmap` is configured primarily through environment variables with the `RMAP_*` prefix. All settings have sensible defaults optimized for typical repositories.
+`rmap` is configured primarily through environment variables with the `RMAP_*` prefix and a `.rmapignore` file for excluding files from annotation. All settings have sensible defaults optimized for typical repositories.
 
 Configuration sources (in order of precedence):
 1. Environment variables (`RMAP_*`)
-2. Default values (defined in `src/config/defaults.ts`)
+2. `.rmapignore` file (for file exclusion patterns)
+3. Default values (defined in `src/config/defaults.ts`)
 
 ## Required Configuration
 
@@ -748,6 +750,123 @@ Reduce batch sizes:
 export RMAP_FILE_MAX_PER_TASK=20
 export RMAP_MAX_PARALLEL=5
 ```
+
+---
+
+## File Exclusion (.rmapignore)
+
+The `.rmapignore` file allows you to exclude files and directories from being annotated. It uses the same syntax as `.gitignore`.
+
+### Auto-generation
+
+On the first run, if `.rmapignore` doesn't exist, `rmap` automatically creates one with sensible defaults:
+
+```
+Created .rmapignore with default patterns. Customize as needed.
+```
+
+### File Format
+
+The `.rmapignore` file uses gitignore syntax:
+
+```gitignore
+# Build artifacts
+dist/
+build/
+.next/
+.nuxt/
+out/
+
+# Dependencies
+node_modules/
+vendor/
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Lock files (too large, limited semantic value)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+Cargo.lock
+
+# Generated/compiled files
+*.min.js
+*.bundle.js
+*.map
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Python
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+venv/
+.venv/
+
+# Build outputs
+target/
+bin/
+obj/
+```
+
+### Pattern Syntax
+
+| Pattern | Description |
+|---------|-------------|
+| `*.log` | Ignore all files with `.log` extension |
+| `dist/` | Ignore directory named `dist` |
+| `/root-only.txt` | Ignore file only at repository root |
+| `**/test/**` | Ignore any `test` directory at any level |
+| `!important.log` | Negation - don't ignore this file |
+| `# comment` | Comments start with `#` |
+
+### Always Ignored
+
+The following paths are always ignored, regardless of `.rmapignore` content:
+
+- `.git/` - Git directory
+- `.repo_map/` - rmap output directory
+
+### Benefits
+
+Using `.rmapignore` provides:
+
+1. **Cost savings**: Skip processing useless files (build artifacts, logs, lock files)
+2. **Faster builds**: Less files = faster pipeline
+3. **Cleaner results**: Query results aren't polluted with build artifacts
+4. **User control**: Easy customization via familiar `.gitignore` syntax
+
+### Example Impact
+
+**Before (without .rmapignore):**
+- 2,500 files discovered
+- 1,800 actually useful code files
+- 700 build artifacts, logs, lockfiles (wasted)
+
+**After (with .rmapignore):**
+- 2,500 files discovered
+- 1,800 passed filter, annotated
+- 700 ignored (saves API calls and time)
 
 ---
 

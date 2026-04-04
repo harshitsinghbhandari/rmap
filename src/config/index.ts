@@ -29,6 +29,12 @@ export {
   DEFAULT_CONFIG,
 } from './defaults.js';
 
+// Export .rmapignore default patterns
+export {
+  DEFAULT_RMAPIGNORE,
+  ALWAYS_IGNORE_PATTERNS,
+} from './rmapignore-defaults.js';
+
 // Export runtime configuration (with environment overrides)
 export {
   CONFIG,
