@@ -10,9 +10,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
 import type { Ignore } from 'ignore';
-import type { RawFileMetadata, Level0Output } from '../../core/types.js';
+import type { RawFileMetadata, Level0Output, FileImportData } from '../../core/types.js';
 import { FILE, OUTPUT } from '../../config/index.js';
-import { extractImports } from './parsers/index.js';
+import { extractImports, extractImportData } from './parsers/index.js';
 import {
   loadIgnorePatternsSync,
   shouldIgnoreFile,
@@ -210,6 +210,15 @@ function processFile(
       ? extractImports(content, language, relativePath)
       : [];
 
+    // Extract symbol-level import/export data (for JS/TS only)
+    let import_data: FileImportData | undefined;
+    if (language === 'JavaScript' || language === 'TypeScript') {
+      const data = extractImportData(content, language, relativePath);
+      if (data) {
+        import_data = data;
+      }
+    }
+
     return {
       name,
       path: relativePath,
@@ -218,6 +227,7 @@ function processFile(
       line_count,
       language,
       raw_imports,
+      import_data,
     };
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'EACCES') {

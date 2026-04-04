@@ -19,6 +19,40 @@ export interface ImportInfo {
 
   /** Line number where import appears (for debugging) */
   line?: number;
+
+  /** Named imports (e.g., import { foo, bar } from './mod') */
+  namedImports?: string[];
+
+  /** Default import local name (e.g., import Foo from './mod') */
+  defaultImport?: string;
+
+  /** Namespace import local name (e.g., import * as utils from './mod') */
+  namespaceImport?: string;
+}
+
+/**
+ * Information about a re-export statement
+ */
+export interface ReExportInfo {
+  /** The symbol being re-exported */
+  symbol: string;
+
+  /** The source module (e.g., './bar') */
+  source: string;
+}
+
+/**
+ * Export information from a file
+ */
+export interface ExportInfo {
+  /** Named exports (e.g., export function foo(), export const bar) */
+  namedExports: string[];
+
+  /** Whether file has a default export */
+  defaultExport: boolean;
+
+  /** Re-exports from other modules */
+  reExports: ReExportInfo[];
 }
 
 /**
@@ -27,6 +61,9 @@ export interface ImportInfo {
 export interface ParseResult {
   /** List of imports found */
   imports: ImportInfo[];
+
+  /** Export information from the file */
+  exports?: ExportInfo;
 
   /** Whether parsing succeeded */
   success: boolean;
