@@ -230,6 +230,14 @@ export const OUTPUT_CONFIG = {
   MAX_CONVENTIONS: 5,
 
   /**
+   * Maximum tags to display per file in output
+   * Files may have more tags internally, but only the highest-signal
+   * tags are shown for readability. Uses TAG_TIERS for prioritization.
+   * @default 2
+   */
+  MAX_DISPLAY_TAGS: 2,
+
+  /**
    * Maximum files to show in Level 2 prompt output
    * @default 10
    */
