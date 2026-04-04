@@ -18,6 +18,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Warning message with 5-second delay to prevent accidental large logs
   - Useful for debugging, understanding LLM behavior, and transparency
 
+- **Modern Terminal UI** (#64)
+  - Progress tracking with visual indicators
+  - Disabled in test environments for clean CI output
+
+- **File Exclusion Support** (#74)
+  - `.rmapignore` file support to exclude files from annotation
+  - Follows similar patterns to `.gitignore`
+
+- **Incremental Checkpoints** (#75)
+  - Incremental checkpoint updates for Level 3 annotations
+  - Enables graceful shutdown and resume during long builds
+
+- **Tag Validation** (#65)
+  - Validate LLM tag output against taxonomy
+  - Automatic retry on invalid tags with configurable retries
+
+- **Global Rate Limiter** (#61)
+  - Centralized rate limiting for all API calls
+  - Prevents hitting API limits during parallel processing
+
+- **Runtime Validation Layer** (#59)
+  - Schema validation for API responses
+  - Runtime type checking for critical data structures
+
+- **Comprehensive Test Suite** (#70, #85)
+  - Integration and schema validation tests
+  - Core, coordinator, and level tests
+  - Comprehensive config module tests
+  - CI workflow fixes and improvements
+
+### Changed
+
+- **Improved Rate Limit Handling** (#77)
+  - Increased rate limit defaults
+  - Smarter 429 retry logic with exponential backoff
+
+- **Better Tag Assignment** (#69)
+  - Improved tag assignment precision
+  - Reduced over-tagging for cleaner results
+
+- **Enhanced Output Formatting** (#70)
+  - Improved `get-context` output formatting and display quality
+  - Added MAX_DISPLAY_TAGS to OUTPUT config
+
+- **Compressed Level 3 Logs** (#83, #84)
+  - Single rolling progress view for Level 3 task logs
+  - Cleaner console output during builds
+
+- **Standardized Error Handling** (#57)
+  - Consistent error handling patterns across codebase
+  - Better error messages and stack traces
+
+### Fixed
+
+- **Dependency Graph Accuracy** (#71)
+  - Use Level 0 raw_imports for dependency graph instead of LLM extraction
+  - More accurate import/export relationships
+
+- **TypeScript Parser Types** (#62)
+  - Added proper TypeScript types to Babel AST path parameters
+  - Fixed type safety in parser module
+
+- **CI Workflow Issues** (#70)
+  - Resolved CI workflow issues identified in test audit
+
 ## [0.1.0] - 2025-04-01
 
 ### Added
