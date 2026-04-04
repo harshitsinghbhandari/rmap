@@ -193,7 +193,8 @@ export const VALIDATION = {
  * - RMAP_RETRY_MAX: Maximum retry attempts (default: 5)
  * - RMAP_RETRY_BASE_BACKOFF_MS: Base backoff in ms (default: 2000)
  * - RMAP_RETRY_REQUEST_DELAY_MS: Request delay in ms (default: 500)
- * - RMAP_RETRY_MAX_BACKOFF_MS: Max backoff cap in ms (default: 32000)
+ * - RMAP_RETRY_MAX_BACKOFF_MS: Max backoff cap in ms (default: 60000)
+ * - RMAP_RATE_LIMIT_INITIAL_DELAY_MS: Initial delay for rate limit errors (default: 15000)
  * - RMAP_RETRY_VALIDATION_ERRORS: Validation error retries (default: 1)
  * - RMAP_RETRY_TAG_VALIDATION: Tag validation retries (default: 2)
  */
@@ -219,6 +220,12 @@ export const RETRY = {
   MAX_BACKOFF_MS: parseEnvInt(
     process.env.RMAP_RETRY_MAX_BACKOFF_MS,
     RETRY_CONFIG.MAX_BACKOFF_MS,
+    1000,
+    120000,
+  ),
+  INITIAL_RATE_LIMIT_DELAY_MS: parseEnvInt(
+    process.env.RMAP_RATE_LIMIT_INITIAL_DELAY_MS,
+    RETRY_CONFIG.INITIAL_RATE_LIMIT_DELAY_MS,
     1000,
     120000,
   ),
@@ -449,8 +456,11 @@ export const FILE = {
  * Rate limiting configuration with environment overrides
  *
  * Environment variables:
- * - RMAP_RATE_LIMIT_RPM: Max requests per minute (default: 30)
- * - RMAP_RATE_LIMIT_TPM: Max input tokens per minute (default: 18000)
+ * - RMAP_RATE_LIMIT_RPM: Max requests per minute (default: 50)
+ * - RMAP_RATE_LIMIT_TPM: Max input tokens per minute (default: 8000)
+ *
+ * Users with higher Anthropic quotas can increase these values.
+ * Users with lower quotas can reduce if needed.
  */
 export const RATE_LIMIT = {
   REQUESTS_PER_MINUTE: parseEnvInt(

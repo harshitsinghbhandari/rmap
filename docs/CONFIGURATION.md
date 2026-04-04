@@ -10,6 +10,7 @@ Complete reference for configuring `rmap` via environment variables.
   - [Delta Update](#delta-update)
   - [Validation](#validation)
   - [Retry & Backoff](#retry--backoff)
+  - [Rate Limiting](#rate-limiting)
   - [Concurrency](#concurrency)
   - [Scoring](#scoring)
   - [Output](#output)
@@ -189,19 +190,18 @@ Controls API retry behavior for rate limiting and transient failures.
 export RMAP_RETRY_MAX=5
 ```
 
-**Retry sequence example:**
-- Attempt 1: Immediate
-- Attempt 2: Wait 2s
-- Attempt 3: Wait 4s
-- Attempt 4: Wait 8s
-- Attempt 5: Wait 16s
-- Attempt 6: Wait 32s
+**Retry sequence example for rate limit (429) errors:**
+- Attempt 1: Wait 15s (initial delay)
+- Attempt 2: Wait 30s
+- Attempt 3: Wait 45s
+- Attempt 4: Wait 60s (capped at max)
+- Attempt 5: Wait 60s
 
 ### RMAP_RETRY_BASE_BACKOFF_MS
 
 **Default**: `2000` (2 seconds)
 **Type**: Integer (100-10000)
-**Description**: Base backoff multiplier in milliseconds
+**Description**: Base backoff multiplier in milliseconds for general errors
 
 Formula: `Math.pow(2, attempt) × BASE_BACKOFF_MS`
 
@@ -223,14 +223,32 @@ export RMAP_RETRY_REQUEST_DELAY_MS=500
 
 ### RMAP_RETRY_MAX_BACKOFF_MS
 
-**Default**: `32000` (32 seconds)
+**Default**: `60000` (60 seconds)
 **Type**: Integer (1000-120000)
 **Description**: Maximum backoff delay cap
 
-Prevents exponential backoff from growing too large.
+Prevents exponential backoff from growing too large. Matches Anthropic's typical rate limit reset window.
 
 ```bash
-export RMAP_RETRY_MAX_BACKOFF_MS=32000
+export RMAP_RETRY_MAX_BACKOFF_MS=60000
+```
+
+### RMAP_RATE_LIMIT_INITIAL_DELAY_MS
+
+**Default**: `15000` (15 seconds)
+**Type**: Integer (1000-120000)
+**Description**: Initial delay in milliseconds specifically for rate limit (429) errors
+
+Starting at 15s gives the API quota time to refresh. Anthropic rate limits often reset every 60 seconds, so waiting 15s on first retry is more effective than aggressive 1-2s retries, reducing wasted retry attempts.
+
+```bash
+export RMAP_RATE_LIMIT_INITIAL_DELAY_MS=15000
+```
+
+**Current (smarter) retry behavior:**
+```
+API call → 429 Rate Limited
+Wait 15s → retry → success (likely works on first retry)
 ```
 
 ### RMAP_RETRY_VALIDATION_ERRORS
@@ -242,6 +260,40 @@ export RMAP_RETRY_MAX_BACKOFF_MS=32000
 ```bash
 export RMAP_RETRY_VALIDATION_ERRORS=1
 ```
+
+---
+
+## Rate Limiting
+
+Controls global rate limits to prevent hitting API quotas.
+
+### RMAP_RATE_LIMIT_RPM
+
+**Default**: `50`
+**Type**: Integer (1-1000)
+**Description**: Maximum requests per minute
+
+Set to 50 to match Anthropic Tier 1 limits. Users with higher quotas can increase this value.
+
+```bash
+export RMAP_RATE_LIMIT_RPM=50
+```
+
+### RMAP_RATE_LIMIT_TPM
+
+**Default**: `8000`
+**Type**: Integer (100-1000000)
+**Description**: Maximum input tokens per minute
+
+8000 tokens/min is sustainable for most Anthropic tier plans and allows ~2-3 concurrent Level 3 tasks without hitting limits. Users with higher quotas can increase this value.
+
+```bash
+export RMAP_RATE_LIMIT_TPM=8000
+```
+
+**Official Claude API limits by tier:**
+- Tier 1: 50 RPM, 30k TPM
+- Higher tiers: Increased limits
 
 ---
 
@@ -720,11 +772,18 @@ rmap map --status
 
 ### Rate Limiting
 
-If you see rate limit errors:
+If you see rate limit errors, the default 15s initial delay should handle most cases. For persistent issues:
 ```bash
+# Reduce concurrency
 export RMAP_CONCURRENCY=3
+# Increase delay between requests
 export RMAP_RETRY_REQUEST_DELAY_MS=1000
+# More retry attempts
 export RMAP_RETRY_MAX=10
+# Longer initial wait on 429 errors
+export RMAP_RATE_LIMIT_INITIAL_DELAY_MS=20000
+# Lower token budget if hitting token limits
+export RMAP_RATE_LIMIT_TPM=5000
 ```
 
 ### Slow Builds
