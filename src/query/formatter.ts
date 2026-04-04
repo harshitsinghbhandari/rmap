@@ -7,6 +7,7 @@
 import type { FileAnnotation, MetaJson } from '../core/types.js';
 import type { FileScore } from './ranking.js';
 import { OUTPUT } from '../config/index.js';
+import { TAG_TIERS } from '../core/constants.js';
 
 /**
  * Format options for output
@@ -26,6 +27,9 @@ export interface FormatOptions {
 
   /** Output format: 'text' for human-readable, 'json' for machine-readable */
   outputFormat?: 'text' | 'json';
+
+  /** Maximum number of tags to display per file (filters to highest-signal tags) */
+  maxDisplayTags?: number;
 }
 
 /**
@@ -37,7 +41,52 @@ const DEFAULT_OPTIONS: Required<FormatOptions> = {
   fullPaths: true,
   maxConventions: OUTPUT.MAX_CONVENTIONS,
   outputFormat: 'text',
+  maxDisplayTags: OUTPUT.MAX_DISPLAY_TAGS,
 };
+
+/**
+ * Filter tags to show only the highest-signal ones for display
+ *
+ * Uses TAG_TIERS to prioritize:
+ * 1. HIGH_SIGNAL tags (most specific, best for retrieval)
+ * 2. ARCHITECTURE tags (pattern-based, still valuable)
+ * 3. LOW_SIGNAL tags (generic, only when no better options)
+ *
+ * @param tags - All tags assigned to the file
+ * @param maxTags - Maximum tags to display
+ * @returns Filtered array of highest-signal tags
+ */
+function filterDisplayTags(tags: string[], maxTags: number): string[] {
+  if (tags.length <= maxTags) {
+    return tags;
+  }
+
+  // Score each tag based on its tier
+  const tagScores = tags.map((tag) => {
+    let score = 0;
+    if (TAG_TIERS.HIGH_SIGNAL.includes(tag as (typeof TAG_TIERS.HIGH_SIGNAL)[number])) {
+      score = 3; // Highest priority
+    } else if (TAG_TIERS.ARCHITECTURE.includes(tag as (typeof TAG_TIERS.ARCHITECTURE)[number])) {
+      score = 2; // Medium priority
+    } else if (TAG_TIERS.LOW_SIGNAL.includes(tag as (typeof TAG_TIERS.LOW_SIGNAL)[number])) {
+      score = 1; // Lowest priority
+    } else {
+      score = 0; // Unknown tags get lowest priority
+    }
+    return { tag, score };
+  });
+
+  // Sort by score descending, then by original order for stability
+  tagScores.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    return tags.indexOf(a.tag) - tags.indexOf(b.tag);
+  });
+
+  // Return top N tags
+  return tagScores.slice(0, maxTags).map((t) => t.tag);
+}
 
 /**
  * Format the repository context section
@@ -64,7 +113,7 @@ function formatRepoContext(meta: MetaJson): string {
   if (meta.modules.length > 0) {
     lines.push('Structure:');
     meta.modules.forEach((module) => {
-      lines.push(`  • ${module.path}: ${module.description}`);
+      lines.push(`  • ${module.path} — ${module.description}`);
     });
     lines.push('');
   }
@@ -89,9 +138,10 @@ function formatFile(
   lines.push(`${file.path}`);
   lines.push(`  ${file.purpose}`);
 
-  // Tags
+  // Tags - filter to highest-signal tags for display
   if (file.tags.length > 0) {
-    lines.push(`  Tags: ${file.tags.join(', ')}`);
+    const displayTags = filterDisplayTags(file.tags, options.maxDisplayTags);
+    lines.push(`  Tags: ${displayTags.join(', ')}`);
   }
 
   // Exports
@@ -163,7 +213,7 @@ function formatBlastRadius(
   const lines = ['═══ BLAST RADIUS ═══', ''];
 
   if (blastRadiusFiles.length === 0) {
-    lines.push('No files import the results above.');
+    lines.push('No direct dependents found in current graph.');
     lines.push('');
     return lines.join('\n');
   }
@@ -172,7 +222,7 @@ function formatBlastRadius(
   const remaining = blastRadiusFiles.length - filesToShow.length;
 
   lines.push(
-    `${blastRadiusFiles.length} file${blastRadiusFiles.length > 1 ? 's' : ''} import the results above:`
+    `${blastRadiusFiles.length} direct dependent${blastRadiusFiles.length > 1 ? 's' : ''} in current graph:`
   );
   lines.push('');
 
@@ -262,7 +312,7 @@ export function formatQueryOutput(
         path: scored.file.path,
         language: scored.file.language,
         purpose: scored.file.purpose,
-        tags: scored.file.tags,
+        tags: filterDisplayTags(scored.file.tags, opts.maxDisplayTags),
         exports: scored.file.exports.slice(0, opts.maxExports),
         relevanceScore: scored.score,
       })),
@@ -270,7 +320,7 @@ export function formatQueryOutput(
         path: file.path,
         language: file.language,
         purpose: file.purpose,
-        tags: file.tags,
+        tags: filterDisplayTags(file.tags, opts.maxDisplayTags),
       })),
       conventions: params.meta.conventions.slice(0, opts.maxConventions),
     };
@@ -317,7 +367,7 @@ export function formatFileQueryOutput(
         path: params.file.path,
         language: params.file.language,
         purpose: params.file.purpose,
-        tags: params.file.tags,
+        tags: filterDisplayTags(params.file.tags, opts.maxDisplayTags),
         exports: params.file.exports.slice(0, opts.maxExports),
         sizeBytes: params.file.size_bytes,
         lineCount: params.file.line_count,
@@ -370,9 +420,9 @@ export function formatFileQueryOutput(
   // Dependents (blast radius)
   lines.push('═══ BLAST RADIUS ═══', '');
   if (params.dependents.length === 0) {
-    lines.push('No files import this file.');
+    lines.push('No direct dependents found in current graph.');
   } else {
-    lines.push(`${params.dependents.length} file${params.dependents.length > 1 ? 's' : ''} import this file:`);
+    lines.push(`${params.dependents.length} direct dependent${params.dependents.length > 1 ? 's' : ''} in current graph:`);
     lines.push('');
     params.dependents.slice(0, opts.maxFiles).forEach((dep) => {
       lines.push(`${dep.path}`);
@@ -424,7 +474,7 @@ export function formatPathQueryOutput(
         path: scored.file.path,
         language: scored.file.language,
         purpose: scored.file.purpose,
-        tags: scored.file.tags,
+        tags: filterDisplayTags(scored.file.tags, opts.maxDisplayTags),
         exports: scored.file.exports.slice(0, opts.maxExports),
         relevanceScore: scored.score,
       })),
@@ -467,12 +517,12 @@ export function formatPathQueryOutput(
   }
 
   // External dependents
-  lines.push('═══ EXTERNAL DEPENDENCIES ═══', '');
+  lines.push('═══ EXTERNAL DEPENDENTS ═══', '');
   if (params.externalDependents.length === 0) {
-    lines.push('No files outside this directory import files from here.');
+    lines.push('No external dependents found in current graph.');
   } else {
     lines.push(
-      `${params.externalDependents.length} file${params.externalDependents.length > 1 ? 's' : ''} outside this directory import from here:`
+      `${params.externalDependents.length} external dependent${params.externalDependents.length > 1 ? 's' : ''} in current graph:`
     );
     lines.push('');
     params.externalDependents.slice(0, opts.maxFiles).forEach((dep) => {

@@ -95,22 +95,30 @@ ${fileTree}
 Your task is to analyze this repository and provide:
 
 1. **repo_name**: The repository name (extract from package.json, go.mod, pyproject.toml, or use directory name)
-2. **purpose**: A single clear sentence describing what this repository does
+2. **purpose**: A concise product-facing description (max 20 words) explaining what this tool does for users, not how it works internally
+   - Good: "Builds a queryable repository map so coding agents can get focused context."
+   - Bad: "A multi-level code analysis and processing system that harvests, detects, divides, annotates..."
 3. **stack**: Primary technology stack (e.g., "TypeScript, Node.js, Express" or "Python, FastAPI, PostgreSQL")
 4. **languages**: List of programming languages used (e.g., ["TypeScript", "JavaScript"])
 5. **entrypoints**: Main entry points of the application (e.g., ["src/index.ts", "src/cli/index.ts"])
-6. **modules**: Top-level modules/directories with their purposes. Format as array of {path, description}.
+6. **modules**: Top-level modules/directories with SHORT descriptions (5-10 words max). Format as array of {path, description}.
    - Only include significant directories (src/*, lib/*, etc.)
-   - Each description should be one clear sentence
+   - Keep descriptions brief: "CLI commands and terminal UI" not "Command-line interface with commands for context retrieval and code mapping, including progress UI and display utilities."
 7. **config_files**: Important configuration files (e.g., ["package.json", "tsconfig.json", ".env.example"])
-8. **conventions**: Project-specific conventions and patterns you observe (e.g., ["Uses barrel exports (index.ts) for module organization", "Test files colocated with source in __tests__ directories"])
+8. **conventions**: Operational coding conventions - actionable rules for how to write code in this repo (not architecture summaries)
+   - Good: "Use barrel exports (index.ts) for module interfaces"
+   - Good: "Tests live in tests/ mirroring src/ structure"
+   - Good: "Env parsing goes through src/config/env.ts"
+   - Bad: "Uses barrel exports (index.ts) for module organization across all directories"
+   - Bad: "Test files colocated with source code in parallel tests/ directory structure"
 
 Guidelines:
-- Be concise and accurate
+- Be extremely concise - agents scan output quickly
+- Purpose should be product-facing (what it does for users), not architecture-facing (how it's built)
+- Module descriptions: one short phrase (5-10 words), not a sentence
+- Conventions: tell agents HOW to behave, not just summarize what exists
 - Focus on the actual structure, not speculation
 - List only files and paths that exist in the file tree above
-- For modules, focus on the main structural directories (don't list every subdirectory)
-- For conventions, note observable patterns in file organization, naming, or structure
 
 Respond with valid JSON in this exact structure:
 {

@@ -469,7 +469,7 @@ test('queryByFile: handles file with no dependents', async () => {
     });
 
     // endpoints/auth.ts is not imported by any file in mockGraph
-    assert.ok(result.includes('No files import this file'));
+    assert.ok(result.includes('No direct dependents found in current graph'));
   } finally {
     await rm(testDir, { recursive: true, force: true });
   }
@@ -489,7 +489,7 @@ test('queryByPath: returns formatted output for path query', async () => {
     // Should include all expected sections
     assert.ok(result.includes('═══ REPO CONTEXT ═══'));
     assert.ok(result.includes('═══ DIRECTORY: src/auth ═══'));
-    assert.ok(result.includes('═══ EXTERNAL DEPENDENCIES ═══'));
+    assert.ok(result.includes('═══ EXTERNAL DEPENDENTS ═══'));
 
     // Should show directory path
     assert.ok(result.includes('src/auth'));
@@ -527,7 +527,7 @@ test('queryByPath: shows external dependents', async () => {
     });
 
     // Files in src/auth/ are imported by files outside (e.g., endpoints/auth.ts)
-    assert.ok(result.includes('═══ EXTERNAL DEPENDENCIES ═══'));
+    assert.ok(result.includes('═══ EXTERNAL DEPENDENTS ═══'));
   } finally {
     await rm(testDir, { recursive: true, force: true });
   }

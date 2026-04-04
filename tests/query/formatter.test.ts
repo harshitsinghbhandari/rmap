@@ -134,8 +134,8 @@ test('formatQueryOutput: displays module structure', () => {
   });
 
   assert.ok(output.includes('Structure:'));
-  assert.ok(output.includes('src/auth: Authentication module'));
-  assert.ok(output.includes('src/api: API endpoints'));
+  assert.ok(output.includes('src/auth — Authentication module'));
+  assert.ok(output.includes('src/api — API endpoints'));
 });
 
 test('formatQueryOutput: includes query tags in relevant files header', () => {
@@ -235,11 +235,11 @@ test('formatQueryOutput: displays blast radius files', () => {
   });
 
   assert.ok(output.includes('═══ BLAST RADIUS ═══'));
-  assert.ok(output.includes('1 file import the results above'));
+  assert.ok(output.includes('1 direct dependent in current graph'));
   assert.ok(output.includes('src/auth/session.ts'));
 });
 
-test('formatQueryOutput: shows "No files import" when blast radius empty', () => {
+test('formatQueryOutput: shows "No direct dependents found" when blast radius empty', () => {
   const output = formatQueryOutput({
     meta: mockMeta,
     relevantFiles: mockFileScores,
@@ -247,7 +247,7 @@ test('formatQueryOutput: shows "No files import" when blast radius empty', () =>
     blastRadiusFiles: [],
   });
 
-  assert.ok(output.includes('No files import the results above'));
+  assert.ok(output.includes('No direct dependents found in current graph'));
 });
 
 test('formatQueryOutput: displays conventions', () => {
@@ -326,7 +326,7 @@ test('formatQueryOutput: handles plural/singular correctly', () => {
   });
 
   // Singular
-  assert.ok(output.includes('1 file import the results above'));
+  assert.ok(output.includes('1 direct dependent in current graph'));
 
   const outputPlural = formatQueryOutput({
     meta: mockMeta,
@@ -336,7 +336,7 @@ test('formatQueryOutput: handles plural/singular correctly', () => {
   });
 
   // Plural
-  assert.ok(outputPlural.includes('3 files import the results above'));
+  assert.ok(outputPlural.includes('3 direct dependents in current graph'));
 });
 
 // formatFileQueryOutput tests
@@ -403,11 +403,11 @@ test('formatFileQueryOutput: displays dependents', () => {
     dependents,
   });
 
-  assert.ok(output.includes('1 file import this file:'));
+  assert.ok(output.includes('1 direct dependent in current graph'));
   assert.ok(output.includes('src/api/endpoints/auth.ts'));
 });
 
-test('formatFileQueryOutput: shows "no files import" when empty', () => {
+test('formatFileQueryOutput: shows "no direct dependents found" when empty', () => {
   const output = formatFileQueryOutput({
     meta: mockMeta,
     file: mockFile,
@@ -415,7 +415,7 @@ test('formatFileQueryOutput: shows "no files import" when empty', () => {
     dependents: [],
   });
 
-  assert.ok(output.includes('No files import this file'));
+  assert.ok(output.includes('No direct dependents found in current graph'));
 });
 
 test('formatFileQueryOutput: limits dependencies displayed', () => {
@@ -472,7 +472,7 @@ test('formatPathQueryOutput: includes all required sections', () => {
 
   assert.ok(output.includes('═══ REPO CONTEXT ═══'));
   assert.ok(output.includes('═══ DIRECTORY: src/auth ═══'));
-  assert.ok(output.includes('═══ EXTERNAL DEPENDENCIES ═══'));
+  assert.ok(output.includes('═══ EXTERNAL DEPENDENTS ═══'));
   assert.ok(output.includes('═══ CONVENTIONS ═══'));
 });
 
@@ -519,11 +519,11 @@ test('formatPathQueryOutput: displays external dependents', () => {
     externalDependents: mockFiles.slice(2, 3),
   });
 
-  assert.ok(output.includes('1 file outside this directory import from here:'));
+  assert.ok(output.includes('1 external dependent in current graph'));
   assert.ok(output.includes('src/api/endpoints/auth.ts'));
 });
 
-test('formatPathQueryOutput: shows "No files outside" when no external deps', () => {
+test('formatPathQueryOutput: shows "No external dependents found" when no external deps', () => {
   const output = formatPathQueryOutput({
     meta: mockMeta,
     path: 'src/auth',
@@ -531,7 +531,7 @@ test('formatPathQueryOutput: shows "No files outside" when no external deps', ()
     externalDependents: [],
   });
 
-  assert.ok(output.includes('No files outside this directory import files from here'));
+  assert.ok(output.includes('No external dependents found in current graph'));
 });
 
 test('formatPathQueryOutput: limits files displayed', () => {
@@ -675,4 +675,112 @@ test('all formatters: produce non-empty output', () => {
   assert.ok(output1.length > 100);
   assert.ok(output2.length > 100);
   assert.ok(output3.length > 100);
+});
+
+// Tag filtering tests
+test('formatQueryOutput: filters tags to show only highest-signal tags', () => {
+  const fileWithManyTags: FileAnnotation = {
+    path: 'src/utils/logger.ts',
+    language: 'TypeScript',
+    size_bytes: 500,
+    line_count: 30,
+    purpose: 'Logger utility',
+    tags: ['logging', 'utility', 'helper'], // logging is HIGH_SIGNAL, utility/helper are LOW_SIGNAL
+    exports: ['log'],
+    imports: [],
+  };
+
+  const output = formatQueryOutput({
+    meta: mockMeta,
+    relevantFiles: [{ file: fileWithManyTags, score: 100, importCount: 0, importedByCount: 0, connectivity: 0 }],
+    queryTags: [],
+    blastRadiusFiles: [],
+  });
+
+  // Should show only top 2 tags (default), prioritizing HIGH_SIGNAL tags
+  // logging is HIGH_SIGNAL, should be shown first
+  assert.ok(output.includes('Tags: logging'));
+  // utility and helper are both LOW_SIGNAL, but since maxDisplayTags=2, one should appear
+  // But logging should definitely be there
+});
+
+test('formatQueryOutput: respects maxDisplayTags option', () => {
+  const fileWithManyTags: FileAnnotation = {
+    path: 'src/utils/logger.ts',
+    language: 'TypeScript',
+    size_bytes: 500,
+    line_count: 30,
+    purpose: 'Logger utility',
+    tags: ['logging', 'metrics', 'utility'], // logging and metrics are HIGH_SIGNAL
+    exports: ['log'],
+    imports: [],
+  };
+
+  const output = formatQueryOutput(
+    {
+      meta: mockMeta,
+      relevantFiles: [{ file: fileWithManyTags, score: 100, importCount: 0, importedByCount: 0, connectivity: 0 }],
+      queryTags: [],
+      blastRadiusFiles: [],
+    },
+    { maxDisplayTags: 1 }
+  );
+
+  // Should show only 1 tag
+  // Count the number of tags in the Tags: line
+  const tagsMatch = output.match(/Tags: ([^\n]+)/);
+  assert.ok(tagsMatch);
+  const tagCount = tagsMatch[1].split(',').length;
+  assert.strictEqual(tagCount, 1);
+});
+
+test('formatQueryOutput: shows all tags when under maxDisplayTags limit', () => {
+  const fileWithFewTags: FileAnnotation = {
+    path: 'src/auth.ts',
+    language: 'TypeScript',
+    size_bytes: 500,
+    line_count: 30,
+    purpose: 'Auth module',
+    tags: ['authentication'], // Only 1 tag
+    exports: ['auth'],
+    imports: [],
+  };
+
+  const output = formatQueryOutput({
+    meta: mockMeta,
+    relevantFiles: [{ file: fileWithFewTags, score: 100, importCount: 0, importedByCount: 0, connectivity: 0 }],
+    queryTags: [],
+    blastRadiusFiles: [],
+  });
+
+  // Should show the single tag
+  assert.ok(output.includes('Tags: authentication'));
+});
+
+test('formatQueryOutput: prioritizes HIGH_SIGNAL over ARCHITECTURE over LOW_SIGNAL tags', () => {
+  const fileWithMixedTags: FileAnnotation = {
+    path: 'src/test.ts',
+    language: 'TypeScript',
+    size_bytes: 500,
+    line_count: 30,
+    purpose: 'Test file',
+    tags: ['utility', 'service', 'logging'], // LOW_SIGNAL, ARCHITECTURE, HIGH_SIGNAL
+    exports: [],
+    imports: [],
+  };
+
+  const output = formatQueryOutput(
+    {
+      meta: mockMeta,
+      relevantFiles: [{ file: fileWithMixedTags, score: 100, importCount: 0, importedByCount: 0, connectivity: 0 }],
+      queryTags: [],
+      blastRadiusFiles: [],
+    },
+    { maxDisplayTags: 2 }
+  );
+
+  // Should show logging (HIGH_SIGNAL) and service (ARCHITECTURE), not utility (LOW_SIGNAL)
+  assert.ok(output.includes('logging'));
+  assert.ok(output.includes('service'));
+  assert.ok(!output.includes('utility'));
 });

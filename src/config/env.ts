@@ -329,6 +329,7 @@ export const SCORING = {
  * - RMAP_OUTPUT_MAX_FILES: Max files per section (default: 10)
  * - RMAP_OUTPUT_MAX_EXPORTS: Max exports per file (default: 5)
  * - RMAP_OUTPUT_MAX_CONVENTIONS: Max conventions (default: 5)
+ * - RMAP_OUTPUT_MAX_DISPLAY_TAGS: Max tags to display per file (default: 2)
  */
 export const OUTPUT = {
   MAX_FILES_PER_SECTION: parseEnvInt(
@@ -348,6 +349,12 @@ export const OUTPUT = {
     OUTPUT_CONFIG.MAX_CONVENTIONS,
     1,
     100,
+  ),
+  MAX_DISPLAY_TAGS: parseEnvInt(
+    process.env.RMAP_OUTPUT_MAX_DISPLAY_TAGS,
+    OUTPUT_CONFIG.MAX_DISPLAY_TAGS,
+    1,
+    10,
   ),
   MAX_FILES_IN_PROMPT: parseEnvInt(
     process.env.RMAP_OUTPUT_MAX_FILES_IN_PROMPT,
