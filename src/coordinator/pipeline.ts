@@ -32,6 +32,9 @@ import { readExistingMeta } from './assembler.js';
 import { CheckpointOrchestrator } from './checkpoint-orchestrator.js';
 import { GracefulShutdownHandler } from './shutdown-handler.js';
 import { MetricsCollector, writeMetricsLog, printCompactSummary } from '../core/index.js';
+import { TaskProgressTracker, printLevelHeader } from '../cli/progress-ui.js';
+import { ANNOTATION_MODEL_MAP, CONCURRENCY_CONFIG } from '../config/index.js';
+import { getUI } from '../cli/ui-constants.js';
 
 /**
  * Pipeline options
@@ -236,6 +239,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
 
   // ===== LEVEL 3: Deep File Annotator =====
   const checkpoint = checkpointer.getCheckpoint();
+  const UI = getUI();
 
   if (checkpoint.levels[3]?.status === 'completed') {
     // Load completed annotations from checkpoint
@@ -267,23 +271,49 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     // Start with previously completed annotations
     annotations = [...level3Annotations];
 
-    if (parallel && delegation.execution === 'parallel') {
-      // Run remaining tasks in parallel with incremental saves
-      tracker.logProgress(`Running ${remainingTasks.length} tasks in parallel...`);
+    // Determine execution mode info for header
+    const executionMode = parallel && delegation.execution === 'parallel' ? 'parallel' : 'sequential';
 
+    // Print level header once with configuration info
+    printLevelHeader('Level 3: Deep File Annotator');
+    console.log(`  Execution: ${executionMode}`);
+    console.log(`  Concurrency: ${CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS} parallel annotations`);
+    console.log(`  Tasks: ${remainingTasks.length}/${delegation.tasks.length}\n`);
+    console.log(`${UI.EMOJI.PENDING} Level 3: Deep annotation in progress\n`);
+
+    // Create task progress tracker for rolling viewport
+    const taskTracker = new TaskProgressTracker(delegation.tasks.length, 5);
+
+    // Mark already completed tasks in the tracker
+    for (const taskId of completedTaskIds) {
+      taskTracker.completeTask(taskId);
+    }
+
+    if (parallel && delegation.execution === 'parallel') {
+      // Run remaining tasks in parallel with incremental saves and progress tracking
       // Process tasks in parallel but save incrementally as each completes
       const taskPromises = remainingTasks.map(async (task) => {
-        const taskAnnotations = await annotateTask(task, level0.files, repoRoot, metrics);
+        const taskAnnotations = await annotateTask({
+          task,
+          allFiles: level0.files,
+          repoRoot,
+          metrics,
+          onProgress: (status, taskName) => {
+            if (status === 'start') {
+              taskTracker.startTask(taskName);
+            } else if (status === 'complete') {
+              taskTracker.completeTask(taskName);
+            } else if (status === 'error') {
+              taskTracker.errorTask(taskName);
+            }
+          },
+        });
 
         // Save this task's annotations incrementally
         await checkpointer.saveAnnotationsIncremental(taskAnnotations);
 
         // Mark this task as completed
         checkpointer.markTaskCompleted(task, delegation, completedTaskIds);
-
-        tracker.logProgress(
-          `Completed task ${completedTaskIds.size}/${delegation.tasks.length} (${taskAnnotations.length} files)`
-        );
 
         return taskAnnotations;
       });
@@ -298,10 +328,23 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       tracker.trackLLMCall(remainingTasks.length);
     } else {
       // Run tasks sequentially with checkpointing after each
-      tracker.logProgress(`Running ${remainingTasks.length} tasks sequentially...`);
-
       for (const task of remainingTasks) {
-        const taskAnnotations = await annotateTask(task, level0.files, repoRoot, metrics);
+        const taskAnnotations = await annotateTask({
+          task,
+          allFiles: level0.files,
+          repoRoot,
+          metrics,
+          onProgress: (status, taskName) => {
+            if (status === 'start') {
+              taskTracker.startTask(taskName);
+            } else if (status === 'complete') {
+              taskTracker.completeTask(taskName);
+            } else if (status === 'error') {
+              taskTracker.errorTask(taskName);
+            }
+          },
+        });
+
         annotations.push(...taskAnnotations);
 
         // Save annotations incrementally
@@ -312,11 +355,11 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
         checkpointer.saveLevel3Progress(annotations);
 
         tracker.trackLLMCall();
-        tracker.logProgress(
-          `Completed task ${completedTaskIds.size}/${delegation.tasks.length}`
-        );
       }
     }
+
+    // Finalize progress tracker
+    taskTracker.done();
 
     // Mark Level 3 as completed and save final output
     checkpointer.completeLevel(3, annotations, CHECKPOINT_FILES.LEVEL3_PROGRESS);

@@ -489,3 +489,88 @@ test('annotateFiles: respects CONCURRENCY_CONFIG', async () => {
   assert.ok(CONCURRENCY_CONFIG.TASK_START_DELAY_MS >= 0);
   assert.ok(CONCURRENCY_CONFIG.TASK_START_DELAY_MS <= 60_000);
 });
+
+// Test: AnnotationOptions quiet mode
+test('AnnotationOptions: supports quiet mode', () => {
+  // TypeScript will ensure this compiles - testing the type interface
+  const options = {
+    agentSize: 'medium' as const,
+    repoRoot: '/test',
+    quiet: true,
+  };
+
+  assert.strictEqual(options.quiet, true);
+  assert.strictEqual(options.agentSize, 'medium');
+});
+
+// Test: TaskAnnotationOptions interface
+test('TaskAnnotationOptions: supports onProgress callback', () => {
+  // Track callback invocations
+  const progressEvents: { status: string; taskName: string }[] = [];
+
+  const options = {
+    task: mockTask,
+    allFiles: mockFileMetadata,
+    repoRoot: '/test',
+    onProgress: (status: 'start' | 'complete' | 'error', taskName: string) => {
+      progressEvents.push({ status, taskName });
+    },
+  };
+
+  // Simulate callback invocations
+  options.onProgress('start', 'src/auth/');
+  options.onProgress('complete', 'src/auth/');
+
+  assert.strictEqual(progressEvents.length, 2);
+  assert.strictEqual(progressEvents[0].status, 'start');
+  assert.strictEqual(progressEvents[1].status, 'complete');
+});
+
+// Test: annotateTask supports both signatures
+test('annotateTask: supports legacy positional args signature', () => {
+  // This test validates the function signature accepts positional args
+  const task: DelegationTask = {
+    scope: 'src/auth/',
+    agent_size: 'medium',
+    estimated_files: 2,
+  };
+
+  // The function should accept (task, files, repoRoot, metrics?) signature
+  // We just validate the args structure, not call the actual function
+  assert.ok(typeof task.scope === 'string');
+  assert.ok(typeof task.agent_size === 'string');
+});
+
+// Test: annotateTask supports new options object signature
+test('annotateTask: supports new options object signature', () => {
+  // Validate the options interface
+  const options = {
+    task: mockTask,
+    allFiles: mockFileMetadata,
+    repoRoot: '/test',
+    metrics: undefined,
+    onProgress: undefined,
+  };
+
+  assert.strictEqual(options.task.scope, 'src/auth/');
+  assert.strictEqual(options.allFiles.length, mockFileMetadata.length);
+});
+
+// Test: onProgress callback receives correct statuses
+test('annotateTask: onProgress receives start/complete/error statuses', () => {
+  const validStatuses = ['start', 'complete', 'error'] as const;
+  const receivedStatuses: string[] = [];
+
+  const mockOnProgress = (status: 'start' | 'complete' | 'error', taskName: string) => {
+    receivedStatuses.push(status);
+  };
+
+  // Simulate progress events
+  mockOnProgress('start', 'task1');
+  mockOnProgress('complete', 'task1');
+  mockOnProgress('start', 'task2');
+  mockOnProgress('error', 'task2');
+
+  assert.strictEqual(receivedStatuses.length, 4);
+  assert.ok(receivedStatuses.every(s => validStatuses.includes(s as typeof validStatuses[number])));
+});

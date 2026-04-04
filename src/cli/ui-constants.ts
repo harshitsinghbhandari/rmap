@@ -47,6 +47,12 @@ export const EMOJI = {
   GREEN_CIRCLE: '🟢',
   ARROWS: '🔄',
   CHECK: '✅',
+  // Task progress indicators
+  PACKAGE: '📦',
+  PENDING: '⏺',
+  WORKING: '⏳',
+  DONE: '✓',
+  ERROR: '✗',
 } as const;
 
 /**
@@ -65,6 +71,12 @@ const EMOJI_PLAIN = {
   GREEN_CIRCLE: '[✓]',
   ARROWS: '[~]',
   CHECK: '[✓]',
+  // Task progress indicators (plain text)
+  PACKAGE: '[P]',
+  PENDING: '◦',
+  WORKING: '→',
+  DONE: '✓',
+  ERROR: '✗',
 } as const;
 
 /**
@@ -93,6 +105,12 @@ export interface UIConstants {
     GREEN_CIRCLE: string;
     ARROWS: string;
     CHECK: string;
+    // Task progress indicators
+    PACKAGE: string;
+    PENDING: string;
+    WORKING: string;
+    DONE: string;
+    ERROR: string;
   };
 }
 
