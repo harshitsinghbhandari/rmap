@@ -105,9 +105,18 @@ export const RETRY_CONFIG = {
   /**
    * Maximum backoff delay cap in milliseconds
    * Prevents exponential backoff from growing too large
-   * @default 32000
+   * @default 60000 (60 seconds)
    */
-  MAX_BACKOFF_MS: 32000,
+  MAX_BACKOFF_MS: 60000,
+
+  /**
+   * Initial delay in milliseconds specifically for rate limit (429) errors
+   * Starting at 15s gives the quota time to refresh, reducing wasted retry attempts.
+   * Anthropic rate limits often reset every 60 seconds, so waiting 15s on first
+   * retry is more effective than aggressive 1-2s retries.
+   * @default 15000 (15 seconds)
+   */
+  INITIAL_RATE_LIMIT_DELAY_MS: 15000,
 
   /**
    * Retry attempts specifically for validation errors in Level 3
@@ -327,24 +336,30 @@ export const FILE_CONFIG = {
  * Rate limiting configuration for API calls
  *
  * Controls global rate limits to prevent hitting API quotas.
- * Uses 60% of official limits as a safety buffer.
  *
- * Official Claude API limits (Tier 1):
- * - 50 requests per minute (RPM)
- * - 30,000 input tokens per minute (TPM)
+ * Official Claude API limits vary by tier:
+ * - Tier 1: 50 RPM, 30k TPM
+ * - Higher tiers: Increased limits
+ *
+ * Default values are set to be sustainable for most Anthropic tier plans
+ * while allowing reasonable concurrent processing.
  */
 export const RATE_LIMIT_CONFIG = {
   /**
-   * Maximum requests per minute (60% of official 50 RPM)
-   * @default 30
+   * Maximum requests per minute
+   * Set to 50 RPM to match Tier 1 limits
+   * @default 50
    */
-  REQUESTS_PER_MINUTE: 30,
+  REQUESTS_PER_MINUTE: 50,
 
   /**
-   * Maximum input tokens per minute (60% of official 30k TPM)
-   * @default 18000
+   * Maximum input tokens per minute
+   * 8000 tokens/min is sustainable for most Anthropic tier plans
+   * and allows ~2-3 concurrent Level 3 tasks without hitting limits.
+   * Can be overridden via RMAP_RATE_LIMIT_TPM env var if user has higher quota.
+   * @default 8000
    */
-  INPUT_TOKENS_PER_MINUTE: 18000,
+  INPUT_TOKENS_PER_MINUTE: 8000,
 } as const;
 
 /**

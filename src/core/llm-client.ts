@@ -7,6 +7,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { RETRY_CONFIG } from '../config/models.js';
+import { RETRY } from '../config/index.js';
 import { globalRateLimiter, estimateTokens } from './rate-limiter.js';
 import { logPromptResponse, type PromptLogContext } from './prompt-logger.js';
 
@@ -18,8 +19,10 @@ export interface RetryConfig {
   maxRetries?: number;
   /** Base delay in milliseconds for exponential backoff (default: 2000) */
   baseDelayMs?: number;
-  /** Maximum delay in milliseconds to cap exponential backoff (default: 32000) */
+  /** Maximum delay in milliseconds to cap exponential backoff (default: 60000) */
   maxDelayMs?: number;
+  /** Initial delay in milliseconds specifically for rate limit (429) errors (default: 15000) */
+  initialRateLimitDelayMs?: number;
   /** Whether to add jitter to prevent thundering herd (default: true) */
   useJitter?: boolean;
 }
@@ -92,6 +95,44 @@ function calculateBackoff(
 }
 
 /**
+ * Calculate delay for rate limit (429) errors
+ *
+ * Starts with a higher initial delay (default 15s) since Anthropic rate limits
+ * often reset every 60 seconds. Waiting 1-2s and retrying immediately just
+ * hits the limit again, wasting retry attempts.
+ *
+ * @param attempt - Current retry attempt (1-indexed)
+ * @param initialDelayMs - Initial delay for first retry (default: 15000)
+ * @param maxDelayMs - Maximum delay to cap at (default: 60000)
+ * @param useJitter - Whether to add random jitter
+ * @returns Delay in milliseconds
+ */
+function calculateRateLimitBackoff(
+  attempt: number,
+  initialDelayMs: number,
+  maxDelayMs: number,
+  useJitter: boolean
+): number {
+  // For rate limits, use initial delay as starting point with linear growth
+  // attempt 1: initialDelayMs (15s)
+  // attempt 2: initialDelayMs * 2 (30s)
+  // attempt 3: initialDelayMs * 3 (45s)
+  // etc., capped at maxDelayMs
+  const linearDelay = initialDelayMs * attempt;
+
+  // Cap at max delay
+  const cappedDelay = Math.min(linearDelay, maxDelayMs);
+
+  // Add jitter: ±10% to prevent thundering herd
+  if (useJitter) {
+    const jitter = cappedDelay * 0.1 * (Math.random() * 2 - 1); // -10% to +10%
+    return Math.max(1000, cappedDelay + jitter); // Never go below 1s
+  }
+
+  return cappedDelay;
+}
+
+/**
  * LLM Client with built-in retry logic
  *
  * Wraps the Anthropic SDK client and provides automatic retry handling
@@ -115,7 +156,8 @@ export class LLMClient {
     this.defaultRetryConfig = {
       maxRetries: retryConfig?.maxRetries ?? RETRY_CONFIG.MAX_RETRIES,
       baseDelayMs: retryConfig?.baseDelayMs ?? RETRY_CONFIG.BASE_BACKOFF_MS,
-      maxDelayMs: retryConfig?.maxDelayMs ?? 32000,
+      maxDelayMs: retryConfig?.maxDelayMs ?? RETRY.MAX_BACKOFF_MS,
+      initialRateLimitDelayMs: retryConfig?.initialRateLimitDelayMs ?? RETRY.INITIAL_RATE_LIMIT_DELAY_MS,
       useJitter: retryConfig?.useJitter ?? true,
     };
   }
@@ -186,14 +228,15 @@ export class LLMClient {
         // Check if it's a rate limit error
         if (error instanceof Anthropic.RateLimitError) {
           if (attempt < config.maxRetries) {
-            const waitTime = calculateBackoff(
+            // Use rate limit specific backoff (starts at 15s by default)
+            const waitTime = calculateRateLimitBackoff(
               attempt,
-              config.baseDelayMs,
+              config.initialRateLimitDelayMs,
               config.maxDelayMs,
               config.useJitter
             );
             console.log(
-              `Rate limit hit. Retrying in ${(waitTime / 1000).toFixed(1)}s... (attempt ${attempt}/${config.maxRetries})`
+              `Rate limit hit (429). Waiting ${(waitTime / 1000).toFixed(1)}s before retry... (attempt ${attempt}/${config.maxRetries})`
             );
             await sleep(waitTime);
             continue;
@@ -244,7 +287,8 @@ export async function withRetry<T>(
   const config: Required<RetryConfig> = {
     maxRetries: retryConfig?.maxRetries ?? RETRY_CONFIG.MAX_RETRIES,
     baseDelayMs: retryConfig?.baseDelayMs ?? RETRY_CONFIG.BASE_BACKOFF_MS,
-    maxDelayMs: retryConfig?.maxDelayMs ?? 32000,
+    maxDelayMs: retryConfig?.maxDelayMs ?? RETRY.MAX_BACKOFF_MS,
+    initialRateLimitDelayMs: retryConfig?.initialRateLimitDelayMs ?? RETRY.INITIAL_RATE_LIMIT_DELAY_MS,
     useJitter: retryConfig?.useJitter ?? true,
   };
 
@@ -259,14 +303,15 @@ export async function withRetry<T>(
       // Check if it's a rate limit error
       if (error instanceof Anthropic.RateLimitError) {
         if (attempt < config.maxRetries) {
-          const waitTime = calculateBackoff(
+          // Use rate limit specific backoff (starts at 15s by default)
+          const waitTime = calculateRateLimitBackoff(
             attempt,
-            config.baseDelayMs,
+            config.initialRateLimitDelayMs,
             config.maxDelayMs,
             config.useJitter
           );
           console.log(
-            `Rate limit hit. Retrying in ${(waitTime / 1000).toFixed(1)}s... (attempt ${attempt}/${config.maxRetries})`
+            `Rate limit hit (429). Waiting ${(waitTime / 1000).toFixed(1)}s before retry... (attempt ${attempt}/${config.maxRetries})`
           );
           await sleep(waitTime);
           continue;
