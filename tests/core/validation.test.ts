@@ -558,7 +558,7 @@ test('validateFileTags: should reject too many tags', () => {
     'api_endpoint',
     'middleware',
     'logging',
-    'monitoring', // 6 tags, max is 5
+    'monitoring', // 6 tags, max is now 3
   ];
   assert.throws(
     () => {
@@ -566,7 +566,7 @@ test('validateFileTags: should reject too many tags', () => {
     },
     {
       name: 'ConfigValidationError',
-      message: /File has 6 tags but maximum is 5/,
+      message: /File has 6 tags but maximum is 3/,
     },
   );
 });

@@ -75,7 +75,8 @@ test('UPDATE_THRESHOLDS has backward-compatible deprecated aliases', () => {
 });
 
 test('MAX_TAGS_PER_FILE is correct', () => {
-  assert.strictEqual(MAX_TAGS_PER_FILE, 5);
+  // MAX_TAGS_PER_FILE reduced from 5 to 3 for improved tag precision
+  assert.strictEqual(MAX_TAGS_PER_FILE, 3);
 });
 
 test('MAX_FILES_PER_TASK is correct', () => {

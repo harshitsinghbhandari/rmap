@@ -435,12 +435,12 @@ export function validateConfig(config: ValidatableConfig = {}): void {
  * Ensures tags are from the taxonomy and within limits
  *
  * @param tags - Tags to validate
- * @param maxTags - Maximum number of tags allowed (default: 5)
+ * @param maxTags - Maximum number of tags allowed (default: FILE_CONFIG.MAX_TAGS_PER_FILE = 3)
  * @throws {ConfigValidationError} If validation fails
  */
 export function validateFileTags(
   tags: string[],
-  maxTags: number = 5,
+  maxTags: number = FILE_CONFIG.MAX_TAGS_PER_FILE,
 ): asserts tags is Tag[] {
   if (tags.length === 0) {
     throw new ConfigValidationError('File must have at least one tag');
