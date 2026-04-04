@@ -31,6 +31,7 @@
     "build": "tsup",
     "dev": "tsx src/cli/index.ts",
     "test": "NODE_ENV=test tsx --test $(find tests -name '*.test.ts')",
+    "test:coverage": "NODE_ENV=test c8 --reporter=text --reporter=lcov tsx --test $(find tests -name '*.test.ts')",
     "lint": "tsc --noEmit",
     "prepublishOnly": "pnpm build"
   },
@@ -72,6 +73,7 @@
     "@types/babel__traverse": "^7.28.0",
     "@types/cli-progress": "^3.11.6",
     "@types/node": "^20.17.15",
+    "c8": "^10.1.2",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
