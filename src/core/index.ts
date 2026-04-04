@@ -103,3 +103,17 @@ export {
   displayLoggingWarning,
 } from './prompt-logger.js';
 export type { PromptLogContext } from './prompt-logger.js';
+// Export ignore patterns utilities
+export {
+  RMAPIGNORE_FILENAME,
+  loadIgnorePatterns,
+  loadIgnorePatternsSync,
+  shouldIgnoreFile,
+  createIgnoreFromPatterns,
+  createIgnoreFilter,
+} from './ignore-patterns.js';
+export type {
+  LoadIgnorePatternsOptions,
+  IgnorePatternsResult,
+  IgnoreStats,
+} from './ignore-patterns.js';

@@ -327,4 +327,169 @@ describe('Level 0 Harvester - Edge Cases', () => {
       );
     });
   });
+
+  describe('.rmapignore integration', () => {
+    it('should respect .rmapignore patterns', async () => {
+      // Create files and directories
+      fs.writeFileSync(path.join(tempDir, 'src.ts'), 'export const x = 1;');
+      fs.writeFileSync(path.join(tempDir, 'debug.log'), 'debug output');
+      fs.writeFileSync(path.join(tempDir, 'error.log'), 'error output');
+
+      // Create .rmapignore
+      fs.writeFileSync(path.join(tempDir, '.rmapignore'), '*.log\n');
+
+      // Initialize git repo
+      fs.writeFileSync(path.join(tempDir, '.git'), 'gitdir: /some/path');
+
+      const result = await harvest(tempDir);
+
+      // Should include source files
+      const hasSrc = result.files.some((f) => f.path === 'src.ts');
+      assert.ok(hasSrc, 'Should include source files');
+
+      // Should NOT include log files
+      const hasDebugLog = result.files.some((f) => f.path === 'debug.log');
+      const hasErrorLog = result.files.some((f) => f.path === 'error.log');
+      assert.ok(!hasDebugLog, 'Should ignore debug.log');
+      assert.ok(!hasErrorLog, 'Should ignore error.log');
+    });
+
+    it('should ignore directories specified in .rmapignore', async () => {
+      // Create a directory with files
+      const customDir = path.join(tempDir, 'custom-ignore');
+      fs.mkdirSync(customDir);
+      fs.writeFileSync(path.join(customDir, 'file.ts'), 'export const x = 1;');
+
+      // Create source file outside ignored directory
+      fs.writeFileSync(path.join(tempDir, 'main.ts'), 'import x from "./custom-ignore/file";');
+
+      // Create .rmapignore
+      fs.writeFileSync(path.join(tempDir, '.rmapignore'), 'custom-ignore/\n');
+
+      // Initialize git repo
+      fs.writeFileSync(path.join(tempDir, '.git'), 'gitdir: /some/path');
+
+      const result = await harvest(tempDir);
+
+      // Should include main.ts
+      const hasMain = result.files.some((f) => f.path === 'main.ts');
+      assert.ok(hasMain, 'Should include main.ts');
+
+      // Should NOT include files from ignored directory
+      const hasCustomFile = result.files.some((f) =>
+        f.path.startsWith('custom-ignore/')
+      );
+      assert.ok(!hasCustomFile, 'Should ignore files in custom-ignore/');
+    });
+
+    it('should auto-create .rmapignore on first run', async () => {
+      // Create a source file
+      fs.writeFileSync(path.join(tempDir, 'index.ts'), 'export const app = {};');
+
+      // Initialize git repo
+      fs.writeFileSync(path.join(tempDir, '.git'), 'gitdir: /some/path');
+
+      // Don't create .rmapignore - it should be auto-created
+      assert.ok(
+        !fs.existsSync(path.join(tempDir, '.rmapignore')),
+        '.rmapignore should not exist before harvest'
+      );
+
+      const result = await harvest(tempDir, { autoCreateIgnoreFile: true });
+
+      // Should have created .rmapignore
+      assert.ok(
+        fs.existsSync(path.join(tempDir, '.rmapignore')),
+        '.rmapignore should be auto-created'
+      );
+      assert.strictEqual(result.rmapignoreCreated, true);
+    });
+
+    it('should not auto-create .rmapignore when disabled', async () => {
+      // Create a source file
+      fs.writeFileSync(path.join(tempDir, 'index.ts'), 'export const app = {};');
+
+      // Initialize git repo
+      fs.writeFileSync(path.join(tempDir, '.git'), 'gitdir: /some/path');
+
+      const result = await harvest(tempDir, { autoCreateIgnoreFile: false });
+
+      // Should NOT have created .rmapignore
+      assert.ok(
+        !fs.existsSync(path.join(tempDir, '.rmapignore')),
+        '.rmapignore should not be created'
+      );
+      assert.strictEqual(result.rmapignoreCreated, false);
+    });
+
+    it('should support negation patterns', async () => {
+      // Create log files
+      fs.writeFileSync(path.join(tempDir, 'debug.log'), 'debug');
+      fs.writeFileSync(path.join(tempDir, 'important.log'), 'important');
+
+      // Create .rmapignore with negation
+      fs.writeFileSync(
+        path.join(tempDir, '.rmapignore'),
+        '*.log\n!important.log\n'
+      );
+
+      // Initialize git repo
+      fs.writeFileSync(path.join(tempDir, '.git'), 'gitdir: /some/path');
+
+      const result = await harvest(tempDir);
+
+      // Should ignore debug.log
+      const hasDebugLog = result.files.some((f) => f.path === 'debug.log');
+      assert.ok(!hasDebugLog, 'Should ignore debug.log');
+
+      // Should NOT ignore important.log (negated)
+      const hasImportantLog = result.files.some((f) => f.path === 'important.log');
+      assert.ok(hasImportantLog, 'Should include important.log (negated)');
+    });
+
+    it('should allow disabling ignore patterns entirely', async () => {
+      // Create files
+      fs.writeFileSync(path.join(tempDir, 'src.ts'), 'export const x = 1;');
+      fs.writeFileSync(path.join(tempDir, 'debug.log'), 'debug output');
+
+      // Create .rmapignore
+      fs.writeFileSync(path.join(tempDir, '.rmapignore'), '*.log\n');
+
+      // Initialize git repo
+      fs.writeFileSync(path.join(tempDir, '.git'), 'gitdir: /some/path');
+
+      const result = await harvest(tempDir, { useIgnorePatterns: false });
+
+      // Should include log files when ignore patterns are disabled
+      const hasDebugLog = result.files.some((f) => f.path === 'debug.log');
+      assert.ok(hasDebugLog, 'Should include log files when patterns disabled');
+    });
+
+    it('should always ignore .git and .repo_map directories', async () => {
+      // Create source file
+      fs.writeFileSync(path.join(tempDir, 'src.ts'), 'export const x = 1;');
+
+      // Create .repo_map directory (should be ignored)
+      const repoMapDir = path.join(tempDir, '.repo_map');
+      fs.mkdirSync(repoMapDir);
+      fs.writeFileSync(
+        path.join(repoMapDir, 'annotations.json'),
+        '{}'
+      );
+
+      // Initialize git repo
+      fs.writeFileSync(path.join(tempDir, '.git'), 'gitdir: /some/path');
+
+      // Create empty .rmapignore (no custom patterns)
+      fs.writeFileSync(path.join(tempDir, '.rmapignore'), '');
+
+      const result = await harvest(tempDir);
+
+      // Should NOT include .repo_map files
+      const hasRepoMapFiles = result.files.some((f) =>
+        f.path.startsWith('.repo_map')
+      );
+      assert.ok(!hasRepoMapFiles, 'Should always ignore .repo_map/');
+    });
+  });
 });

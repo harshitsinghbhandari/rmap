@@ -5,3 +5,4 @@
  */
 
 export { harvest } from './harvester.js';
+export type { HarvestOptions, Level0OutputWithStats } from './harvester.js';

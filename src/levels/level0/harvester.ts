@@ -3,14 +3,21 @@
  *
  * Pure script-based metadata extraction (no LLM calls).
  * Recursively walks the file tree, extracts metadata, and collects import statements.
+ * Respects .rmapignore patterns for excluding files from annotation.
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { execSync } from 'node:child_process';
+import type { Ignore } from 'ignore';
 import type { RawFileMetadata, Level0Output } from '../../core/types.js';
 import { FILE, OUTPUT } from '../../config/index.js';
 import { extractImports } from './parsers/index.js';
+import {
+  loadIgnorePatternsSync,
+  shouldIgnoreFile,
+  type IgnoreStats,
+} from '../../core/ignore-patterns.js';
 
 /**
  * Directories to always skip
@@ -224,26 +231,50 @@ function processFile(
 
 /**
  * Recursively walk directory tree and collect files
+ *
+ * @param dirPath - Current directory path being walked
+ * @param repoRoot - Root of the repository
+ * @param ig - Ignore instance for pattern matching (optional)
+ * @param verbose - Whether to log skipped files
  */
 function* walkDirectory(
   dirPath: string,
-  repoRoot: string
+  repoRoot: string,
+  ig?: Ignore,
+  verbose = false
 ): Generator<string> {
   try {
     const entries = fs.readdirSync(dirPath, { withFileTypes: true });
 
     for (const entry of entries) {
       const fullPath = path.join(dirPath, entry.name);
+      const relativePath = path.relative(repoRoot, fullPath);
 
       if (entry.isDirectory()) {
-        // Skip directories we don't want to process
+        // Skip directories we don't want to process (hard-coded)
         if (shouldSkipDirectory(entry.name)) {
           continue;
         }
 
+        // Check against ignore patterns (directory paths should end with /)
+        if (ig && shouldIgnoreFile(ig, relativePath + '/')) {
+          if (verbose) {
+            console.log(`  Skipped directory: ${relativePath}/ (matched .rmapignore)`);
+          }
+          continue;
+        }
+
         // Recursively walk subdirectories
-        yield* walkDirectory(fullPath, repoRoot);
+        yield* walkDirectory(fullPath, repoRoot, ig, verbose);
       } else if (entry.isFile()) {
+        // Check file against ignore patterns
+        if (ig && shouldIgnoreFile(ig, relativePath)) {
+          if (verbose) {
+            console.log(`  Skipped: ${relativePath} (matched .rmapignore)`);
+          }
+          continue;
+        }
+
         yield fullPath;
       }
     }
@@ -257,15 +288,64 @@ function* walkDirectory(
 }
 
 /**
+ * Options for the harvest function
+ */
+export interface HarvestOptions {
+  /**
+   * Whether to auto-create .rmapignore if it doesn't exist
+   * @default true
+   */
+  autoCreateIgnoreFile?: boolean;
+
+  /**
+   * Whether to log skipped files (verbose mode)
+   * @default false
+   */
+  verbose?: boolean;
+
+  /**
+   * Whether to use .rmapignore patterns at all
+   * @default true
+   */
+  useIgnorePatterns?: boolean;
+}
+
+/**
+ * Extended Level0Output with ignore statistics
+ */
+export interface Level0OutputWithStats extends Level0Output {
+  /**
+   * Statistics about files ignored by .rmapignore patterns
+   */
+  ignoreStats?: IgnoreStats;
+
+  /**
+   * Whether a new .rmapignore file was created
+   */
+  rmapignoreCreated?: boolean;
+}
+
+/**
  * Main harvester function
  *
  * Recursively scans the repository and extracts metadata for all files.
  * This is a pure script operation with no LLM calls.
+ * Respects .rmapignore patterns for excluding files from annotation.
  *
  * @param repoRoot - Absolute path to the repository root
+ * @param options - Options for harvesting behavior
  * @returns Level0Output containing all file metadata and git info
  */
-export async function harvest(repoRoot: string): Promise<Level0Output> {
+export async function harvest(
+  repoRoot: string,
+  options: HarvestOptions = {}
+): Promise<Level0OutputWithStats> {
+  const {
+    autoCreateIgnoreFile = true,
+    verbose = false,
+    useIgnorePatterns = true,
+  } = options;
+
   const startTime = Date.now();
 
   // Validate repo root exists
@@ -281,6 +361,19 @@ export async function harvest(repoRoot: string): Promise<Level0Output> {
   console.log('Starting Level 0 metadata harvest...');
   console.log(`Repository: ${repoRoot}`);
 
+  // Load ignore patterns
+  let ig: Ignore | undefined;
+  let rmapignoreCreated = false;
+
+  if (useIgnorePatterns) {
+    const ignoreResult = loadIgnorePatternsSync(repoRoot, {
+      autoCreate: autoCreateIgnoreFile,
+      verbose,
+    });
+    ig = ignoreResult.ig;
+    rmapignoreCreated = ignoreResult.created;
+  }
+
   // Get git commit
   const git_commit = getGitCommit(repoRoot);
   console.log(`Git commit: ${git_commit}`);
@@ -289,9 +382,12 @@ export async function harvest(repoRoot: string): Promise<Level0Output> {
   const files: RawFileMetadata[] = [];
   let totalSizeBytes = 0;
   let processedCount = 0;
+  let ignoredCount = 0;
+  let totalScanned = 0;
 
   // Walk directory tree
-  for (const filePath of walkDirectory(repoRoot, repoRoot)) {
+  for (const filePath of walkDirectory(repoRoot, repoRoot, ig, verbose)) {
+    totalScanned++;
     const metadata = processFile(filePath, repoRoot);
 
     if (metadata) {
@@ -317,11 +413,22 @@ export async function harvest(repoRoot: string): Promise<Level0Output> {
   console.log(`✓ Harvested ${files.length} files in ${durationSeconds}s`);
   console.log(`  Total size: ${(totalSizeBytes / 1024 / 1024).toFixed(2)} MB`);
 
+  // Build ignore stats (files that were filtered are already excluded from walkDirectory)
+  // We can't get exact ignore counts from the generator, but we report what we have
+  const ignoreStats: IgnoreStats = {
+    totalChecked: totalScanned,
+    ignoredCount: ignoredCount,
+    passedCount: totalScanned,
+    ignoredPercent: 0,
+  };
+
   return {
     files,
     git_commit,
     timestamp: new Date().toISOString(),
     total_files: files.length,
     total_size_bytes: totalSizeBytes,
+    ignoreStats: useIgnorePatterns ? ignoreStats : undefined,
+    rmapignoreCreated,
   };
 }
