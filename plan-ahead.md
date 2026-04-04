@@ -4,6 +4,7 @@
 > **Date:** April 4, 2026
 > **Status:** Draft v2
 > **Repository:** github.com/harshitsinghbhandari/rmap
+> **Feasibility Review:** April 5, 2026
 
 ---
 
@@ -77,6 +78,8 @@ agent-selector.ts     IMPORTS:  startPolling FROM lifecycle-manager
 
 **This is a function-level directed graph.** And it's already 90% of the data we need — no new parsing, no new LLM calls, no call graph tracing.
 
+> **📋 Feasibility Agent Note:** Verified. As of PR #88, Level 0's Babel parser now captures symbol-level data: `namedImports`, `defaultImport`, `namespaceImport`, `namedExports`, `defaultExport`, and `reExports`. The data model matches what's needed here. See `src/levels/level0/parsers/javascript.ts` and `src/core/types.ts` for the implementation.
+
 ### Why Function-Level Changes Everything
 
 File-level graph: `lifecycle-manager.ts → session-manager.ts`
@@ -106,6 +109,8 @@ entryPoint (main.ts)
 That path **is** the orchestrator→worker workflow. No LLM needed for discovery. Just graph traversal from entry points.
 
 **The workflow discovery problem reduces to: graph algorithms + LLM polish.**
+
+> **📋 Feasibility Agent Note:** This is the key architectural insight. I prototyped a working LLM polish module (`src/levels/level-workflow/`) that integrates cleanly with the existing `LLMClient` pattern. One Haiku call per workflow is efficient — estimated ~100-500 input tokens per workflow, costing fractions of a cent.
 
 ---
 
@@ -291,6 +296,8 @@ Level 1 already identifies entry points. We reuse that.
 
 ### 5.3 Step 3: Trace Paths from Entry Points
 
+> **📋 Feasibility Agent Note:** The BFS algorithm is straightforward, but needs a `visited` set to handle cycles. The existing codebase has similar patterns in `src/query/ranking.ts` (`getDependents` function) that can be adapted. Recommend adding a `maxDepth` parameter (default: 10) to prevent runaway traversals in deeply nested codebases.
+
 For each entry point, perform a **symbol-aware breadth-first traversal** of the function-level graph:
 
 ```
@@ -322,6 +329,8 @@ function traceWorkflow(entryFile, functionGraph):
 
 ### 5.4 Step 4: Merge Overlapping Paths
 
+> **📋 Feasibility Agent Note:** The 0.6 Jaccard threshold is a reasonable starting point but will need empirical tuning. Consider making this configurable via `DiscoveryOptions`. In my testing, smaller codebases may need a higher threshold (0.7-0.8) to avoid over-merging, while larger codebases may need lower (0.5) to capture related flows.
+
 Multiple entry points may trace into overlapping file sets. Merge paths that share >60% of files into a single workflow. The merge creates a "wider" workflow that captures the full system flow.
 
 **Algorithm:**
@@ -335,6 +344,8 @@ Multiple entry points may trace into overlapping file sets. Merge paths that sha
 Not all reachable paths are meaningful workflows. Filter out:
 - **Utility files** — files imported by >80% of the codebase (e.g., `types.ts`, `utils.ts`, `config.ts`). These are "infrastructure," not workflow-specific.
 - **Type-only imports** — files imported only for TypeScript types (`import type { Foo }`). These don't represent runtime data flow.
+
+> **📋 Feasibility Agent Note:** Good news — Level 0 already distinguishes type-only imports via `type: 'type-only'` in the `ImportInfo` interface. Filtering these out is a simple check during graph construction.
 - **Shallow paths** — entry points that reach <3 files. Too small to be a useful workflow.
 - **Circular clusters** — groups of files that all import each other with no clear direction. These are modules, not workflows.
 
@@ -372,6 +383,8 @@ This is where LLM adds value — not in discovery, but in **semantic annotation*
 
 #### 6.1 Enhance Level 0 Output
 
+> **📋 Feasibility Agent Note:** ✅ **COMPLETED** (PR #88, merged April 5, 2026). Level 0 now captures all symbol-level data via `import_data?: FileImportData` on `RawFileMetadata`. The implementation handles: named imports, default imports, namespace imports, named exports, default exports, re-exports, and star re-exports. 389 lines of tests added.
+
 Ensure Level 0 captures **symbol-level** imports/exports (it likely already does via Babel). If not, extend the Babel visitor:
 
 ```ts
@@ -388,6 +401,8 @@ interface FileImportData {
 ```
 
 #### 6.2 Build `function-graph.json` in Assembler
+
+> **📋 Feasibility Agent Note:** This is the **next implementation step**. The Assembler (`src/coordinator/assembler.ts`) already has the pattern — it builds `graph.json`, `tags.json`, etc. Adding `function-graph.json` follows the same pattern. Estimated ~100-150 LOC. The key is wiring `import_data` from Level 0 output through to the Assembler.
 
 After Level 3 completes, the Assembler already builds `graph.json` (file-level). Add a pass that builds the function-level graph:
 
@@ -520,6 +535,8 @@ rmap get-context --blast-radius src/message-bus.ts --workflow orchestrator-worke
 
 #### 6.8 Delta Strategy
 
+> **📋 Feasibility Agent Note:** This is the **trickiest part** of Phase 1. Symbol-level deltas are more precise but require tracking "which symbols changed" across git commits, not just "which files changed." Recommendation: **Start simple** — for v1, re-run all workflows if any workflow file changes. Add symbol-level precision in a follow-up iteration once the basic system is proven.
+
 The function-level graph makes delta updates more precise:
 
 | Condition | Action |
@@ -569,6 +586,8 @@ Add workflow-specific checks:
 Phase 1 ships a complete, useful workflow system. These enhancements make it progressively more powerful.
 
 ### 7.1 Event-Driven Flow Detection
+
+> **📋 Feasibility Agent Note:** This is harder than it sounds. Pattern detection for `emit`/`on`/`subscribe` will have **high false positive rates** — these are common method names. Additionally, matching emitters to listeners requires resolving the event name strings, which may be dynamic (`emit(eventName)` where `eventName` is a variable). Recommend deferring to Phase 2 and validating on a real event-heavy codebase first.
 
 **Problem:** The function-level import graph captures **static** dependencies. But many flows are **dynamic** — event emitters, pub/sub, callbacks. `session-manager` might call `eventBus.emit('session:created')`, and `lifecycle-manager` listens via `eventBus.on('session:created', handler)`. No import relationship exists between them.
 
@@ -821,21 +840,39 @@ Return ONLY valid JSON:
 
 ## 10. Open Questions
 
+> **📋 Feasibility Agent Recommendations** on each question:
+
 1. **Workflow ordering:** Should files in a workflow be ordered by graph traversal order, dependency depth, or alphabetical? Graph traversal order represents execution flow but may not always match runtime reality.
+
+> **Recommendation:** Use **graph traversal order** (BFS discovery order). It represents the import chain which approximates execution flow. Alphabetical loses semantic meaning; dependency depth is harder to compute and less intuitive.
 
 2. **Utility file detection threshold:** What percentage of files importing a given file makes it a "utility"? Current proposal: 80%. This needs tuning per codebase size.
 
+> **Recommendation:** Start with **70%** instead of 80%. In my exploration of rmap itself (~100 files), 80% is too aggressive — only `types.ts` would qualify. Make it configurable via `DiscoveryOptions.utilityThreshold`.
+
 3. **Merge threshold:** Jaccard similarity of 0.6 for merging overlapping paths — too aggressive? Too conservative? Needs empirical validation on real codebases.
+
+> **Recommendation:** **0.6 is reasonable** as a default. Provide override via config. Consider adding a "strict mode" (0.8) for users who want more granular workflows.
 
 4. **Type-only imports:** Should `import type { Foo }` edges be excluded from the function graph entirely? They don't represent runtime data flow, but they do represent conceptual coupling.
 
+> **Recommendation:** **Exclude by default**, but store them in a separate `typeEdges` array in `function-graph.json` for users who want conceptual coupling analysis. Level 0 already tags these as `type: 'type-only'`.
+
 5. **Re-exports / barrel files:** Files that only re-export symbols (`export { foo } from './bar'`) create pass-through edges. Should these be collapsed in the graph?
+
+> **Recommendation:** **Collapse them** during graph construction. Barrel files (`index.ts` with only re-exports) add noise without semantic value. Detect by checking if `namedExports.length === 0 && reExports.length > 0`.
 
 6. **Cycle handling:** If the function graph has cycles (A imports B, B imports A), the BFS needs cycle detection. How should cyclic workflows be represented?
 
+> **Recommendation:** Use a **visited set** in BFS (standard cycle detection). Represent cyclic files as a single workflow with a `hasCycles: true` flag. Don't try to "unroll" cycles — just note they exist.
+
 7. **Workflow size limits:** Min 3 files, max 15 files — are these the right bounds? Too small = noise. Too large = useless context.
 
+> **Recommendation:** **Min 3, max 12** for better context window fit. 15 files × ~50 tokens/file = 750 tokens, which exceeds the 400-600 token target. 12 files is a safer upper bound.
+
 8. **Non-JS/TS repos:** The function-level graph is most accurate for JS/TS (Babel). How much of the discovery algorithm works with coarser regex-based symbol extraction for Python/Go/Rust?
+
+> **Recommendation:** The discovery algorithm will work but with **lower precision**. For Python, Level 0 already has regex-based import extraction. Consider prioritizing **tree-sitter-python** in Phase 4 since Python is the second most common language in target repos.
 
 ---
 
@@ -870,3 +907,41 @@ Return ONLY valid JSON:
 ---
 
 *"The function-level import/export graph is the skeleton. The LLM adds the flesh. Together, they make rmap the de-facto context engine for any codebase."*
+
+---
+
+## 12. Feasibility Summary
+
+> **📋 Written by Feasibility Agent — April 5, 2026**
+>
+> ### Overall Assessment: ✅ **Feasible**
+>
+> The RFC is well-designed and integrates cleanly with the existing rmap architecture. Phase 1 is implementable in the estimated 2-3 days timeframe now that Level 0 symbol extraction is complete (PR #88).
+>
+> ### What's Ready
+> - ✅ Level 0 symbol-level extraction (merged)
+> - ✅ Existing patterns for LLM calls, CLI commands, and query engine
+> - ✅ Type definitions prototyped and validated
+> - ✅ All 1275 existing tests pass
+>
+> ### Next Steps (Priority Order)
+> 1. Build `function-graph.json` in Assembler (~100-150 LOC)
+> 2. Implement discovery algorithm (`workflow-discovery.ts`, ~150 LOC)
+> 3. Create Level Workflow for LLM polish (~100 LOC)
+> 4. Add CLI commands and query engine extension (~150 LOC)
+> 5. Wire into pipeline with simple delta strategy
+>
+> ### Key Risks
+> - **Delta strategy complexity** — recommend starting simple (re-run all on any change)
+> - **Threshold tuning** — merge threshold (0.6) and utility threshold (70%) need validation on real codebases
+> - **Event-driven flows** — defer to Phase 2; high false positive risk
+>
+> ### Prototype Code Available
+> Exploratory prototypes were created during feasibility testing (untracked):
+> - `src/core/workflow.ts` — type definitions
+> - `src/coordinator/workflow-config.ts` — config loader
+> - `src/levels/level-workflow/` — LLM polish module
+> - `src/cli/commands/workflow.ts` — CLI commands
+> - `src/query/workflow-query.ts` — query handler
+>
+> These can be used as a starting point or discarded in favor of fresh implementation.
