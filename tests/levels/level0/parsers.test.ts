@@ -11,6 +11,7 @@ import { JavaScriptParser } from '../../../src/levels/level0/parsers/javascript.
 import { FallbackParser } from '../../../src/levels/level0/parsers/fallback.js';
 import {
   extractImports,
+  extractImportData,
   getParser,
 } from '../../../src/levels/level0/parsers/index.js';
 
@@ -630,5 +631,393 @@ describe('Edge Cases', () => {
       '../parent',
       './sibling',
     ]);
+  });
+});
+
+describe('Symbol-level Import Extraction', () => {
+  const parser = new JavaScriptParser();
+
+  describe('Named imports', () => {
+    it('should extract named imports', () => {
+      const code = `
+        import { useState, useEffect } from 'react';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.strictEqual(result.imports.length, 1);
+      assert.deepStrictEqual(result.imports[0].namedImports, ['useState', 'useEffect']);
+      assert.strictEqual(result.imports[0].defaultImport, undefined);
+      assert.strictEqual(result.imports[0].namespaceImport, undefined);
+    });
+
+    it('should handle aliased named imports', () => {
+      const code = `
+        import { foo as bar, baz as qux } from './module';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.strictEqual(result.imports.length, 1);
+      // Should capture the original names, not aliases
+      assert.deepStrictEqual(result.imports[0].namedImports, ['foo', 'baz']);
+    });
+  });
+
+  describe('Default imports', () => {
+    it('should extract default imports', () => {
+      const code = `
+        import React from 'react';
+        import MyComponent from './MyComponent';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.strictEqual(result.imports.length, 2);
+
+      const reactImport = result.imports.find((imp) => imp.source === 'react');
+      assert.ok(reactImport);
+      assert.strictEqual(reactImport.defaultImport, 'React');
+      assert.strictEqual(reactImport.namedImports, undefined);
+
+      const componentImport = result.imports.find((imp) => imp.source === './MyComponent');
+      assert.ok(componentImport);
+      assert.strictEqual(componentImport.defaultImport, 'MyComponent');
+    });
+  });
+
+  describe('Namespace imports', () => {
+    it('should extract namespace imports', () => {
+      const code = `
+        import * as Utils from './utils';
+        import * as React from 'react';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.strictEqual(result.imports.length, 2);
+
+      const utilsImport = result.imports.find((imp) => imp.source === './utils');
+      assert.ok(utilsImport);
+      assert.strictEqual(utilsImport.namespaceImport, 'Utils');
+
+      const reactImport = result.imports.find((imp) => imp.source === 'react');
+      assert.ok(reactImport);
+      assert.strictEqual(reactImport.namespaceImport, 'React');
+    });
+  });
+
+  describe('Mixed imports', () => {
+    it('should extract mixed default and named imports', () => {
+      const code = `
+        import React, { useState, useEffect } from 'react';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.strictEqual(result.imports.length, 1);
+      assert.strictEqual(result.imports[0].defaultImport, 'React');
+      assert.deepStrictEqual(result.imports[0].namedImports, ['useState', 'useEffect']);
+    });
+
+    it('should extract mixed default and namespace imports', () => {
+      const code = `
+        import React, * as ReactDOM from 'react-dom';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.strictEqual(result.imports.length, 1);
+      assert.strictEqual(result.imports[0].defaultImport, 'React');
+      // Note: This is actually invalid syntax, but let's see how the parser handles it
+    });
+  });
+});
+
+describe('Export Extraction', () => {
+  const parser = new JavaScriptParser();
+
+  describe('Named exports', () => {
+    it('should extract named function exports', () => {
+      const code = `
+        export function foo() {}
+        export function bar() {}
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.deepStrictEqual(result.exports.namedExports.sort(), ['bar', 'foo']);
+      assert.strictEqual(result.exports.defaultExport, false);
+    });
+
+    it('should extract named class exports', () => {
+      const code = `
+        export class Foo {}
+        export class Bar extends Foo {}
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.deepStrictEqual(result.exports.namedExports.sort(), ['Bar', 'Foo']);
+    });
+
+    it('should extract named variable exports', () => {
+      const code = `
+        export const foo = 1;
+        export let bar = 2;
+        export var baz = 3;
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.deepStrictEqual(result.exports.namedExports.sort(), ['bar', 'baz', 'foo']);
+    });
+
+    it('should extract export declarations without declaration', () => {
+      const code = `
+        const foo = 1;
+        const bar = 2;
+        export { foo, bar };
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.deepStrictEqual(result.exports.namedExports.sort(), ['bar', 'foo']);
+    });
+
+    it('should extract TypeScript type exports', () => {
+      const code = `
+        export type Foo = string;
+        export interface Bar { name: string; }
+        export enum Status { Active, Inactive }
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.deepStrictEqual(result.exports.namedExports.sort(), ['Bar', 'Foo', 'Status']);
+    });
+  });
+
+  describe('Default exports', () => {
+    it('should detect default function export', () => {
+      const code = `
+        export default function main() {}
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.strictEqual(result.exports.defaultExport, true);
+    });
+
+    it('should detect default class export', () => {
+      const code = `
+        export default class MyClass {}
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.strictEqual(result.exports.defaultExport, true);
+    });
+
+    it('should detect default expression export', () => {
+      const code = `
+        const foo = { bar: 1 };
+        export default foo;
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.strictEqual(result.exports.defaultExport, true);
+    });
+  });
+
+  describe('Re-exports', () => {
+    it('should extract named re-exports', () => {
+      const code = `
+        export { foo, bar } from './module';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.strictEqual(result.exports.reExports.length, 2);
+
+      const symbols = result.exports.reExports.map((r) => r.symbol).sort();
+      assert.deepStrictEqual(symbols, ['bar', 'foo']);
+
+      for (const reExport of result.exports.reExports) {
+        assert.strictEqual(reExport.source, './module');
+      }
+    });
+
+    it('should extract aliased re-exports', () => {
+      const code = `
+        export { foo as baz } from './module';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.strictEqual(result.exports.reExports.length, 1);
+      // Should capture the exported name (baz), not the original (foo)
+      assert.strictEqual(result.exports.reExports[0].symbol, 'baz');
+      assert.strictEqual(result.exports.reExports[0].source, './module');
+    });
+
+    it('should extract star re-exports', () => {
+      const code = `
+        export * from './utils';
+        export * from './helpers';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.strictEqual(result.exports.reExports.length, 2);
+
+      const starExports = result.exports.reExports.filter((r) => r.symbol === '*');
+      assert.strictEqual(starExports.length, 2);
+
+      const sources = result.exports.reExports.map((r) => r.source).sort();
+      assert.deepStrictEqual(sources, ['./helpers', './utils']);
+    });
+
+    it('should extract default re-exports', () => {
+      const code = `
+        export { default as MyComponent } from './component';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.strictEqual(result.exports.reExports.length, 1);
+      assert.strictEqual(result.exports.reExports[0].symbol, 'MyComponent');
+      assert.strictEqual(result.exports.reExports[0].source, './component');
+    });
+  });
+
+  describe('Mixed exports', () => {
+    it('should handle mixed named and default exports', () => {
+      const code = `
+        export const foo = 1;
+        export function bar() {}
+        export default class Main {}
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.deepStrictEqual(result.exports.namedExports.sort(), ['bar', 'foo']);
+      assert.strictEqual(result.exports.defaultExport, true);
+    });
+
+    it('should handle mixed local exports and re-exports', () => {
+      const code = `
+        export const localFoo = 1;
+        export { remoteFoo } from './remote';
+        export * from './utils';
+      `;
+
+      const result = parser.parse(code, 'test.ts');
+
+      assert.ok(result.success);
+      assert.ok(result.exports);
+      assert.deepStrictEqual(result.exports.namedExports, ['localFoo']);
+      assert.strictEqual(result.exports.reExports.length, 2);
+
+      const reExportSymbols = result.exports.reExports.map((r) => r.symbol).sort();
+      assert.deepStrictEqual(reExportSymbols, ['*', 'remoteFoo']);
+    });
+  });
+});
+
+describe('extractImportData', () => {
+  it('should return complete FileImportData structure', () => {
+    const code = `
+      import React, { useState } from 'react';
+      import type { Config } from './config';
+      import * as Utils from './utils';
+
+      export function myFunction() {}
+      export const myConst = 1;
+      export default class MyClass {}
+      export { helper } from './helpers';
+    `;
+
+    const data = extractImportData(code, 'TypeScript', 'test.ts');
+
+    assert.ok(data);
+    assert.strictEqual(data.path, 'test.ts');
+
+    // Check imports (re-exports with source also count as imports)
+    assert.strictEqual(data.imports.length, 4);
+
+    const reactImport = data.imports.find((imp) => imp.source === 'react');
+    assert.ok(reactImport);
+    assert.strictEqual(reactImport.defaultImport, 'React');
+    assert.deepStrictEqual(reactImport.namedImports, ['useState']);
+
+    const configImport = data.imports.find((imp) => imp.source === './config');
+    assert.ok(configImport);
+    assert.strictEqual(configImport.type, 'type-only');
+
+    const utilsImport = data.imports.find((imp) => imp.source === './utils');
+    assert.ok(utilsImport);
+    assert.strictEqual(utilsImport.namespaceImport, 'Utils');
+
+    // Check exports
+    assert.deepStrictEqual(data.namedExports.sort(), ['myConst', 'myFunction']);
+    assert.strictEqual(data.defaultExport, true);
+    assert.strictEqual(data.reExports.length, 1);
+    assert.strictEqual(data.reExports[0].symbol, 'helper');
+    assert.strictEqual(data.reExports[0].source, './helpers');
+  });
+
+  it('should return path matching the input', () => {
+    const code = `import foo from 'bar';`;
+
+    const data = extractImportData(code, 'JavaScript', 'src/components/Button.js');
+
+    assert.ok(data);
+    assert.strictEqual(data.path, 'src/components/Button.js');
+  });
+
+  it('should handle files with no imports or exports', () => {
+    const code = `const x = 1;`;
+
+    const data = extractImportData(code, 'JavaScript', 'test.js');
+
+    assert.ok(data);
+    assert.strictEqual(data.imports.length, 0);
+    assert.strictEqual(data.namedExports.length, 0);
+    assert.strictEqual(data.defaultExport, false);
+    assert.strictEqual(data.reExports.length, 0);
   });
 });

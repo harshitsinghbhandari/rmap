@@ -13,8 +13,9 @@ import type {
   CallExpression,
   ExportNamedDeclaration,
   ExportAllDeclaration,
+  ExportDefaultDeclaration,
 } from '@babel/types';
-import type { Parser, ParseResult, ImportInfo } from './types.js';
+import type { Parser, ParseResult, ImportInfo, ExportInfo, ReExportInfo } from './types.js';
 
 // Handle CommonJS/ESM interop for @babel/traverse
 const traverse = (_traverse as any).default || _traverse;
@@ -34,6 +35,9 @@ export class JavaScriptParser implements Parser {
    */
   parse(content: string, filePath: string): ParseResult {
     const imports: ImportInfo[] = [];
+    const namedExports: string[] = [];
+    const reExports: ReExportInfo[] = [];
+    let defaultExport = false;
 
     try {
       // Parse with all plugins enabled to support modern syntax
@@ -53,12 +57,36 @@ export class JavaScriptParser implements Parser {
       traverse(ast, {
         // Static imports: import foo from 'bar'
         ImportDeclaration(path: NodePath<ImportDeclaration>) {
-          imports.push({
+          const specifiers = path.node.specifiers;
+          const importInfo: ImportInfo = {
             source: path.node.source.value,
             type: path.node.importKind === 'type' ? 'type-only' : 'static',
-            isSideEffect: path.node.specifiers.length === 0,
+            isSideEffect: specifiers.length === 0,
             line: path.node.loc?.start.line,
-          });
+          };
+
+          // Extract specifier details
+          const namedImports: string[] = [];
+          for (const spec of specifiers) {
+            if (spec.type === 'ImportSpecifier') {
+              // Named import: { foo } or { foo as bar }
+              const imported = spec.imported;
+              const name = imported.type === 'Identifier' ? imported.name : imported.value;
+              namedImports.push(name);
+            } else if (spec.type === 'ImportDefaultSpecifier') {
+              // Default import: import Foo from 'module'
+              importInfo.defaultImport = spec.local.name;
+            } else if (spec.type === 'ImportNamespaceSpecifier') {
+              // Namespace import: import * as foo from 'module'
+              importInfo.namespaceImport = spec.local.name;
+            }
+          }
+
+          if (namedImports.length > 0) {
+            importInfo.namedImports = namedImports;
+          }
+
+          imports.push(importInfo);
         },
 
         // Dynamic imports: import('bar')
@@ -95,15 +123,82 @@ export class JavaScriptParser implements Parser {
           }
         },
 
-        // Re-exports: export { foo } from 'bar'
+        // Named exports and re-exports: export { foo }, export const bar, export { foo } from 'bar'
         ExportNamedDeclaration(path: NodePath<ExportNamedDeclaration>) {
-          if (path.node.source) {
+          const source = path.node.source;
+
+          if (source) {
+            // Re-export: export { foo } from 'bar' or export { foo as baz } from 'bar'
             imports.push({
-              source: path.node.source.value,
+              source: source.value,
               type: 'static',
               isSideEffect: false,
               line: path.node.loc?.start.line,
             });
+
+            // Track re-exported symbols
+            for (const spec of path.node.specifiers) {
+              if (spec.type === 'ExportSpecifier') {
+                const exported = spec.exported;
+                const exportedName = exported.type === 'Identifier' ? exported.name : exported.value;
+                reExports.push({
+                  symbol: exportedName,
+                  source: source.value,
+                });
+              }
+            }
+          } else {
+            // Local named export
+            const declaration = path.node.declaration;
+            if (declaration) {
+              // export function foo() {}, export class Bar {}, export const x = ...
+              if (declaration.type === 'FunctionDeclaration' && declaration.id) {
+                namedExports.push(declaration.id.name);
+              } else if (declaration.type === 'ClassDeclaration' && declaration.id) {
+                namedExports.push(declaration.id.name);
+              } else if (declaration.type === 'VariableDeclaration') {
+                // export const foo = ..., export let bar = ...
+                for (const declarator of declaration.declarations) {
+                  if (declarator.id.type === 'Identifier') {
+                    namedExports.push(declarator.id.name);
+                  } else if (declarator.id.type === 'ObjectPattern') {
+                    // export const { a, b } = obj
+                    for (const prop of declarator.id.properties) {
+                      if (prop.type === 'ObjectProperty' && prop.value.type === 'Identifier') {
+                        namedExports.push(prop.value.name);
+                      } else if (prop.type === 'RestElement' && prop.argument.type === 'Identifier') {
+                        namedExports.push(prop.argument.name);
+                      }
+                    }
+                  } else if (declarator.id.type === 'ArrayPattern') {
+                    // export const [a, b] = arr
+                    for (const element of declarator.id.elements) {
+                      if (element && element.type === 'Identifier') {
+                        namedExports.push(element.name);
+                      }
+                    }
+                  }
+                }
+              } else if (declaration.type === 'TSTypeAliasDeclaration') {
+                // export type Foo = ...
+                namedExports.push(declaration.id.name);
+              } else if (declaration.type === 'TSInterfaceDeclaration') {
+                // export interface Foo { ... }
+                namedExports.push(declaration.id.name);
+              } else if (declaration.type === 'TSEnumDeclaration') {
+                // export enum Foo { ... }
+                namedExports.push(declaration.id.name);
+              }
+            } else {
+              // export { foo, bar }
+              for (const spec of path.node.specifiers) {
+                if (spec.type === 'ExportSpecifier') {
+                  const exported = spec.exported;
+                  const name = exported.type === 'Identifier' ? exported.name : exported.value;
+                  namedExports.push(name);
+                }
+              }
+            }
           }
         },
 
@@ -115,11 +210,29 @@ export class JavaScriptParser implements Parser {
             isSideEffect: false,
             line: path.node.loc?.start.line,
           });
+
+          // Track as a wildcard re-export
+          reExports.push({
+            symbol: '*',
+            source: path.node.source.value,
+          });
+        },
+
+        // Default export: export default foo
+        ExportDefaultDeclaration(path: NodePath<ExportDefaultDeclaration>) {
+          defaultExport = true;
         },
       });
 
+      const exports: ExportInfo = {
+        namedExports,
+        defaultExport,
+        reExports,
+      };
+
       return {
         imports,
+        exports,
         success: true,
       };
     } catch (error) {

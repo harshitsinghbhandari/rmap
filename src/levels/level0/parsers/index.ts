@@ -5,7 +5,8 @@
  * with automatic fallback to regex-based parsing if AST parsing fails.
  */
 
-import type { Parser } from './types.js';
+import type { Parser, ParseResult } from './types.js';
+import type { FileImportData, SymbolImportInfo, ReExportInfo } from '../../../core/types.js';
 import { JavaScriptParser } from './javascript.js';
 import { FallbackParser } from './fallback.js';
 
@@ -67,4 +68,69 @@ export function extractImports(
 
   // Return deduplicated list of import sources
   return [...new Set(result.imports.map((imp) => imp.source))];
+}
+
+/**
+ * Convert ParseResult imports to SymbolImportInfo array
+ */
+function toSymbolImports(result: ParseResult): SymbolImportInfo[] {
+  return result.imports.map((imp) => ({
+    source: imp.source,
+    type: imp.type,
+    isSideEffect: imp.isSideEffect,
+    line: imp.line,
+    namedImports: imp.namedImports,
+    defaultImport: imp.defaultImport,
+    namespaceImport: imp.namespaceImport,
+  }));
+}
+
+/**
+ * Extract symbol-level import/export data from file content
+ *
+ * This returns the full structured import/export data including
+ * named imports, default imports, namespace imports, and exports.
+ *
+ * @param content - File content to parse
+ * @param language - Programming language
+ * @param filePath - File path (used as path in FileImportData)
+ * @returns FileImportData with symbol-level information, or null if parsing fails
+ */
+export function extractImportData(
+  content: string,
+  language: string,
+  filePath: string
+): FileImportData | null {
+  const parser = getParser(language);
+  const result = parser.parse(content, filePath);
+
+  if (!result.success) {
+    // AST parsing failed, try fallback parser
+    console.warn(
+      `Warning: Failed to parse ${filePath}: ${result.error}. Using fallback parser.`
+    );
+
+    const fallbackParser = new FallbackParser();
+    const fallbackResult = fallbackParser.parse(content, filePath);
+
+    // Fallback parser doesn't provide symbol-level info, return basic structure
+    return {
+      path: filePath,
+      imports: toSymbolImports(fallbackResult),
+      namedExports: [],
+      defaultExport: false,
+      reExports: [],
+    };
+  }
+
+  // Build FileImportData from ParseResult
+  const reExports: ReExportInfo[] = result.exports?.reExports ?? [];
+
+  return {
+    path: filePath,
+    imports: toSymbolImports(result),
+    namedExports: result.exports?.namedExports ?? [],
+    defaultExport: result.exports?.defaultExport ?? false,
+    reExports,
+  };
 }
