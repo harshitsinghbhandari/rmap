@@ -2,7 +2,7 @@
 
 > **Author:** Harshit Singh Bhandari
 > **Date:** April 4, 2026
-> **Status:** Draft
+> **Status:** Draft v2
 > **Repository:** github.com/harshitsinghbhandari/rmap
 
 ---
@@ -52,15 +52,130 @@ worker updates session state → orchestrator reads result
 
 ---
 
-## 3. Data Model
+## 3. The Key Insight: Function-Level Import/Export Graph
 
-### 3.1 Output: `.repo_map/workflows.json`
+### Why File-Level Imports Aren't Enough
+
+rmap's Level 0 already captures which files import from which files. But file-level edges are vague:
+
+```
+lifecycle-manager.ts → session-manager.ts
+```
+
+That tells you they're connected. It doesn't tell you *what flows between them*.
+
+### What We Already Have
+
+Level 0's Babel AST parser already extracts **function-level imports and exports** for JS/TS:
+
+```
+session-manager.ts    EXPORTS: createSession, getSession, updateSession
+lifecycle-manager.ts  IMPORTS:  createSession, getSession FROM session-manager
+                      EXPORTS:  startPolling, stopPolling
+agent-selector.ts     IMPORTS:  startPolling FROM lifecycle-manager
+```
+
+**This is a function-level directed graph.** And it's already 90% of the data we need — no new parsing, no new LLM calls, no call graph tracing.
+
+### Why Function-Level Changes Everything
+
+File-level graph: `lifecycle-manager.ts → session-manager.ts`
+→ "These files are connected." **Vague. Useless for workflow detection.**
+
+Function-level graph: `lifecycle-manager.ts` imports `createSession` from `session-manager.ts`
+→ "Lifecycle manager *uses* session creation." **Actionable. This is a workflow edge.**
+
+The function-level graph is:
+- **Directed** — you know which way data/control flows (exporter → importer)
+- **Symbol-specific** — you know *what* flows, not just that *something* flows
+- **Already extracted** — Level 0 Babel parsing gives you this for free
+- **Queryable** — "what files use `createSession`?" is a simple graph lookup
+
+### Turning Function-Level Graphs Into Workflows
+
+Build a graph where **nodes are `file:symbol`** and **edges are import relationships**. Then run path-finding:
+
+```
+entryPoint (main.ts)
+  → imports delegate (agent-selector.ts)
+    → imports startPolling (lifecycle-manager.ts)
+      → imports createSession (session-manager.ts)
+      → imports sendMessage (message-bus.ts)
+```
+
+That path **is** the orchestrator→worker workflow. No LLM needed for discovery. Just graph traversal from entry points.
+
+**The workflow discovery problem reduces to: graph algorithms + LLM polish.**
+
+---
+
+## 4. Data Model
+
+### 4.1 Function-Level Graph: `.repo_map/function-graph.json`
+
+New intermediate output from the assembler. This is the raw graph that powers everything else.
+
+```ts
+export interface FunctionGraphNode {
+  file: string;         // e.g. "src/session-manager.ts"
+  symbol: string;       // e.g. "createSession"
+  type: "import" | "export" | "re-export";
+}
+
+export interface FunctionGraphEdge {
+  from: { file: string; symbol: string };  // exporter
+  to: { file: string; symbol: string };    // importer
+  type: "import" | "re-export" | "dynamic-import";
+}
+
+export interface FunctionGraphJson {
+  schemaVersion: 1;
+  nodes: FunctionGraphNode[];
+  edges: FunctionGraphEdge[];
+  // Pre-computed file-level adjacency for quick lookups
+  fileAdjacency: Record<string, { imports: string[]; exports: string[]; importedBy: string[] }>;
+}
+```
+
+**Example:**
+```json
+{
+  "nodes": [
+    { "file": "src/session-manager.ts", "symbol": "createSession", "type": "export" },
+    { "file": "src/session-manager.ts", "symbol": "getSession", "type": "export" },
+    { "file": "src/lifecycle-manager.ts", "symbol": "startPolling", "type": "export" },
+    { "file": "src/lifecycle-manager.ts", "symbol": "createSession", "type": "import" }
+  ],
+  "edges": [
+    {
+      "from": { "file": "src/session-manager.ts", "symbol": "createSession" },
+      "to": { "file": "src/lifecycle-manager.ts", "symbol": "createSession" },
+      "type": "import"
+    },
+    {
+      "from": { "file": "src/lifecycle-manager.ts", "symbol": "startPolling" },
+      "to": { "file": "src/agent-selector.ts", "symbol": "startPolling" },
+      "type": "import"
+    }
+  ],
+  "fileAdjacency": {
+    "src/session-manager.ts": {
+      "exports": ["createSession", "getSession", "updateSession"],
+      "imports": ["EventEmitter"],
+      "importedBy": ["src/lifecycle-manager.ts", "src/agent-selector.ts"]
+    }
+  }
+}
+```
+
+### 4.2 Output: `.repo_map/workflows.json`
 
 ```ts
 export interface WorkflowFileEntry {
   path: string;
   reason: string;           // LLM-filled, 1-2 sentences, why THIS file in THIS workflow
   role?: string;            // optional e.g. "state-management", "message-passing"
+  keySymbols?: string[];    // the specific functions this file contributes to the workflow
 }
 
 export interface WorkflowDefinition {
@@ -73,6 +188,8 @@ export interface WorkflowDefinition {
   participants?: string[];  // e.g. ["orchestrator", "worker-agent"]
   lastUpdated: string;
   version: number;
+  source: "user" | "discovered" | "hybrid";  // how this workflow was created
+  confidence?: number;     // 0-1, for discovered workflows
 }
 
 export interface WorkflowsJson {
@@ -81,7 +198,7 @@ export interface WorkflowsJson {
 }
 ```
 
-### 3.2 Example Output
+### 4.3 Example Output
 
 ```json
 {
@@ -95,35 +212,41 @@ export interface WorkflowsJson {
         {
           "path": "src/session-manager.ts",
           "reason": "Maintains shared session state, message queue, and correlation IDs between orchestrator and worker",
-          "role": "state-management"
-        },
-        {
-          "path": "src/message-bus.ts",
-          "reason": "Handles async message passing, retries, and failure recovery for agent-to-agent communication",
-          "role": "message-passing"
-        },
-        {
-          "path": "src/agent-selector.ts",
-          "reason": "Determines which agent plugin handles the delegated task based on task metadata",
-          "role": "agent-routing"
+          "role": "state-management",
+          "keySymbols": ["createSession", "getSession", "updateSession"]
         },
         {
           "path": "src/lifecycle-manager.ts",
           "reason": "Polling loop that triggers agent execution and monitors state transitions during the handoff",
-          "role": "lifecycle-control"
+          "role": "lifecycle-control",
+          "keySymbols": ["startPolling", "stopPolling"]
+        },
+        {
+          "path": "src/agent-selector.ts",
+          "reason": "Determines which agent plugin handles the delegated task based on task metadata",
+          "role": "agent-routing",
+          "keySymbols": ["delegate", "selectAgent"]
+        },
+        {
+          "path": "src/message-bus.ts",
+          "reason": "Handles async message passing, retries, and failure recovery for agent-to-agent communication",
+          "role": "message-passing",
+          "keySymbols": ["sendMessage", "onMessage"]
         }
       ],
       "entryPoint": "src/orchestrator/main.ts",
       "tags": ["multi-agent", "communication", "handoff", "state-management"],
       "participants": ["orchestrator", "worker"],
       "lastUpdated": "2026-04-04T23:45:12Z",
-      "version": 3
+      "version": 3,
+      "source": "discovered",
+      "confidence": 0.92
     }
   }
 }
 ```
 
-### 3.3 Index in `meta.json`
+### 4.4 Index in `meta.json`
 
 Add lightweight index fields for fast listing without loading the full workflows file:
 
@@ -140,15 +263,149 @@ Add lightweight index fields for fast listing without loading the full workflows
 
 ---
 
-## 4. Implementation Plan
+## 5. Workflow Discovery Algorithm
 
-### Phase 1: User-Defined Workflows (Foundation)
+This is the core innovation. Instead of relying on LLM to guess workflows (expensive, unreliable), we use the function-level graph and graph algorithms to discover them deterministically.
 
-**Goal:** Users define workflow skeletons in a config file; rmap fills in the semantic `reason` fields automatically.
+### 5.1 Step 1: Build the Function-Level Graph
 
-**Estimated effort:** 250–350 LOC new code + 1 prompt template. ~2-3 days.
+**Source:** Level 0 already captures function-level imports/exports via Babel AST parsing. Extend the Assembler to output `function-graph.json` (new file).
 
-#### 4.1 Config File: `.repo_map/workflows.config.json`
+For each JS/TS file, Level 0 currently extracts:
+- Named imports: `import { foo, bar } from './module'` → `foo`, `bar`
+- Default imports: `import something from './module'` → `default`
+- Re-exports: `export { foo } from './module'` → `foo`
+- Dynamic imports: `import('./module')` → entire module
+- CommonJS: `require('./module')` → entire module
+
+All of this is already happening. We just need to wire it into a graph structure.
+
+### 5.2 Step 2: Identify Entry Points
+
+Entry points are files that:
+- Have no importers (root of the dependency tree), OR
+- Are explicitly listed as entry points by Level 1's structure detection, OR
+- Are CLI bin targets, HTTP route handlers, or exported from `package.json` `main`/`bin`
+
+Level 1 already identifies entry points. We reuse that.
+
+### 5.3 Step 3: Trace Paths from Entry Points
+
+For each entry point, perform a **symbol-aware breadth-first traversal** of the function-level graph:
+
+```
+function traceWorkflow(entryFile, functionGraph):
+  visited = Set()
+  queue = [entryFile]
+  workflowFiles = []
+  
+  while queue is not empty:
+    file = queue.shift()
+    if file in visited: continue
+    visited.add(file)
+    workflowFiles.push(file)
+    
+    // Get all symbols this file imports
+    imports = functionGraph.getImports(file)
+    
+    for each import:
+      sourceFile = import.sourceFile
+      sourceSymbol = import.symbol
+      
+      // Check if source symbol is exported by source file
+      if functionGraph.isExported(sourceFile, sourceSymbol):
+        // This is a real data flow edge
+        queue.push(sourceFile)
+  
+  return workflowFiles
+```
+
+### 5.4 Step 4: Merge Overlapping Paths
+
+Multiple entry points may trace into overlapping file sets. Merge paths that share >60% of files into a single workflow. The merge creates a "wider" workflow that captures the full system flow.
+
+**Algorithm:**
+1. Trace all entry points → set of candidate workflows
+2. Compute Jaccard similarity between all pairs
+3. Merge pairs with similarity > 0.6
+4. Repeat until no more merges possible
+
+### 5.5 Step 5: Filter Noise
+
+Not all reachable paths are meaningful workflows. Filter out:
+- **Utility files** — files imported by >80% of the codebase (e.g., `types.ts`, `utils.ts`, `config.ts`). These are "infrastructure," not workflow-specific.
+- **Type-only imports** — files imported only for TypeScript types (`import type { Foo }`). These don't represent runtime data flow.
+- **Shallow paths** — entry points that reach <3 files. Too small to be a useful workflow.
+- **Circular clusters** — groups of files that all import each other with no clear direction. These are modules, not workflows.
+
+### 5.6 Step 6: LLM Polish
+
+Now use LLM (one Haiku call) to:
+1. **Name** the workflow (human-readable)
+2. **Describe** it (1-2 sentences)
+3. **Fill `reason`** for each file (why it's part of this flow, not just what the file does)
+4. **Assign `role`** and **`tags`** per file
+5. **Prune** false positives — the LLM sees the full file list + function-level edges and can say "file X is a shared utility, not really part of this workflow"
+
+This is where LLM adds value — not in discovery, but in **semantic annotation**.
+
+### 5.7 Why This Is Better Than Pure LLM Discovery
+
+| Aspect | LLM-Only Discovery | Function-Graph + LLM Polish |
+|---|---|---|
+| Accuracy | Depends on prompt quality | Deterministic graph traversal, LLM only annotates |
+| Cost | Multiple expensive Sonnet calls | One cheap Haiku call per workflow |
+| Reproducibility | Varies between runs | Same graph = same workflows |
+| Scalability | Degrades on large repos | Graph algorithms scale linearly |
+| False positives | High (LLM guesses) | Low (graph pruning + LLM validation) |
+| Ordering | LLM guesses execution order | Determined by traversal order |
+
+---
+
+## 6. Implementation Plan
+
+### Phase 1: Function-Level Graph + User Workflows (Foundation)
+
+**Goal:** Extract function-level graph from existing Level 0 data. Support user-defined workflows with auto-generated reasons.
+
+**Estimated effort:** ~350–450 LOC new code + 1 prompt template. ~2-3 days.
+
+#### 6.1 Enhance Level 0 Output
+
+Ensure Level 0 captures **symbol-level** imports/exports (it likely already does via Babel). If not, extend the Babel visitor:
+
+```ts
+// What we need per file:
+interface FileImportData {
+  path: string;
+  namedImports: { symbol: string; source: string }[];  // { foo } from './bar'
+  defaultImport?: { symbol: string; source: string };    // import X from './bar'
+  reExports: { symbol: string; source: string }[];       // export { foo } from './bar'
+  dynamicImports: string[];                               // import('./bar')
+  namedExports: string[];                                 // export function foo
+  defaultExport: boolean;
+}
+```
+
+#### 6.2 Build `function-graph.json` in Assembler
+
+After Level 3 completes, the Assembler already builds `graph.json` (file-level). Add a pass that builds the function-level graph:
+
+```
+For each file:
+  For each named import { symbol, source }:
+    Add edge: source:symbol → file:symbol
+  For each named export:
+    Add node: file:symbol (type: export)
+  For each re-export { symbol, source }:
+    Add edge: source:symbol → file:symbol (type: re-export)
+```
+
+Compute `fileAdjacency` index for fast lookups.
+
+#### 6.3 User-Defined Workflows (Config File)
+
+Create `.repo_map/workflows.config.json`:
 
 ```json
 {
@@ -170,176 +427,191 @@ Add lightweight index fields for fast listing without loading the full workflows
 ```
 
 The user provides: **id, name, description, file list, entry point.**
-rmap generates: **reason per file, role, tags, version.**
+rmap generates: **reason per file, role, tags, keySymbols, version.**
 
-#### 4.2 Pipeline Integration
+#### 6.4 Pipeline Integration
 
-Insert a new lightweight level after Level 3 (Deep Annotator):
+Insert a new lightweight level after Level 3:
 
 ```
 Level 0 (Harvest)
   → Level 1 (Structure Detection)
     → Level 2 (Work Division)
       → Level 3 (Deep Annotation)
-        → [NEW] Level Workflow (Reason Extraction)
+        → Assembler builds function-graph.json
+        → [NEW] Level Workflow (Discovery + Reason Extraction)
           → Level 4 (Validation)
-            → Assembler
+            → Final Assembler writes workflows.json
 ```
 
-**New level details:**
-- **Location:** `src/levels/level-workflow/`
-- **Pattern:** Same as `level1/` and `level3/` (prompt template + LLM call + typed output)
-- **Model:** Claude Haiku (cheap, fast — 1 call per workflow)
-- **Input:** Workflow file list + existing Level 3 annotations + graph context
-- **Output:** `WorkflowDefinition` with `reason` and `role` fields filled in
+**Level Workflow has two modes:**
 
-**Coordinator changes** (`src/coordinator/index.ts`):
-- Insert the new level call (one-line change in the pipeline sequence)
-- Add checkpoint key for workflow level
-- Wire up to Assembler
+| Mode | Trigger | Behavior |
+|---|---|---|
+| **User mode** | `workflows.config.json` exists | Use user-defined file lists, LLM fills reasons |
+| **Discovery mode** | No config or `--discover` flag | Run graph algorithm to find workflows, LLM polishes |
+| **Hybrid mode** | Both config + `--discover` | User workflows take priority, discovered workflows fill gaps |
 
-**Assembler changes:**
-- Write `workflows.json` to `.repo_map/`
-- Update `meta.json` with `workflowIds` and `workflowNames` index
+#### 6.5 Discovery Algorithm Implementation
 
-#### 4.3 CLI Commands
+New file: `src/core/workflow-discovery.ts`
+
+```ts
+export function discoverWorkflows(
+  functionGraph: FunctionGraphJson,
+  entryPoints: string[],
+  options: DiscoveryOptions
+): WorkflowCandidate[] {
+  // 1. Trace paths from each entry point
+  const paths = entryPoints.map(ep => tracePath(ep, functionGraph));
+  
+  // 2. Merge overlapping paths (Jaccard > 0.6)
+  const merged = mergePaths(paths);
+  
+  // 3. Filter noise (utility files, type-only, shallow, circular)
+  const filtered = filterNoise(merged, functionGraph);
+  
+  // 4. Sort files within each workflow by traversal order
+  return filtered.map(w => sortWorkflow(w, functionGraph));
+}
+```
+
+**Configuration options:**
+```ts
+interface DiscoveryOptions {
+  minFiles: number;           // default: 3 — skip workflows smaller than this
+  maxFiles: number;           // default: 15 — cap workflow size
+  mergeThreshold: number;     // default: 0.6 — Jaccard similarity for merging
+  utilityThreshold: number;   // default: 0.8 — files imported by >80% of codebase are utilities
+  excludePatterns: string[];  // glob patterns for files to always exclude
+}
+```
+
+#### 6.6 CLI Commands
 
 New file: `src/cli/commands/workflow.ts`
 
 ```bash
-rmap workflow list                  # Table of all workflows (id, name, file count, version)
-rmap workflow <id>                  # Rich context: files + reasons + scoped blast radius
-rmap workflow build                 # Re-generate reasons for all workflows
-rmap workflow edit <id>             # Open config for manual editing (future)
-rmap workflow discover              # Auto-discover workflows from code (Phase 2)
+rmap workflow list                        # Table of all workflows (id, name, source, confidence, file count)
+rmap workflow <id>                        # Rich context: files + reasons + keySymbols + scoped blast radius
+rmap workflow build                       # Re-generate reasons for all workflows
+rmap workflow discover                    # Run discovery algorithm + LLM polish, write to workflows.json
+rmap workflow discover --dry-run          # Show discovered workflows without writing
+rmap workflow graph <id>                  # Show function-level graph for a specific workflow
+rmap workflow edit <id>                   # Open config for manual editing (future)
+rmap get-context --workflow <id>          # Query engine shortcut
 ```
 
-Shortcut integration:
-```bash
-rmap get-context --workflow orchestrator-worker
-```
-
-#### 4.4 Query Engine Extension
+#### 6.7 Query Engine Extension
 
 Add `WorkflowQuery` handler to `src/query/`:
 
-1. Load `workflows.json`
-2. Pull exact files + reasons for the requested workflow
-3. Run blast-radius logic **scoped to workflow files only** (not full graph)
-4. Output format identical to existing `get-context` output (agents need zero new parsing logic)
+1. Load `workflows.json` + `function-graph.json`
+2. Pull exact files + reasons + keySymbols for the requested workflow
+3. Run blast-radius logic **scoped to workflow files only**
+4. Show function-level connections: "session-manager.createSession → lifecycle-manager"
 
-#### 4.5 Delta Strategy
+New query modes:
+```bash
+rmap get-context --symbol createSession         # "What workflow(s) use this symbol?"
+rmap get-context --workflow orchestrator-worker  # Files + reasons + symbol flow
+rmap get-context --blast-radius src/message-bus.ts --workflow orchestrator-worker  # Scoped blast
+```
 
-Extend existing git-diff-based delta logic:
+#### 6.8 Delta Strategy
+
+The function-level graph makes delta updates more precise:
 
 | Condition | Action |
 |---|---|
-| No workflow files changed | Skip workflow level entirely |
-| <3 workflow files changed | Re-run only affected workflows |
-| Any entry point changed | Re-run all workflows touching that entry point |
-| >10 workflow files changed | Re-run all workflows |
+| No workflow files changed, no function signatures changed | Skip workflow level entirely |
+| File changed but exported symbols unchanged | Re-run LLM polish only (reasons might be stale) |
+| File changed + exported symbols changed | Re-trace all workflows containing this file |
+| File changed + is an entry point | Re-trace from this entry point |
+| New file added with exports | Check if any existing workflows import from this file |
+| File deleted | Remove from all workflows, re-trace affected workflows |
+| >20 files changed | Re-run full discovery + re-polish all |
 
-**Edge cases to handle:**
-- Renamed files (git detects renames — update workflow file paths)
-- Deleted files that were in a workflow (remove from workflow, flag in validation)
-- New files in a directory that's part of a workflow (suggest adding to workflow, don't auto-add)
+**Function-level deltas are more precise than file-level deltas.** Changing a function name in `session-manager.ts` means re-running only workflows that *import that specific symbol* — not all workflows that touch the file.
 
-#### 4.6 Validation (Level 4 Extension)
+#### 6.9 Validation (Level 4 Extension)
 
 Add workflow-specific checks:
 - All files in a workflow still exist
-- No duplicate files across workflows (warn, don't error)
-- Entry point exists and is reachable from at least one workflow file
+- All `keySymbols` still exist in their respective files
+- Function-level edges in the workflow still exist in `function-graph.json` (catches renames)
 - No orphan workflows (workflows with 0 valid files)
+- Entry point is reachable from at least one file in the workflow
+- Warn: same file appears in >5 workflows (might be a utility, not workflow-specific)
+- Warn: workflow has no function-level edges (dead workflow — files are listed but don't actually connect)
 
 ### Phase 1 Difficulty Assessment
 
 | Piece | Difficulty | Notes |
 |---|---|---|
-| Types (`workflow.ts`) | **Trivial** | Copy interfaces as-is |
+| Function-level graph extraction | **Easy** | Level 0 Babel parsing likely already has this data |
+| `function-graph.json` assembler pass | **Easy** | Map Level 0 output into graph structure |
+| Types (`workflow.ts`) | **Trivial** | Interfaces defined above |
 | Config loader | **Easy** | Follow existing config patterns |
-| Level Workflow (prompt + Haiku) | **Easy-Medium** | One prompt, one LLM call per workflow. Prompt design is the value prop. |
-| Coordinator integration | **Medium** | Pipeline insertion is one line, but checkpoint keys + delta detection + graceful shutdown need care |
-| Assembler | **Easy** | Another JSON file in `.repo_map/` |
+| Discovery algorithm | **Medium** | BFS + merge + filter. Straightforward graph algorithms |
+| Level Workflow (LLM polish) | **Easy-Medium** | One Haiku call per workflow for naming + reasons |
+| Coordinator integration | **Medium** | Checkpoint keys + delta detection + two modes |
+| Assembler | **Easy** | Two new JSON files in `.repo_map/` |
 | CLI commands | **Easy** | Commander boilerplate, copy existing patterns |
-| Query engine | **Easy-Medium** | Scoped blast radius is the interesting bit |
-| Delta strategy | **Medium-Hard** | Git diff → workflow file matching → selective re-run. Edge cases: renames, deletes |
-| Validation | **Easy** | Existence checks + reachability |
+| Query engine | **Easy-Medium** | Symbol-aware queries + scoped blast radius |
+| Delta strategy | **Medium** | Symbol-level deltas are more precise but need careful implementation |
+| Validation | **Easy-Medium** | Symbol existence checks + edge validation |
 
 ---
 
-## 5. Enhancement Proposals (10x Vision)
+## 7. Enhancement Proposals (Beyond Phase 1)
 
-The Phase 1 plan is solid, shippable, and provides immediate value. But it has a limitation: **the user must manually define which files form a workflow.** This section proposes four enhancements that progressively make rmap more autonomous and more powerful.
+Phase 1 ships a complete, useful workflow system. These enhancements make it progressively more powerful.
 
-### 5.1 Automatic Workflow Discovery
+### 7.1 Event-Driven Flow Detection
 
-**Problem:** Requiring `workflows.config.json` means the user must already understand the codebase well enough to identify cross-cutting flows. For large or unfamiliar codebases, this is a significant burden.
+**Problem:** The function-level import graph captures **static** dependencies. But many flows are **dynamic** — event emitters, pub/sub, callbacks. `session-manager` might call `eventBus.emit('session:created')`, and `lifecycle-manager` listens via `eventBus.on('session:created', handler)`. No import relationship exists between them.
 
-**Proposal:** Extend Level 2 (Work Division) to also identify workflows. Level 2 already receives the full file list + import graph. Add a secondary Sonnet call that says:
+**Proposal:** Extend Level 0's Babel parser to detect event patterns:
 
-> *"Given this file tree and import graph, identify 3-7 cross-cutting workflows — sequences of files where data or control flows across module boundaries. For each workflow, provide the ordered file list and a description of the flow."*
+```
+// Pattern 1: EventEmitter
+eventBus.emit('session:created', data)
+eventBus.on('session:created', handler)
 
-**Output:** Same `WorkflowDefinition` structure, written to `workflows.json` automatically.
+// Pattern 2: Pub/sub
+pubsub.publish('topic', message)
+pubsub.subscribe('topic', callback)
 
-**How it works:**
-1. Level 2 groups files by module (existing behavior)
-2. New secondary prompt analyzes **cross-module edges** in the import graph
-3. Clusters cross-module edges into coherent flows
-4. Returns ordered file lists with descriptions
-5. User can override via `workflows.config.json` (manual definitions take priority)
+// Pattern 3: Callback registration
+app.use(middleware)
+router.post('/path', handler)
 
-**Why this is hard:**
-- Distinguishing "files in the same module" from "files forming a causal chain" requires understanding intent, not just structure
-- Getting reliable ordering (which file executes first?) from static analysis is non-trivial
-- The LLM might conflate "these files are often imported together" with "these files form a flow"
-- Prompt engineering is critical — need to constrain the LLM to produce flows, not just clusters
+// Pattern 4: Stream/observable
+stream.pipe(destination)
+observable.subscribe(observer)
+```
 
-**Difficulty:** **Hard** (prompt engineering + quality validation)
+These create **implicit edges** in the function graph: `emitter → listener` via shared event name.
 
-### 5.2 Dynamic Call Graph Tracing
+**How:**
+1. Detect emit/publish/subscribe patterns in AST
+2. Match by string literal (event name)
+3. Add implicit edges to `function-graph.json` with type `"event"`
+4. Discovery algorithm treats event edges like import edges for path tracing
 
-**Problem:** Static imports tell you *what connects to what*, not *how data flows at runtime*. The import graph is undirected (A imports B, B imports A) and doesn't capture:
-- Event-driven communication (emit/on/subscribe)
-- Runtime polymorphism (interface → multiple implementations)
-- Conditional paths (if/else branching to different modules)
-- Async chains (Promise.then, async/await, callback nesting)
+**Difficulty:** **Medium-Hard** (pattern detection is finite, but false positives are common — `emit` is a generic word)
 
-**Proposal:** Build an AST-level control flow analyzer for JS/TS that produces a **directed dataflow graph** — not just "A depends on B" but "A calls B.foo(), which emits 'done', which triggers C.handler()".
+### 7.2 Workflow Evolution Tracking
 
-**How it works:**
+**Problem:** Workflows change over time. An agent reviewing a PR should know "what workflows does this change affect?"
 
-Using Babel (already in the project for Level 0 import extraction):
+**Proposal:** Store workflow definitions per git commit and diff them.
 
-1. **Function call tracking:** Visitor that records `importedSymbol.method()` calls, resolving through re-exports
-2. **Event pattern detection:** Regex + AST matching for `.emit()`, `.on()`, `.subscribe()`, `.addEventListener()`, event emitter constructors
-3. **Promise chain tracing:** Follow `.then()`, `.catch()`, `await` chains across file boundaries
-4. **Return value propagation:** Track what a function returns and where that return value is used as an argument
-
-**Output:** A directed graph where edges represent actual runtime control/data flow, not just static dependencies.
-
-**Then:** Cluster this directed graph into workflows automatically using graph analysis algorithms (strongly connected components → entry/exit point detection → path extraction).
-
-**Why this is genuinely hard:**
-- This is essentially a subset of the program analysis problem that compiler researchers have worked on for decades
-- Dynamic dispatch (polymorphism) means you can't always statically determine which function gets called
-- Event-driven architectures create implicit control flow that doesn't appear in the AST
-- Cyclic dependencies create infinite loops in naive graph traversal
-- Accuracy degrades significantly for highly dynamic patterns (proxy objects, reflect APIs, eval)
-
-**Difficulty:** **Very Hard** (this is a real program analysis problem, not just prompt engineering)
-
-### 5.3 Workflow Evolution Tracking
-
-**Problem:** Workflows change over time as the codebase evolves. Currently, rmap generates a snapshot. There's no way to see *how* a workflow changed between versions.
-
-**Proposal:** Store workflow definitions alongside each map build and diff them across git commits.
-
-**How it works:**
-
-1. Each `rmap map` run writes `workflows.json` with a `version` field (already in the data model)
-2. Additionally, store a git-tagged snapshot: `.repo_map/history/workflows.<short-sha>.json`
-3. On subsequent runs, diff the new workflows against the last stored snapshot
+**How:**
+1. Each `rmap map` writes `workflows.json` with version + git SHA
+2. Store snapshots: `.repo_map/history/workflows.<short-sha>.json`
+3. Diff new workflows against last snapshot
 4. Output `workflow-changes.json`:
 
 ```json
@@ -350,190 +622,251 @@ Using Babel (already in the project for Level 0 import extraction):
     "orchestrator-worker": {
       "type": "modified",
       "addedFiles": ["src/retry-handler.ts"],
+      "addedSymbols": ["retry-handler.retry"],
       "removedFiles": [],
       "changedReasons": ["src/session-manager.ts"],
       "entryPointChanged": false
     },
     "auth-flow": {
       "type": "removed",
-      "reason": "All files in this workflow were deleted or merged into session-manager.ts"
+      "reason": "All function-level edges dissolved"
     },
     "config-reload": {
       "type": "added",
-      "files": ["src/config-watcher.ts", "src/config-loader.ts"]
+      "files": ["src/config-watcher.ts"],
+      "source": "discovered",
+      "confidence": 0.87
     }
   }
 }
 ```
 
-**Agent query support:**
+**Agent queries:**
 ```bash
-rmap workflow diff orchestrator-worker     # what changed in this workflow?
-rmap workflow diff --since 2 weeks ago     # what workflows changed recently?
-rmap workflow history orchestrator-worker  # full version history
+rmap workflow diff orchestrator-worker      # what changed in this workflow?
+rmap workflow diff --since "2 weeks ago"    # what workflows changed recently?
+rmap workflow history orchestrator-worker   # full version history
 ```
 
-**Why this matters:** An agent reviewing a PR can ask "what workflows does this PR touch?" and get an immediate, accurate answer. This is especially powerful for multi-agent systems where a change to the message bus might affect 3 different workflows.
+**The function-level graph makes diffs more precise.** Instead of "file X changed in workflow Y," you can say "symbol `createSession` was removed from workflow Y's critical path."
 
-**Difficulty:** **Medium** (git integration + JSON diffing, straightforward engineering)
+**Difficulty:** **Medium** (git integration + JSON diffing + symbol-level comparison)
 
-### 5.4 Runtime-Validated Workflows
+### 7.3 Cross-Language Symbol Resolution
 
-**Problem:** All of the above is static analysis. The discovered workflows are theoretical — they represent what *should* happen based on code structure, not what *actually* happens at runtime. For complex systems, these can diverge significantly.
+**Problem:** Level 0 uses Babel for JS/TS and regex for other languages. The function-level graph is accurate for JS/TS but coarse for Python, Go, Rust, etc.
 
-**Proposal:** Integrate with runtime tracing to validate that discovered workflows match actual execution paths.
+**Proposal:** Add per-language AST parsers for common languages:
 
-**How it works:**
-
-1. **Instrument the codebase:** Lightweight monkey-patching of key patterns (function calls, event emissions, promise resolutions) that records caller → callee relationships at runtime
-2. **Run the test suite (or production traffic sample):** Collect actual call sequences
-3. **Compare:** Match runtime traces against rmap's predicted workflows
-4. **Report:**
-   - **Coverage:** "Workflow X is exercised by 12 tests, covers 8/10 files"
-   - **Mismatches:** "Predicted flow: A → B → C. Actual flow: A → D → C (file B is never reached in this workflow)"
-   - **Dead flows:** "Workflow Y has no runtime evidence — may be theoretical or deprecated"
-   - **Hidden flows:** "Runtime shows frequent A → E → F path not captured in any workflow"
-
-**Implementation options:**
-
-| Approach | Pros | Cons |
+| Language | Parser | What we get |
 |---|---|---|
-| Node.js `--inspect` + CDP | No code changes, rich data | Complex setup, heavy for CI |
-| Lightweight `console.log` wrapping | Simple, fast | Requires code modification |
-| Custom V8 coverage + AST mapping | No runtime overhead | Limited to function-level granularity |
-| Test coverage mapping | Uses existing data | Only captures tested paths |
+| Python | `tree-sitter-python` or `ast` module | Function defs, class methods, imports |
+| Go | `go/ast` | Function signatures, interface implementations |
+| Rust | `syn` crate or `tree-sitter-rust` | Public functions, trait implementations, use statements |
+| Java/Kotlin | `tree-sitter-java` / `tree-sitter-kotlin` | Method signatures, interface implementations |
 
-**Difficulty:** **Very Hard** (runtime instrumentation, data collection at scale, trace → workflow matching)
+This makes the function-level graph — and therefore workflow discovery — work across languages.
+
+**Difficulty:** **Medium** per language (parser integration, symbol resolution rules differ)
+
+### 7.4 Runtime-Validated Workflows
+
+**Problem:** Static function-level graphs capture declared dependencies but not actual execution paths. A function might be imported but never called, or called via a path the static analysis misses (reflection, dynamic dispatch).
+
+**Proposal:** Collect runtime traces during test execution and validate workflows.
+
+**How:**
+1. Instrument the codebase to log function entry/exit at symbol level
+2. Run the test suite with instrumentation enabled
+3. Match runtime traces against `function-graph.json`
+4. Report:
+   - **Coverage:** "Workflow X is exercised by 12 tests, covers 8/10 files, 15/18 symbols"
+   - **Dead edges:** "Symbol `startPolling` is in the graph but never called in tests"
+   - **Hidden paths:** "Runtime shows `retry-handler.ts` is always called before `message-bus.ts`, but it's not in any workflow"
+   - **Orphan workflows:** "Workflow Y has no runtime evidence — may be deprecated"
+
+**Difficulty:** **Very Hard** (runtime instrumentation, trace collection, trace → workflow matching)
+
+### 7.5 Workflow Hotspots & Complexity Metrics
+
+**Problem:** Some workflows are more fragile than others. An agent should know which workflows are risky to modify.
+
+**Proposal:** Compute per-workflow metrics:
+
+| Metric | What it measures | How |
+|---|---|---|
+| **Blast radius** | How many other workflows would break if this workflow's files changed? | Count of workflows sharing files |
+| **Symbol coupling** | How many symbols does this workflow share with other workflows? | Intersection of keySymbols sets |
+| **Chain depth** | How long is the execution chain? | Max path length in function graph |
+| **Fan-out** | How many files does a single file in this workflow connect to outside the workflow? | Edges crossing workflow boundary |
+| **Change frequency** | How often do files in this workflow change? | Git log on workflow files |
+
+Output as `workflow-risk.json`. Agents can query: "what's the riskiest workflow to modify?"
+
+**Difficulty:** **Easy-Medium** (graph algorithms + git log, mostly computation)
 
 ---
 
-## 6. Implementation Roadmap
+## 8. Implementation Roadmap
 
 ### Phase 1: Foundation (Week 1-2)
+- [ ] Verify Level 0 captures symbol-level imports/exports (extend if not)
 - [ ] Add types to `src/core/workflow.ts`
-- [ ] Create `src/levels/level-workflow/` (prompt template + LLM call)
-- [ ] Update coordinator to call the new level
-- [ ] Update Assembler to write `workflows.json` + meta.json index
+- [ ] Build `function-graph.json` assembler pass
+- [ ] Implement discovery algorithm (`src/core/workflow-discovery.ts`)
+- [ ] Create `src/levels/level-workflow/` (LLM polish prompt)
+- [ ] Update coordinator with two modes (user / discovery / hybrid)
+- [ ] Update Assembler to write `workflows.json` + `function-graph.json` + meta.json index
 - [ ] Add config loader for `workflows.config.json`
 - [ ] Create `src/cli/commands/workflow.ts` + register in CLI
-- [ ] Extend query engine (`--workflow` flag)
-- [ ] Update delta strategy (workflow-aware invalidation)
-- [ ] Update Level 4 validation (workflow-specific checks)
+- [ ] Extend query engine (symbol-aware queries + `--workflow` flag)
+- [ ] Update delta strategy (symbol-level invalidation)
+- [ ] Update Level 4 validation (symbol existence + edge checks)
 - [ ] Add tests
 - [ ] Update README + ARCHITECTURE.md + CLI.md
 
-**Deliverable:** User-defined workflows with auto-generated semantic reasons. Query support. Delta updates.
+**Deliverable:** Function-level graph. Automatic workflow discovery. User-defined override. LLM-polished reasons. Query support. Symbol-level deltas.
 
-### Phase 2: Discovery (Week 3-4)
-- [ ] Design and iterate on workflow discovery prompt
-- [ ] Extend Level 2 with secondary Sonnet call for cross-module flow detection
-- [ ] Add `rmap workflow discover` command
-- [ ] Implement user-override priority (manual config > auto-discovered)
-- [ ] Quality validation (compare discovered vs. expected workflows on known codebases)
+### Phase 2: Event-Driven Flows (Week 3)
+- [ ] Extend Babel parser to detect event emitter patterns
+- [ ] Add implicit edges to function-graph.json
+- [ ] Update discovery algorithm to use event edges
+- [ ] Validate on event-heavy codebases (Express, EventEmitter, RxJS)
 
-**Deliverable:** Automatic workflow discovery. Zero-config for new codebases.
+**Deliverable:** Dynamic flow detection. More complete graph.
 
-### Phase 3: Evolution (Week 5)
+### Phase 3: Evolution Tracking (Week 4)
 - [ ] Implement workflow versioning with git SHA tracking
-- [ ] Build workflow diff engine
+- [ ] Build symbol-level workflow diff engine
 - [ ] Add `rmap workflow diff` and `rmap workflow history` commands
 - [ ] Store historical snapshots in `.repo_map/history/`
 
-**Deliverable:** Workflow change tracking across commits.
+**Deliverable:** Workflow change tracking. PR-aware workflow diffs.
 
-### Phase 4: Deep Analysis (Week 6+)
-- [ ] Build AST-level call graph tracer for JS/TS
-- [ ] Event pattern detection (emit/on/subscribe)
-- [ ] Promise chain tracing across file boundaries
-- [ ] Graph clustering → automatic workflow extraction
-- [ ] Compare static workflows against call graph workflows
+### Phase 4: Cross-Language Support (Week 5-6)
+- [ ] Add tree-sitter-based parsers for Python, Go, Rust
+- [ ] Unified symbol extraction interface
+- [ ] Language-aware discovery (different import patterns per language)
 
-**Deliverable:** Directed dataflow graph. More accurate workflow discovery.
+**Deliverable:** Workflow discovery works across languages.
 
-### Phase 5: Runtime Validation (Future)
+### Phase 5: Risk & Complexity Metrics (Week 6-7)
+- [ ] Compute blast radius, coupling, depth per workflow
+- [ ] Git-based change frequency analysis
+- [ ] `rmap workflow risk` command
+- [ ] Risk-aware query results ("this workflow is high-risk")
+
+**Deliverable:** Risk metrics. Smarter agent context.
+
+### Phase 6: Runtime Validation (Future)
 - [ ] Instrumentation layer design
 - [ ] Trace collection during test runs
 - [ ] Trace → workflow matching algorithm
 - [ ] Coverage and mismatch reporting
-- [ ] CI integration
 
 **Deliverable:** Runtime-validated workflows with coverage metrics.
 
 ---
 
-## 7. Prompt Template (Phase 1 — Reason Extraction)
+## 9. Prompt Template (LLM Polish — Phase 1)
 
-For the Level Workflow prompt that generates the `reason` and `role` fields:
+For the Level Workflow prompt that generates names, descriptions, reasons, and roles:
 
 ```
-You are analyzing files that participate in a specific workflow within a codebase.
+You are polishing a discovered workflow within a codebase. The workflow was identified
+by tracing function-level import/export relationships through the code.
 
-WORKFLOW: {workflow.name}
-DESCRIPTION: {workflow.description}
-
-FILES IN THIS WORKFLOW:
+WORKFLOW ENTRY POINT: {entryPoint}
+FILES IN WORKFLOW (ordered by traversal):
 {for each file:}
-- {file.path}
-  Purpose: {existing level-3 annotation}
-  Exports: {exports from level-3}
-  Imports from other workflow files: {filtered from graph.json}
+  {file.path}
+  Exports used by this workflow: {file.keySymbols}
+  Existing annotation: {level3 annotation}
 
-DEPENDENCY CONTEXT (how these files connect):
-{extract from graph.json: edges between workflow files}
+FUNCTION-LEVEL EDGES (how files connect):
+{for each edge in the workflow:}
+  {sourceFile}.{symbol} → {targetFile} (imported as {importedSymbol})
+
+OPTIONAL — USER CONTEXT (if workflow was user-defined):
+  Name: {workflow.name}
+  Description: {workflow.description}
 
 TAG TAXONOMY (pick from these):
 {existing tag list}
 
-TASK: For each file, provide:
-1. "reason": 1-2 sentences explaining why THIS file is part of THIS specific workflow.
-   Focus on what role it plays in the flow, not just what the file does generally.
-2. "role": A short slug describing its function in this workflow (e.g. "state-management",
-   "message-passing", "entry-point", "validation", "routing").
-3. "tags": 1-3 tags from the taxonomy that describe this file's role in the workflow.
+TASK: Provide the following for this workflow:
+1. "name": A short, descriptive name for this workflow (2-5 words)
+2. "description": 1-2 sentences describing what this workflow accomplishes
+3. "tags": 2-4 tags from the taxonomy
+4. For EACH file in the workflow:
+   - "reason": 1-2 sentences explaining why THIS file is part of THIS specific workflow.
+     Focus on what role it plays in the flow, referencing the specific symbols it provides.
+   - "role": A short slug (e.g. "state-management", "message-passing", "entry-point")
+5. "prune": List any files that are utilities/shared infrastructure and don't truly
+   belong in this workflow (they'll be removed from the file list)
 
-Return ONLY valid JSON matching this exact schema:
+Return ONLY valid JSON:
 {
+  "name": "...",
+  "description": "...",
+  "tags": ["...", "..."],
   "files": [
-    {
-      "path": "...",
-      "reason": "...",
-      "role": "...",
-      "tags": ["...", "..."]
-    }
-  ]
+    { "path": "...", "reason": "...", "role": "..." }
+  ],
+  "prune": []
 }
 ```
 
 ---
 
-## 8. Open Questions
+## 10. Open Questions
 
-1. **Workflow ordering:** Should files in a workflow be ordered by execution sequence, dependency order, or alphabetical? Execution sequence is most useful but hardest to determine statically.
+1. **Workflow ordering:** Should files in a workflow be ordered by graph traversal order, dependency depth, or alphabetical? Graph traversal order represents execution flow but may not always match runtime reality.
 
-2. **Workflow overlap:** Should the same file appear in multiple workflows? Yes, but should we warn about heavy overlap (same file in >5 workflows)?
+2. **Utility file detection threshold:** What percentage of files importing a given file makes it a "utility"? Current proposal: 80%. This needs tuning per codebase size.
 
-3. **Workflow granularity:** What's the right size for a workflow? 3 files? 10 files? 30 files? Too small = noise. Too large = useless context. Suggestion: 3-15 files per workflow.
+3. **Merge threshold:** Jaccard similarity of 0.6 for merging overlapping paths — too aggressive? Too conservative? Needs empirical validation on real codebases.
 
-4. **Tag taxonomy extension:** Do we need new tags beyond the existing ~60? Candidates: `multi-agent`, `handoff`, `dataflow`, `event-driven`, `lifecycle`, `configuration`.
+4. **Type-only imports:** Should `import type { Foo }` edges be excluded from the function graph entirely? They don't represent runtime data flow, but they do represent conceptual coupling.
 
-5. **Breaking changes:** Does `workflows.json` need schema versioning from day one? Yes — set `schemaVersion: 1` and plan for migration paths.
+5. **Re-exports / barrel files:** Files that only re-export symbols (`export { foo } from './bar'`) create pass-through edges. Should these be collapsed in the graph?
 
-6. **Non-JS/TS repos:** How much of this works for Python, Go, Rust codebases? The config-driven approach (Phase 1) works universally. Discovery (Phase 2) depends on import extraction quality per language. Call graph tracing (Phase 4) needs per-language AST support.
+6. **Cycle handling:** If the function graph has cycles (A imports B, B imports A), the BFS needs cycle detection. How should cyclic workflows be represented?
+
+7. **Workflow size limits:** Min 3 files, max 15 files — are these the right bounds? Too small = noise. Too large = useless context.
+
+8. **Non-JS/TS repos:** The function-level graph is most accurate for JS/TS (Babel). How much of the discovery algorithm works with coarser regex-based symbol extraction for Python/Go/Rust?
 
 ---
 
-## 9. Summary
+## 11. Summary
 
-| Phase | What | Hard | Effort | Value |
+### The Core Idea
+
+**rmap already has function-level import/export data.** This is the key. By building a directed function-level graph and running graph algorithms (BFS traversal, path merging, noise filtering), we can discover workflows **deterministically** — without expensive LLM calls for discovery. The LLM is used only for **polish** (naming, reasoning, pruning), which is what it's best at.
+
+### Difficulty Comparison
+
+| Approach | Discovery Method | Cost | Accuracy | Reproducibility | Difficulty |
+|---|---|---|---|---|---|
+| **File-level + LLM** | LLM guesses from file tree | High (many Sonnet calls) | Medium | Low | Hard |
+| **Function-graph + LLM polish** | Graph algorithm discovers, LLM annotates | Low (one Haiku per workflow) | High | High | **Medium** |
+| **Full call graph tracing** | AST-level control flow analysis | Very High | Very High | High | Very Hard |
+| **Runtime validation** | Instrumented execution traces | Highest | Highest | Medium | Very Hard |
+
+**The function-graph approach hits the sweet spot.** It's accurate, cheap, reproducible, and implementable in weeks — not months.
+
+### Phase Roadmap
+
+| Phase | What | Difficulty | Effort | Value |
 |---|---|---|---|---|
-| **1** | User-defined workflows + auto reasons | Medium | 2-3 days | High — immediately useful |
-| **2** | Auto-discovery from code | Hard | 1-2 weeks | Very High — zero-config |
+| **1** | Function graph + discovery + LLM polish | Medium | 2-3 days | **Very High** — ships zero-config workflows |
+| **2** | Event-driven flow detection | Medium-Hard | 1 week | High — captures dynamic flows |
 | **3** | Evolution tracking | Medium | 1 week | High — PR review superpower |
-| **4** | Call graph tracing | Very Hard | 2-4 weeks | Transformative — accurate flows |
-| **5** | Runtime validation | Very Hard | 4+ weeks | Ultimate — verified workflows |
-
-**The path:** Phase 1 ships fast and provides immediate value. Phase 2 makes it zero-config. Phases 3-5 progressively make workflows more accurate and more powerful. Each phase is independently valuable — no single phase is a blocker for the others.
+| **4** | Cross-language support | Medium | 1-2 weeks | High — polyglot codebases |
+| **5** | Risk & complexity metrics | Easy-Medium | 1 week | Medium — smarter agent context |
+| **6** | Runtime validation | Very Hard | 4+ weeks | Transformative — verified workflows |
 
 ---
 
-*"This makes rmap the de-facto context engine for any agent-orchestrator codebase."*
+*"The function-level import/export graph is the skeleton. The LLM adds the flesh. Together, they make rmap the de-facto context engine for any codebase."*
