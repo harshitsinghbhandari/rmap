@@ -235,6 +235,65 @@ export interface TaskDelegation {
 }
 
 /**
+ * Information about a re-export statement
+ */
+export interface ReExportInfo {
+  /** The symbol being re-exported */
+  symbol: string;
+
+  /** The source module (e.g., './bar') */
+  source: string;
+}
+
+/**
+ * Symbol-level import information
+ */
+export interface SymbolImportInfo {
+  /** Import source path (e.g., './utils', 'react') */
+  source: string;
+
+  /** Import type */
+  type: 'static' | 'dynamic' | 'require' | 'type-only';
+
+  /** Whether this is a side-effect import (import './styles') */
+  isSideEffect: boolean;
+
+  /** Line number where import appears (for debugging) */
+  line?: number;
+
+  /** Named imports (e.g., import { foo, bar } from './mod') */
+  namedImports?: string[];
+
+  /** Default import local name (e.g., import Foo from './mod') */
+  defaultImport?: string;
+
+  /** Namespace import local name (e.g., import * as utils from './mod') */
+  namespaceImport?: string;
+}
+
+/**
+ * File-level import/export data for symbol-level analysis
+ *
+ * Enables function-level dependency graphs and workflow discovery
+ */
+export interface FileImportData {
+  /** Relative path from repo root */
+  path: string;
+
+  /** Symbol-level import information */
+  imports: SymbolImportInfo[];
+
+  /** Named exports (e.g., export function foo(), export const bar) */
+  namedExports: string[];
+
+  /** Whether file has a default export */
+  defaultExport: boolean;
+
+  /** Re-exports from other modules */
+  reExports: ReExportInfo[];
+}
+
+/**
  * Level 0 metadata (raw file information)
  *
  * Produced by the metadata harvester before LLM processing
@@ -260,6 +319,9 @@ export interface RawFileMetadata {
 
   /** Raw import/require/from statements extracted via regex */
   raw_imports: string[];
+
+  /** Symbol-level import/export data (when available) */
+  import_data?: FileImportData;
 }
 
 /**
