@@ -22,6 +22,7 @@ import {
 } from '../../src/core/providers/factory.js';
 
 import { ClaudeProvider } from '../../src/core/providers/claude-provider.js';
+import { GeminiProvider } from '../../src/core/providers/gemini-provider.js';
 
 // ============================================================================
 // LLMProviderCallOptions Interface Tests
@@ -128,11 +129,29 @@ test('createProvider creates ClaudeProvider for anthropic', () => {
   assert.strictEqual(provider.getName(), 'anthropic');
 });
 
-test('createProvider throws for unimplemented gemini provider', () => {
-  assert.throws(
-    () => createProvider('gemini'),
-    /Gemini provider not yet implemented/
-  );
+test('createProvider creates GeminiProvider for gemini when API key provided', () => {
+  const provider = createProvider('gemini', 'test-api-key');
+  assert.ok(provider instanceof GeminiProvider);
+  assert.strictEqual(provider.getName(), 'gemini');
+});
+
+test('createProvider throws for gemini without API key', () => {
+  // Temporarily remove env vars to test the error case
+  const originalGeminiKey = process.env.GEMINI_API_KEY;
+  const originalGoogleKey = process.env.GOOGLE_API_KEY;
+  delete process.env.GEMINI_API_KEY;
+  delete process.env.GOOGLE_API_KEY;
+
+  try {
+    assert.throws(
+      () => createProvider('gemini'),
+      /Gemini API key is required/
+    );
+  } finally {
+    // Restore env vars
+    if (originalGeminiKey) process.env.GEMINI_API_KEY = originalGeminiKey;
+    if (originalGoogleKey) process.env.GOOGLE_API_KEY = originalGoogleKey;
+  }
 });
 
 test('createProvider throws for unimplemented openai provider', () => {
@@ -146,8 +165,8 @@ test('isProviderImplemented returns true for anthropic', () => {
   assert.strictEqual(isProviderImplemented('anthropic'), true);
 });
 
-test('isProviderImplemented returns false for gemini', () => {
-  assert.strictEqual(isProviderImplemented('gemini'), false);
+test('isProviderImplemented returns true for gemini', () => {
+  assert.strictEqual(isProviderImplemented('gemini'), true);
 });
 
 test('isProviderImplemented returns false for openai', () => {
@@ -161,7 +180,7 @@ test('getSupportedProviderTypes returns all provider types', () => {
 
 test('getImplementedProviderTypes returns only implemented providers', () => {
   const types = getImplementedProviderTypes();
-  assert.deepStrictEqual(types, ['anthropic']);
+  assert.deepStrictEqual(types, ['anthropic', 'gemini']);
 });
 
 // ============================================================================
@@ -302,6 +321,113 @@ test('Providers can be swapped without changing call signature', () => {
 test('Provider names are consistent with ProviderType', () => {
   // Use ClaudeProvider directly to avoid triggering API key validation
   const provider = new ClaudeProvider();
+  const name = provider.getName();
+
+  // The name should match a valid ProviderType
+  const validTypes: ProviderType[] = ['anthropic', 'gemini', 'openai'];
+  assert.ok(validTypes.includes(name as ProviderType));
+});
+
+// ============================================================================
+// GeminiProvider Tests
+// ============================================================================
+
+test('GeminiProvider implements LLMProvider interface', () => {
+  const provider = new GeminiProvider('test-api-key');
+
+  // Check that all interface methods exist
+  assert.strictEqual(typeof provider.call, 'function');
+  assert.strictEqual(typeof provider.getName, 'function');
+  assert.strictEqual(typeof provider.getSupportedModels, 'function');
+});
+
+test('GeminiProvider.getName returns gemini', () => {
+  const provider = new GeminiProvider('test-api-key');
+  assert.strictEqual(provider.getName(), 'gemini');
+});
+
+test('GeminiProvider.getSupportedModels returns array of models', () => {
+  const provider = new GeminiProvider('test-api-key');
+  const models = provider.getSupportedModels();
+
+  assert.ok(Array.isArray(models));
+  assert.ok(models.length > 0);
+
+  // Check that expected models are included
+  assert.ok(models.includes('gemini-2.5-flash'));
+  assert.ok(models.includes('gemini-2.5-pro'));
+});
+
+test('GeminiProvider.getClient returns GoogleGenAI client', () => {
+  const provider = new GeminiProvider('test-api-key');
+  const client = provider.getClient();
+
+  // Check that it has the GoogleGenAI SDK shape
+  assert.ok(client !== null);
+  assert.ok(client.models !== undefined);
+});
+
+test('GeminiProvider throws without API key', () => {
+  // Temporarily remove env vars to test the error case
+  const originalGeminiKey = process.env.GEMINI_API_KEY;
+  const originalGoogleKey = process.env.GOOGLE_API_KEY;
+  delete process.env.GEMINI_API_KEY;
+  delete process.env.GOOGLE_API_KEY;
+
+  try {
+    assert.throws(
+      () => new GeminiProvider(),
+      /Gemini API key is required/
+    );
+  } finally {
+    // Restore env vars
+    if (originalGeminiKey) process.env.GEMINI_API_KEY = originalGeminiKey;
+    if (originalGoogleKey) process.env.GOOGLE_API_KEY = originalGoogleKey;
+  }
+});
+
+test('GeminiProvider uses GEMINI_API_KEY env var', () => {
+  const originalGeminiKey = process.env.GEMINI_API_KEY;
+  const originalGoogleKey = process.env.GOOGLE_API_KEY;
+  process.env.GEMINI_API_KEY = 'test-gemini-key';
+  delete process.env.GOOGLE_API_KEY;
+
+  try {
+    const provider = new GeminiProvider();
+    assert.strictEqual(provider.getName(), 'gemini');
+  } finally {
+    // Restore env vars
+    if (originalGeminiKey) {
+      process.env.GEMINI_API_KEY = originalGeminiKey;
+    } else {
+      delete process.env.GEMINI_API_KEY;
+    }
+    if (originalGoogleKey) process.env.GOOGLE_API_KEY = originalGoogleKey;
+  }
+});
+
+test('GeminiProvider uses GOOGLE_API_KEY env var as fallback', () => {
+  const originalGeminiKey = process.env.GEMINI_API_KEY;
+  const originalGoogleKey = process.env.GOOGLE_API_KEY;
+  delete process.env.GEMINI_API_KEY;
+  process.env.GOOGLE_API_KEY = 'test-google-key';
+
+  try {
+    const provider = new GeminiProvider();
+    assert.strictEqual(provider.getName(), 'gemini');
+  } finally {
+    // Restore env vars
+    if (originalGeminiKey) process.env.GEMINI_API_KEY = originalGeminiKey;
+    if (originalGoogleKey) {
+      process.env.GOOGLE_API_KEY = originalGoogleKey;
+    } else {
+      delete process.env.GOOGLE_API_KEY;
+    }
+  }
+});
+
+test('GeminiProvider name matches ProviderType', () => {
+  const provider = new GeminiProvider('test-api-key');
   const name = provider.getName();
 
   // The name should match a valid ProviderType

@@ -1,16 +1,17 @@
 /**
  * Level 1 Structure Detector
  *
- * Uses Claude Haiku (small/fast LLM) to identify repository structure and conventions.
+ * Uses a fast LLM (Claude Haiku or Gemini Flash) to identify repository structure and conventions.
  * Takes Level 0 metadata and produces high-level understanding of the codebase.
+ * The LLM provider is configurable via rmap.yaml or environment variables.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import type { Level0Output, Level1Output, Module } from '../../core/types.js';
 import { validateLevel1Output, ValidationError } from './validation.js';
-import { DETECTION_MODEL, TOKEN } from '../../config/index.js';
+import { TOKEN, LLM_PROVIDER } from '../../config/index.js';
+import { getDetectionModel } from '../../config/models.js';
 import { LLMClient, MetricsCollector, ConfigError } from '../../core/index.js';
 
 /**
@@ -140,26 +141,64 @@ Respond with valid JSON in this exact structure:
 
 
 /**
+ * Extract JSON from LLM response text
+ * Handles various formats: raw JSON, markdown code blocks, mixed text
+ */
+function extractJson(responseText: string): string {
+  let text = responseText.trim();
+
+  // Try to extract JSON from markdown code blocks
+  // Handle ```json ... ``` or ``` ... ```
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    text = codeBlockMatch[1].trim();
+  }
+
+  // If still not starting with {, try to find JSON object in text
+  if (!text.startsWith('{')) {
+    const jsonStart = text.indexOf('{');
+    const jsonEnd = text.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      text = text.slice(jsonStart, jsonEnd + 1);
+    }
+  }
+
+  return text;
+}
+
+/**
  * Parse and validate JSON response from LLM
  */
 function parseAndValidateResponse(responseText: string): Level1Output {
-  // Remove markdown code blocks if present
-  let jsonText = responseText.trim();
-
-  if (jsonText.startsWith('```json')) {
-    jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-  } else if (jsonText.startsWith('```')) {
-    jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-  }
+  const jsonText = extractJson(responseText);
 
   // Parse JSON
   let parsed: unknown;
   try {
     parsed = JSON.parse(jsonText);
   } catch (error) {
-    throw new ValidationError(
-      `Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}`
-    );
+    // Try to fix common JSON issues from LLMs
+    try {
+      // Replace unescaped newlines in strings with \n
+      // This regex finds strings and escapes newlines within them
+      const fixedJson = jsonText
+        .replace(/:\s*"([^"]*?)"/g, (match, content) => {
+          // Escape actual newlines within string values
+          const escaped = content
+            .replace(/\n/g, '\\n')
+            .replace(/\r/g, '\\r')
+            .replace(/\t/g, '\\t');
+          return `: "${escaped}"`;
+        });
+      parsed = JSON.parse(fixedJson);
+    } catch {
+      // If still failing, throw original error with context
+      const preview = jsonText.slice(0, 200);
+      throw new ValidationError(
+        `Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}\n` +
+        `Response preview: ${preview}...`
+      );
+    }
   }
 
   // Validate structure
@@ -167,7 +206,7 @@ function parseAndValidateResponse(responseText: string): Level1Output {
 }
 
 /**
- * Detect repository structure using Claude Haiku
+ * Detect repository structure using the configured LLM provider
  *
  * @param level0 - Output from Level 0 metadata harvester
  * @param repoRoot - Absolute path to repository root
@@ -179,30 +218,27 @@ export async function detectStructure(
   repoRoot: string,
   metrics?: MetricsCollector
 ): Promise<Level1Output> {
-  // Check for API key
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new ConfigError('ANTHROPIC_API_KEY environment variable is not set');
-  }
+  // Get provider configuration
+  const providerType = LLM_PROVIDER.LEVEL1;
+  const model = getDetectionModel(providerType);
 
-  // Initialize Anthropic client
-  const anthropicClient = new Anthropic({ apiKey });
-  const llmClient = new LLMClient(anthropicClient);
+  // Initialize LLM client with configured provider
+  const llmClient = LLMClient.withProvider(providerType);
 
   console.log('Starting Level 1 structure detection...');
-  console.log('Using Claude Haiku for fast analysis');
+  console.log(`Using ${providerType} provider with ${model}`);
 
   // Build prompt
   const prompt = buildPrompt(level0, repoRoot);
 
-  // Call Claude with retry logic
+  // Call LLM with retry logic
   const response = await llmClient.sendMessage(prompt, {
-    model: DETECTION_MODEL,
+    model,
     maxTokens: TOKEN.MAX_TOKENS_LEVEL1,
     logContext: {
       level: 'level1',
       purpose: 'Repository structure detection - identifies repo name, purpose, stack, languages, entry points, modules, and conventions',
-      model: DETECTION_MODEL,
+      model,
     },
   });
 

@@ -1,24 +1,49 @@
 /**
  * Centralized Model Configuration
  *
- * Defines which Claude models to use for different tasks across the rmap pipeline.
+ * Defines which LLM models to use for different tasks across the rmap pipeline.
+ * Supports multiple providers (Anthropic, Gemini, OpenAI).
  */
 
+import type { ProviderType } from '../core/providers/types.js';
+
 /**
- * Available Claude models
+ * Available Claude models (Anthropic)
  */
-export const MODELS = {
+export const CLAUDE_MODELS = {
   HAIKU: 'claude-haiku-4-5-20251001',
   SONNET: 'claude-sonnet-4-5-20250929',
 } as const;
 
 /**
- * Model selection based on agent size for Level 3 annotations
+ * Available Gemini models (Google)
+ */
+export const GEMINI_MODELS = {
+  FLASH: 'gemini-2.5-flash',
+  PRO: 'gemini-2.5-pro',
+} as const;
+
+/**
+ * Legacy alias for backward compatibility
+ */
+export const MODELS = CLAUDE_MODELS;
+
+/**
+ * Model selection based on agent size for Level 3 annotations (Claude)
  */
 export const ANNOTATION_MODEL_MAP = {
   small: MODELS.HAIKU,
   medium: MODELS.SONNET,
   large: MODELS.SONNET,
+} as const;
+
+/**
+ * Model selection based on agent size for Level 3 annotations (Gemini)
+ */
+export const GEMINI_ANNOTATION_MODEL_MAP = {
+  small: GEMINI_MODELS.FLASH,
+  medium: GEMINI_MODELS.PRO,
+  large: GEMINI_MODELS.PRO,
 } as const;
 
 /**
@@ -30,6 +55,64 @@ export const DIVISION_MODEL = MODELS.SONNET;
  * Model for Level 1 repository detection
  */
 export const DETECTION_MODEL = MODELS.HAIKU;
+
+/**
+ * Get the appropriate detection model (Level 1) for a provider
+ *
+ * @param provider - The LLM provider type
+ * @returns Model identifier string
+ */
+export function getDetectionModel(provider: ProviderType): string {
+  switch (provider) {
+    case 'anthropic':
+      return CLAUDE_MODELS.HAIKU;
+    case 'gemini':
+      return GEMINI_MODELS.FLASH;
+    case 'openai':
+      throw new Error('OpenAI provider not yet implemented');
+    default:
+      return CLAUDE_MODELS.HAIKU;
+  }
+}
+
+/**
+ * Get the appropriate division model (Level 2) for a provider
+ *
+ * @param provider - The LLM provider type
+ * @returns Model identifier string
+ */
+export function getDivisionModel(provider: ProviderType): string {
+  switch (provider) {
+    case 'anthropic':
+      return CLAUDE_MODELS.SONNET;
+    case 'gemini':
+      return GEMINI_MODELS.PRO;
+    case 'openai':
+      throw new Error('OpenAI provider not yet implemented');
+    default:
+      return CLAUDE_MODELS.SONNET;
+  }
+}
+
+/**
+ * Get the appropriate annotation model (Level 3) for a provider and agent size
+ *
+ * @param provider - The LLM provider type
+ * @param size - Agent size (small, medium, large)
+ * @returns Model identifier string
+ */
+export function getAnnotationModel(provider: ProviderType, size: AgentSize): string {
+  switch (provider) {
+    case 'anthropic':
+      return ANNOTATION_MODEL_MAP[size];
+    case 'gemini':
+      return GEMINI_ANNOTATION_MODEL_MAP[size];
+    case 'openai':
+      throw new Error('OpenAI provider not yet implemented');
+    default:
+      return ANNOTATION_MODEL_MAP[size];
+  }
+}
 
 /**
  * Retry and timeout configuration for API calls

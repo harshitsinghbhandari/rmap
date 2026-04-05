@@ -7,14 +7,32 @@
 // Export all model constants and types
 export {
   MODELS,
+  CLAUDE_MODELS,
+  GEMINI_MODELS,
   ANNOTATION_MODEL_MAP,
+  GEMINI_ANNOTATION_MODEL_MAP,
   DIVISION_MODEL,
   DETECTION_MODEL,
   RETRY_CONFIG,
   CONCURRENCY_CONFIG,
+  // Provider-aware model selection functions
+  getDetectionModel,
+  getDivisionModel,
+  getAnnotationModel,
 } from './models.js';
 
 export type { AgentSize } from './models.js';
+
+// Export YAML config utilities
+export {
+  loadYamlConfig,
+  findConfigFile,
+  getYamlLLMProvider,
+  clearConfigCache,
+  getLoadedConfigPath,
+} from './yaml-config.js';
+
+export type { YamlConfig, YamlLLMConfig } from './yaml-config.js';
 
 // Export default configuration constants (no environment overrides)
 export {
