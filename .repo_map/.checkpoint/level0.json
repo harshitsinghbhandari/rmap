@@ -1,0 +1,1941 @@
+{
+  "files": [
+    {
+      "name": ".env",
+      "path": ".env",
+      "extension": "",
+      "size_bytes": 126,
+      "line_count": 1,
+      "raw_imports": []
+    },
+    {
+      "name": ".gitignore",
+      "path": ".gitignore",
+      "extension": "",
+      "size_bytes": 398,
+      "line_count": 44,
+      "raw_imports": []
+    },
+    {
+      "name": ".rmapignore",
+      "path": ".rmapignore",
+      "extension": "",
+      "size_bytes": 528,
+      "line_count": 58,
+      "raw_imports": []
+    },
+    {
+      "name": "CHANGELOG.md",
+      "path": "CHANGELOG.md",
+      "extension": ".md",
+      "size_bytes": 6849,
+      "line_count": 188,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "CONTRIBUTING.md",
+      "path": "CONTRIBUTING.md",
+      "extension": ".md",
+      "size_bytes": 13670,
+      "line_count": 614,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "DEVTEST.md",
+      "path": "DEVTEST.md",
+      "extension": ".md",
+      "size_bytes": 2310,
+      "line_count": 138,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "LICENSE",
+      "path": "LICENSE",
+      "extension": "",
+      "size_bytes": 1074,
+      "line_count": 22,
+      "raw_imports": []
+    },
+    {
+      "name": "README.md",
+      "path": "README.md",
+      "extension": ".md",
+      "size_bytes": 13041,
+      "line_count": 488,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "agent-orchestrator.yaml",
+      "path": "agent-orchestrator.yaml",
+      "extension": ".yaml",
+      "size_bytes": 735,
+      "line_count": 28,
+      "language": "YAML",
+      "raw_imports": []
+    },
+    {
+      "name": "ARCHITECTURE.md",
+      "path": "docs/ARCHITECTURE.md",
+      "extension": ".md",
+      "size_bytes": 22000,
+      "line_count": 864,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "CLI.md",
+      "path": "docs/CLI.md",
+      "extension": ".md",
+      "size_bytes": 15991,
+      "line_count": 677,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "CONFIGURATION.md",
+      "path": "docs/CONFIGURATION.md",
+      "extension": ".md",
+      "size_bytes": 19090,
+      "line_count": 941,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "VALIDATION.md",
+      "path": "docs/VALIDATION.md",
+      "extension": ".md",
+      "size_bytes": 3160,
+      "line_count": 130,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "idea.md",
+      "path": "idea.md",
+      "extension": ".md",
+      "size_bytes": 23169,
+      "line_count": 626,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "package.json",
+      "path": "package.json",
+      "extension": ".json",
+      "size_bytes": 2142,
+      "line_count": 82,
+      "language": "JSON",
+      "raw_imports": []
+    },
+    {
+      "name": "plan-ahead.md",
+      "path": "plan-ahead.md",
+      "extension": ".md",
+      "size_bytes": 22893,
+      "line_count": 540,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "setup.sh",
+      "path": "scripts/setup.sh",
+      "extension": ".sh",
+      "size_bytes": 10015,
+      "line_count": 403,
+      "language": "Shell",
+      "raw_imports": []
+    },
+    {
+      "name": "skills-lock.json",
+      "path": "skills-lock.json",
+      "extension": ".json",
+      "size_bytes": 886,
+      "line_count": 26,
+      "language": "JSON",
+      "raw_imports": []
+    },
+    {
+      "name": "get-context.ts",
+      "path": "src/cli/commands/get-context.ts",
+      "extension": ".ts",
+      "size_bytes": 3252,
+      "line_count": 114,
+      "language": "TypeScript",
+      "raw_imports": [
+        "commander",
+        "../../query/index.js",
+        "../display.js",
+        "../types.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/cli/commands/index.ts",
+      "extension": ".ts",
+      "size_bytes": 191,
+      "line_count": 9,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./map.js",
+        "./get-context.js"
+      ]
+    },
+    {
+      "name": "map.ts",
+      "path": "src/cli/commands/map.ts",
+      "extension": ".ts",
+      "size_bytes": 12468,
+      "line_count": 440,
+      "language": "TypeScript",
+      "raw_imports": [
+        "commander",
+        "node:path",
+        "../../coordinator/index.js",
+        "../../coordinator/assembler.js",
+        "../../coordinator/delta.js",
+        "../../coordinator/versioning.js",
+        "../../coordinator/checkpoint.js",
+        "../ui-constants.js",
+        "../display.js",
+        "../types.js"
+      ]
+    },
+    {
+      "name": "display.ts",
+      "path": "src/cli/display.ts",
+      "extension": ".ts",
+      "size_bytes": 8521,
+      "line_count": 284,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./ui-constants.js",
+        "./types.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/cli/index.ts",
+      "extension": ".ts",
+      "size_bytes": 2097,
+      "line_count": 69,
+      "language": "TypeScript",
+      "raw_imports": [
+        "commander",
+        "../version.js",
+        "./commands/index.js",
+        "../core/prompt-logger.js"
+      ]
+    },
+    {
+      "name": "progress-ui.ts",
+      "path": "src/cli/progress-ui.ts",
+      "extension": ".ts",
+      "size_bytes": 12644,
+      "line_count": 493,
+      "language": "TypeScript",
+      "raw_imports": [
+        "@clack/prompts",
+        "cli-progress",
+        "log-update",
+        "./ui-constants.js"
+      ]
+    },
+    {
+      "name": "types.ts",
+      "path": "src/cli/types.ts",
+      "extension": ".ts",
+      "size_bytes": 2632,
+      "line_count": 124,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "ui-constants.ts",
+      "path": "src/cli/ui-constants.ts",
+      "extension": ".ts",
+      "size_bytes": 2822,
+      "line_count": 149,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "defaults.ts",
+      "path": "src/config/defaults.ts",
+      "extension": ".ts",
+      "size_bytes": 8680,
+      "line_count": 387,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "env.ts",
+      "path": "src/config/env.ts",
+      "extension": ".ts",
+      "size_bytes": 12923,
+      "line_count": 501,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./defaults.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/config/index.ts",
+      "extension": ".ts",
+      "size_bytes": 2050,
+      "line_count": 84,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./models.js",
+        "./defaults.js",
+        "./rmapignore-defaults.js",
+        "./env.js",
+        "../core/validation.js"
+      ]
+    },
+    {
+      "name": "models.ts",
+      "path": "src/config/models.ts",
+      "extension": ".ts",
+      "size_bytes": 3206,
+      "line_count": 125,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "rmapignore-defaults.ts",
+      "path": "src/config/rmapignore-defaults.ts",
+      "extension": ".ts",
+      "size_bytes": 913,
+      "line_count": 72,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "assembler.ts",
+      "path": "src/coordinator/assembler.ts",
+      "extension": ".ts",
+      "size_bytes": 6281,
+      "line_count": 243,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path",
+        "../core/types.js",
+        "../core/constants.js"
+      ]
+    },
+    {
+      "name": "checkpoint-orchestrator.ts",
+      "path": "src/coordinator/checkpoint-orchestrator.ts",
+      "extension": ".ts",
+      "size_bytes": 10336,
+      "line_count": 372,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path",
+        "../core/types.js",
+        "../core/constants.js",
+        "./checkpoint.js",
+        "./incremental-annotations.js"
+      ]
+    },
+    {
+      "name": "checkpoint.ts",
+      "path": "src/coordinator/checkpoint.ts",
+      "extension": ".ts",
+      "size_bytes": 10344,
+      "line_count": 357,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path",
+        "../core/types.js",
+        "../core/constants.js",
+        "../core/index.js"
+      ]
+    },
+    {
+      "name": "delta-update.ts",
+      "path": "src/coordinator/delta-update.ts",
+      "extension": ".ts",
+      "size_bytes": 6081,
+      "line_count": 208,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../core/types.js",
+        "../levels/level3/index.js",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "name": "delta.ts",
+      "path": "src/coordinator/delta.ts",
+      "extension": ".ts",
+      "size_bytes": 8927,
+      "line_count": 327,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path",
+        "../core/types.js",
+        "../core/index.js",
+        "../config/index.js"
+      ]
+    },
+    {
+      "name": "graph-repair.ts",
+      "path": "src/coordinator/graph-repair.ts",
+      "extension": ".ts",
+      "size_bytes": 7302,
+      "line_count": 266,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../core/types.js",
+        "../core/constants.js",
+        "./graph.js"
+      ]
+    },
+    {
+      "name": "graph.ts",
+      "path": "src/coordinator/graph.ts",
+      "extension": ".ts",
+      "size_bytes": 4196,
+      "line_count": 153,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../core/types.js"
+      ]
+    },
+    {
+      "name": "incremental-annotations.ts",
+      "path": "src/coordinator/incremental-annotations.ts",
+      "extension": ".ts",
+      "size_bytes": 4552,
+      "line_count": 162,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs/promises",
+        "node:path",
+        "../core/types.js",
+        "../core/constants.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/coordinator/index.ts",
+      "extension": ".ts",
+      "size_bytes": 3272,
+      "line_count": 114,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./pipeline.js",
+        "./assembler.js",
+        "./graph.js",
+        "./progress.js",
+        "./checkpoint-orchestrator.js",
+        "./shutdown-handler.js"
+      ]
+    },
+    {
+      "name": "pipeline.ts",
+      "path": "src/coordinator/pipeline.ts",
+      "extension": ".ts",
+      "size_bytes": 17356,
+      "line_count": 497,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:child_process",
+        "../core/types.js",
+        "../core/constants.js",
+        "../levels/level0/index.js",
+        "../levels/level1/index.js",
+        "../levels/level2/index.js",
+        "../levels/level3/index.js",
+        "../levels/level4/index.js",
+        "./graph.js",
+        "./progress.js",
+        "./assembler.js",
+        "./checkpoint-orchestrator.js",
+        "./shutdown-handler.js",
+        "../core/index.js",
+        "../cli/progress-ui.js",
+        "../config/index.js",
+        "../cli/ui-constants.js"
+      ]
+    },
+    {
+      "name": "progress.ts",
+      "path": "src/coordinator/progress.ts",
+      "extension": ".ts",
+      "size_bytes": 3103,
+      "line_count": 139,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../cli/progress-ui.js"
+      ]
+    },
+    {
+      "name": "shutdown-handler.ts",
+      "path": "src/coordinator/shutdown-handler.ts",
+      "extension": ".ts",
+      "size_bytes": 2476,
+      "line_count": 92,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "versioning.ts",
+      "path": "src/coordinator/versioning.ts",
+      "extension": ".ts",
+      "size_bytes": 7852,
+      "line_count": 298,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../core/types.js",
+        "../core/constants.js"
+      ]
+    },
+    {
+      "name": "concurrency.ts",
+      "path": "src/core/concurrency.ts",
+      "extension": ".ts",
+      "size_bytes": 5612,
+      "line_count": 189,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../config/index.js"
+      ]
+    },
+    {
+      "name": "constants.ts",
+      "path": "src/core/constants.ts",
+      "extension": ".ts",
+      "size_bytes": 8002,
+      "line_count": 350,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "errors.ts",
+      "path": "src/core/errors.ts",
+      "extension": ".ts",
+      "size_bytes": 4883,
+      "line_count": 213,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "git-utils.ts",
+      "path": "src/core/git-utils.ts",
+      "extension": ".ts",
+      "size_bytes": 5988,
+      "line_count": 204,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:child_process"
+      ]
+    },
+    {
+      "name": "ignore-patterns.ts",
+      "path": "src/core/ignore-patterns.ts",
+      "extension": ".ts",
+      "size_bytes": 7699,
+      "line_count": 299,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path",
+        "ignore",
+        "../config/rmapignore-defaults.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/core/index.ts",
+      "extension": ".ts",
+      "size_bytes": 2743,
+      "line_count": 120,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./types.js",
+        "./constants.js",
+        "./git-utils.js",
+        "./concurrency.js",
+        "./llm-client.js",
+        "./rate-limiter.js",
+        "../config/models.js",
+        "./metrics.js",
+        "./metrics-logger.js",
+        "./errors.js",
+        "./validation.js",
+        "./prompt-logger.js",
+        "./ignore-patterns.js"
+      ]
+    },
+    {
+      "name": "llm-client.ts",
+      "path": "src/core/llm-client.ts",
+      "extension": ".ts",
+      "size_bytes": 10307,
+      "line_count": 333,
+      "language": "TypeScript",
+      "raw_imports": [
+        "@anthropic-ai/sdk",
+        "../config/models.js",
+        "../config/index.js",
+        "./rate-limiter.js",
+        "./prompt-logger.js"
+      ]
+    },
+    {
+      "name": "metrics-logger.ts",
+      "path": "src/core/metrics-logger.ts",
+      "extension": ".ts",
+      "size_bytes": 4778,
+      "line_count": 146,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path",
+        "./metrics.js"
+      ]
+    },
+    {
+      "name": "metrics.ts",
+      "path": "src/core/metrics.ts",
+      "extension": ".ts",
+      "size_bytes": 7105,
+      "line_count": 265,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "prompt-logger.ts",
+      "path": "src/core/prompt-logger.ts",
+      "extension": ".ts",
+      "size_bytes": 4899,
+      "line_count": 185,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "name": "rate-limiter.ts",
+      "path": "src/core/rate-limiter.ts",
+      "extension": ".ts",
+      "size_bytes": 7786,
+      "line_count": 262,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../config/index.js"
+      ]
+    },
+    {
+      "name": "types.ts",
+      "path": "src/core/types.ts",
+      "extension": ".ts",
+      "size_bytes": 8769,
+      "line_count": 374,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./constants.js"
+      ]
+    },
+    {
+      "name": "validation.ts",
+      "path": "src/core/validation.ts",
+      "extension": ".ts",
+      "size_bytes": 13961,
+      "line_count": 485,
+      "language": "TypeScript",
+      "raw_imports": [
+        "zod",
+        "./constants.js",
+        "../config/defaults.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/index.ts",
+      "extension": ".ts",
+      "size_bytes": 399,
+      "line_count": 15,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./version.js",
+        "./core/index.js"
+      ]
+    },
+    {
+      "name": "harvester.ts",
+      "path": "src/levels/level0/harvester.ts",
+      "extension": ".ts",
+      "size_bytes": 10609,
+      "line_count": 435,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path",
+        "node:child_process",
+        "ignore",
+        "../../core/types.js",
+        "../../config/index.js",
+        "./parsers/index.js",
+        "../../core/ignore-patterns.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/levels/level0/index.ts",
+      "extension": ".ts",
+      "size_bytes": 226,
+      "line_count": 9,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./harvester.js"
+      ]
+    },
+    {
+      "name": "README.md",
+      "path": "src/levels/level0/parsers/README.md",
+      "extension": ".md",
+      "size_bytes": 9925,
+      "line_count": 393,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "fallback.ts",
+      "path": "src/levels/level0/parsers/fallback.ts",
+      "extension": ".ts",
+      "size_bytes": 3448,
+      "line_count": 117,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./types.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/levels/level0/parsers/index.ts",
+      "extension": ".ts",
+      "size_bytes": 2071,
+      "line_count": 71,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./types.js",
+        "./javascript.js",
+        "./fallback.js"
+      ]
+    },
+    {
+      "name": "javascript.ts",
+      "path": "src/levels/level0/parsers/javascript.ts",
+      "extension": ".ts",
+      "size_bytes": 4121,
+      "line_count": 135,
+      "language": "TypeScript",
+      "raw_imports": [
+        "@babel/parser",
+        "@babel/traverse",
+        "@babel/types",
+        "./types.js"
+      ]
+    },
+    {
+      "name": "types.ts",
+      "path": "src/levels/level0/parsers/types.ts",
+      "extension": ".ts",
+      "size_bytes": 1017,
+      "line_count": 48,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "detector.ts",
+      "path": "src/levels/level1/detector.ts",
+      "extension": ".ts",
+      "size_bytes": 7905,
+      "line_count": 229,
+      "language": "TypeScript",
+      "raw_imports": [
+        "@anthropic-ai/sdk",
+        "node:path",
+        "node:fs",
+        "../../core/types.js",
+        "./validation.js",
+        "../../config/index.js",
+        "../../core/index.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/levels/level1/index.ts",
+      "extension": ".ts",
+      "size_bytes": 229,
+      "line_count": 9,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./detector.js",
+        "./validation.js"
+      ]
+    },
+    {
+      "name": "validation.ts",
+      "path": "src/levels/level1/validation.ts",
+      "extension": ".ts",
+      "size_bytes": 3118,
+      "line_count": 113,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/types.js",
+        "../../core/index.js"
+      ]
+    },
+    {
+      "name": "divider.ts",
+      "path": "src/levels/level2/divider.ts",
+      "extension": ".ts",
+      "size_bytes": 6642,
+      "line_count": 208,
+      "language": "TypeScript",
+      "raw_imports": [
+        "@anthropic-ai/sdk",
+        "../../core/types.js",
+        "./prompt.js",
+        "../../config/index.js",
+        "../../core/index.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/levels/level2/index.ts",
+      "extension": ".ts",
+      "size_bytes": 330,
+      "line_count": 14,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./divider.js",
+        "./validation.js",
+        "./prompt.js"
+      ]
+    },
+    {
+      "name": "prompt.ts",
+      "path": "src/levels/level2/prompt.ts",
+      "extension": ".ts",
+      "size_bytes": 5096,
+      "line_count": 165,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/types.js",
+        "../../config/index.js"
+      ]
+    },
+    {
+      "name": "validation.ts",
+      "path": "src/levels/level2/validation.ts",
+      "extension": ".ts",
+      "size_bytes": 5588,
+      "line_count": 172,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/types.js",
+        "../../config/index.js",
+        "../../core/index.js"
+      ]
+    },
+    {
+      "name": "annotator.ts",
+      "path": "src/levels/level3/annotator.ts",
+      "extension": ".ts",
+      "size_bytes": 15896,
+      "line_count": 488,
+      "language": "TypeScript",
+      "raw_imports": [
+        "@anthropic-ai/sdk",
+        "node:fs",
+        "node:path",
+        "../../core/types.js",
+        "../../core/concurrency.js",
+        "./prompt.js",
+        "./parser.js",
+        "./tag-validator.js",
+        "../../config/index.js",
+        "../../core/index.js",
+        "../../cli/progress-ui.js",
+        "../../cli/ui-constants.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/levels/level3/index.ts",
+      "extension": ".ts",
+      "size_bytes": 455,
+      "line_count": 11,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./annotator.js",
+        "./prompt.js",
+        "./parser.js"
+      ]
+    },
+    {
+      "name": "parser.ts",
+      "path": "src/levels/level3/parser.ts",
+      "extension": ".ts",
+      "size_bytes": 9550,
+      "line_count": 317,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/types.js",
+        "../../core/constants.js",
+        "../../config/index.js",
+        "node:path",
+        "./tag-validator.js"
+      ]
+    },
+    {
+      "name": "prompt.ts",
+      "path": "src/levels/level3/prompt.ts",
+      "extension": ".ts",
+      "size_bytes": 6224,
+      "line_count": 174,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/types.js",
+        "../../core/constants.js",
+        "../../config/index.js",
+        "./tag-validator.js"
+      ]
+    },
+    {
+      "name": "tag-validator.ts",
+      "path": "src/levels/level3/tag-validator.ts",
+      "extension": ".ts",
+      "size_bytes": 10466,
+      "line_count": 332,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/constants.js",
+        "../../config/index.js",
+        "node:path"
+      ]
+    },
+    {
+      "name": "autofix.ts",
+      "path": "src/levels/level4/autofix.ts",
+      "extension": ".ts",
+      "size_bytes": 6796,
+      "line_count": 258,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/types.js",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "name": "checks.ts",
+      "path": "src/levels/level4/checks.ts",
+      "extension": ".ts",
+      "size_bytes": 6175,
+      "line_count": 223,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/types.js",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/levels/level4/index.ts",
+      "extension": ".ts",
+      "size_bytes": 827,
+      "line_count": 43,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./validator.js",
+        "./checks.js",
+        "./orphans.js",
+        "./autofix.js"
+      ]
+    },
+    {
+      "name": "orphans.ts",
+      "path": "src/levels/level4/orphans.ts",
+      "extension": ".ts",
+      "size_bytes": 4911,
+      "line_count": 179,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/types.js"
+      ]
+    },
+    {
+      "name": "validator.ts",
+      "path": "src/levels/level4/validator.ts",
+      "extension": ".ts",
+      "size_bytes": 4656,
+      "line_count": 170,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/types.js",
+        "./checks.js",
+        "./orphans.js",
+        "./autofix.js"
+      ]
+    },
+    {
+      "name": ".gitkeep",
+      "path": "src/query/.gitkeep",
+      "extension": "",
+      "size_bytes": 0,
+      "line_count": 1,
+      "raw_imports": []
+    },
+    {
+      "name": "engine.ts",
+      "path": "src/query/engine.ts",
+      "extension": ".ts",
+      "size_bytes": 10145,
+      "line_count": 356,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs/promises",
+        "node:path",
+        "../core/types.js",
+        "../core/index.js",
+        "./filter.js",
+        "./formatter.js",
+        "./ranking.js",
+        "./schemas.js"
+      ]
+    },
+    {
+      "name": "filter.ts",
+      "path": "src/query/filter.ts",
+      "extension": ".ts",
+      "size_bytes": 4011,
+      "line_count": 144,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../core/constants.js",
+        "../core/types.js"
+      ]
+    },
+    {
+      "name": "formatter.ts",
+      "path": "src/query/formatter.ts",
+      "extension": ".ts",
+      "size_bytes": 15369,
+      "line_count": 545,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../core/types.js",
+        "./ranking.js",
+        "../config/index.js",
+        "../core/constants.js"
+      ]
+    },
+    {
+      "name": "index.ts",
+      "path": "src/query/index.ts",
+      "extension": ".ts",
+      "size_bytes": 835,
+      "line_count": 37,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./engine.js",
+        "./filter.js",
+        "./ranking.js",
+        "./formatter.js"
+      ]
+    },
+    {
+      "name": "ranking.ts",
+      "path": "src/query/ranking.ts",
+      "extension": ".ts",
+      "size_bytes": 5728,
+      "line_count": 217,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../core/types.js",
+        "../config/index.js"
+      ]
+    },
+    {
+      "name": "schemas.ts",
+      "path": "src/query/schemas.ts",
+      "extension": ".ts",
+      "size_bytes": 2740,
+      "line_count": 103,
+      "language": "TypeScript",
+      "raw_imports": [
+        "zod",
+        "../core/constants.js"
+      ]
+    },
+    {
+      "name": "version.ts",
+      "path": "src/version.ts",
+      "extension": ".ts",
+      "size_bytes": 59,
+      "line_count": 5,
+      "language": "TypeScript",
+      "raw_imports": []
+    },
+    {
+      "name": "commands.test.ts",
+      "path": "tests/cli/commands.test.ts",
+      "extension": ".ts",
+      "size_bytes": 7036,
+      "line_count": 208,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/cli/commands/map.js",
+        "../../src/cli/commands/get-context.js"
+      ]
+    },
+    {
+      "name": "compute.test.ts",
+      "path": "tests/cli/compute.test.ts",
+      "extension": ".ts",
+      "size_bytes": 12209,
+      "line_count": 423,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/cli/types.js"
+      ]
+    },
+    {
+      "name": "progress-ui.test.ts",
+      "path": "tests/cli/progress-ui.test.ts",
+      "extension": ".ts",
+      "size_bytes": 5741,
+      "line_count": 200,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/cli/progress-ui.js"
+      ]
+    },
+    {
+      "name": "defaults.test.ts",
+      "path": "tests/config/defaults.test.ts",
+      "extension": ".ts",
+      "size_bytes": 11232,
+      "line_count": 273,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/config/defaults.js"
+      ]
+    },
+    {
+      "name": "env.test.ts",
+      "path": "tests/config/env.test.ts",
+      "extension": ".ts",
+      "size_bytes": 10192,
+      "line_count": 277,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/config/env.js",
+        "../../src/config/defaults.js"
+      ]
+    },
+    {
+      "name": "index.test.ts",
+      "path": "tests/config/index.test.ts",
+      "extension": ".ts",
+      "size_bytes": 8641,
+      "line_count": 266,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/config/index.js"
+      ]
+    },
+    {
+      "name": "models.test.ts",
+      "path": "tests/config/models.test.ts",
+      "extension": ".ts",
+      "size_bytes": 7016,
+      "line_count": 209,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/config/models.js"
+      ]
+    },
+    {
+      "name": "rmapignore-defaults.test.ts",
+      "path": "tests/config/rmapignore-defaults.test.ts",
+      "extension": ".ts",
+      "size_bytes": 7125,
+      "line_count": 207,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/config/rmapignore-defaults.js"
+      ]
+    },
+    {
+      "name": "assembler.test.ts",
+      "path": "tests/coordinator/assembler.test.ts",
+      "extension": ".ts",
+      "size_bytes": 19462,
+      "line_count": 669,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../../src/core/types.js",
+        "../../src/coordinator/assembler.js",
+        "../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "checkpoint.test.ts",
+      "path": "tests/coordinator/checkpoint.test.ts",
+      "extension": ".ts",
+      "size_bytes": 16047,
+      "line_count": 543,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../../src/coordinator/checkpoint.js",
+        "../../src/core/types.js",
+        "../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "delta.test.ts",
+      "path": "tests/coordinator/delta.test.ts",
+      "extension": ".ts",
+      "size_bytes": 5769,
+      "line_count": 142,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:child_process",
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../../src/coordinator/delta.js",
+        "../../src/core/constants.js",
+        "../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "graph.test.ts",
+      "path": "tests/coordinator/graph.test.ts",
+      "extension": ".ts",
+      "size_bytes": 16799,
+      "line_count": 573,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/types.js",
+        "../../src/coordinator/graph.js"
+      ]
+    },
+    {
+      "name": "incremental-annotations.test.ts",
+      "path": "tests/coordinator/incremental-annotations.test.ts",
+      "extension": ".ts",
+      "size_bytes": 7953,
+      "line_count": 233,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "node:url",
+        "../../src/coordinator/incremental-annotations.js",
+        "../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "pipeline.test.ts",
+      "path": "tests/coordinator/pipeline.test.ts",
+      "extension": ".ts",
+      "size_bytes": 16670,
+      "line_count": 571,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/types.js",
+        "../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "progress.test.ts",
+      "path": "tests/coordinator/progress.test.ts",
+      "extension": ".ts",
+      "size_bytes": 14281,
+      "line_count": 494,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/coordinator/progress.js"
+      ]
+    },
+    {
+      "name": "shutdown-handler.test.ts",
+      "path": "tests/coordinator/shutdown-handler.test.ts",
+      "extension": ".ts",
+      "size_bytes": 8054,
+      "line_count": 276,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/coordinator/shutdown-handler.js"
+      ]
+    },
+    {
+      "name": "versioning.test.ts",
+      "path": "tests/coordinator/versioning.test.ts",
+      "extension": ".ts",
+      "size_bytes": 12635,
+      "line_count": 435,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/coordinator/versioning.js",
+        "../../src/core/types.js",
+        "../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "concurrency.test.ts",
+      "path": "tests/core/concurrency.test.ts",
+      "extension": ".ts",
+      "size_bytes": 9057,
+      "line_count": 306,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/concurrency.js"
+      ]
+    },
+    {
+      "name": "constants.test.ts",
+      "path": "tests/core/constants.test.ts",
+      "extension": ".ts",
+      "size_bytes": 2916,
+      "line_count": 85,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "errors.test.ts",
+      "path": "tests/core/errors.test.ts",
+      "extension": ".ts",
+      "size_bytes": 9536,
+      "line_count": 268,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/errors.js"
+      ]
+    },
+    {
+      "name": "git-utils.test.ts",
+      "path": "tests/core/git-utils.test.ts",
+      "extension": ".ts",
+      "size_bytes": 6799,
+      "line_count": 169,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/git-utils.js"
+      ]
+    },
+    {
+      "name": "ignore-patterns.test.ts",
+      "path": "tests/core/ignore-patterns.test.ts",
+      "extension": ".ts",
+      "size_bytes": 14268,
+      "line_count": 498,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../../src/core/ignore-patterns.js",
+        "../../src/config/rmapignore-defaults.js"
+      ]
+    },
+    {
+      "name": "index.test.ts",
+      "path": "tests/core/index.test.ts",
+      "extension": ".ts",
+      "size_bytes": 3656,
+      "line_count": 87,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/index.js"
+      ]
+    },
+    {
+      "name": "llm-client.test.ts",
+      "path": "tests/core/llm-client.test.ts",
+      "extension": ".ts",
+      "size_bytes": 11202,
+      "line_count": 368,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/llm-client.js"
+      ]
+    },
+    {
+      "name": "metrics.test.ts",
+      "path": "tests/core/metrics.test.ts",
+      "extension": ".ts",
+      "size_bytes": 6947,
+      "line_count": 230,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/metrics.js"
+      ]
+    },
+    {
+      "name": "rate-limiter.test.ts",
+      "path": "tests/core/rate-limiter.test.ts",
+      "extension": ".ts",
+      "size_bytes": 10203,
+      "line_count": 308,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/rate-limiter.js"
+      ]
+    },
+    {
+      "name": "types.test.ts",
+      "path": "tests/core/types.test.ts",
+      "extension": ".ts",
+      "size_bytes": 4700,
+      "line_count": 188,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "validation.test.ts",
+      "path": "tests/core/validation.test.ts",
+      "extension": ".ts",
+      "size_bytes": 16619,
+      "line_count": 721,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/validation.js",
+        "../../src/core/constants.js",
+        "../../src/config/defaults.js",
+        "../../src/config/env.js"
+      ]
+    },
+    {
+      "name": "checkpoint.test.ts",
+      "path": "tests/integration/checkpoint.test.ts",
+      "extension": ".ts",
+      "size_bytes": 17386,
+      "line_count": 555,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../../src/coordinator/checkpoint.js",
+        "../../src/core/types.js",
+        "../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "pipeline.test.ts",
+      "path": "tests/integration/pipeline.test.ts",
+      "extension": ".ts",
+      "size_bytes": 22834,
+      "line_count": 766,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../../src/core/types.js",
+        "../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "level0.test.ts",
+      "path": "tests/level0.test.ts",
+      "extension": ".ts",
+      "size_bytes": 16075,
+      "line_count": 441,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../src/levels/level0/index.js",
+        "node:path",
+        "node:fs",
+        "node:url"
+      ]
+    },
+    {
+      "name": "level1.test.ts",
+      "path": "tests/level1.test.ts",
+      "extension": ".ts",
+      "size_bytes": 10069,
+      "line_count": 387,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../src/levels/level1/validation.js",
+        "../src/core/types.js"
+      ]
+    },
+    {
+      "name": "harvester.test.ts",
+      "path": "tests/levels/level0/harvester.test.ts",
+      "extension": ".ts",
+      "size_bytes": 16926,
+      "line_count": 496,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../../../src/levels/level0/harvester.js"
+      ]
+    },
+    {
+      "name": "integration-parser.test.ts",
+      "path": "tests/levels/level0/integration-parser.test.ts",
+      "extension": ".ts",
+      "size_bytes": 7414,
+      "line_count": 222,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "../../../src/levels/level0/parsers/index.js"
+      ]
+    },
+    {
+      "name": "parsers.test.ts",
+      "path": "tests/levels/level0/parsers.test.ts",
+      "extension": ".ts",
+      "size_bytes": 18186,
+      "line_count": 635,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level0/parsers/javascript.js",
+        "../../../src/levels/level0/parsers/fallback.js",
+        "../../../src/levels/level0/parsers/index.js"
+      ]
+    },
+    {
+      "name": "detector.test.ts",
+      "path": "tests/levels/level1/detector.test.ts",
+      "extension": ".ts",
+      "size_bytes": 11445,
+      "line_count": 357,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level1/detector.js",
+        "../../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "validation.test.ts",
+      "path": "tests/levels/level1/validation.test.ts",
+      "extension": ".ts",
+      "size_bytes": 13400,
+      "line_count": 521,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level1/validation.js",
+        "../../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "divider.test.ts",
+      "path": "tests/levels/level2/divider.test.ts",
+      "extension": ".ts",
+      "size_bytes": 11986,
+      "line_count": 332,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/core/types.js",
+        "../../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "prompt.test.ts",
+      "path": "tests/levels/level2/prompt.test.ts",
+      "extension": ".ts",
+      "size_bytes": 11174,
+      "line_count": 353,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level2/prompt.js",
+        "../../../src/core/types.js",
+        "../../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "validation.test.ts",
+      "path": "tests/levels/level2/validation.test.ts",
+      "extension": ".ts",
+      "size_bytes": 13721,
+      "line_count": 432,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level2/validation.js",
+        "../../../src/core/types.js",
+        "../../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "annotator.test.ts",
+      "path": "tests/levels/level3/annotator.test.ts",
+      "extension": ".ts",
+      "size_bytes": 17947,
+      "line_count": 577,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/core/types.js",
+        "../../../src/config/models.js",
+        "../../../src/config/index.js",
+        "../../../src/core/concurrency.js"
+      ]
+    },
+    {
+      "name": "parser.test.ts",
+      "path": "tests/levels/level3/parser.test.ts",
+      "extension": ".ts",
+      "size_bytes": 15206,
+      "line_count": 539,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level3/parser.js",
+        "../../../src/core/types.js",
+        "../../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "prompt.test.ts",
+      "path": "tests/levels/level3/prompt.test.ts",
+      "extension": ".ts",
+      "size_bytes": 11841,
+      "line_count": 416,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level3/prompt.js",
+        "../../../src/config/index.js",
+        "../../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "raw-imports.test.ts",
+      "path": "tests/levels/level3/raw-imports.test.ts",
+      "extension": ".ts",
+      "size_bytes": 10656,
+      "line_count": 270,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level3/parser.js",
+        "../../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "tag-validator.test.ts",
+      "path": "tests/levels/level3/tag-validator.test.ts",
+      "extension": ".ts",
+      "size_bytes": 19493,
+      "line_count": 562,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level3/tag-validator.js",
+        "../../../src/core/constants.js",
+        "../../../src/config/index.js"
+      ]
+    },
+    {
+      "name": "autofix.test.ts",
+      "path": "tests/levels/level4/autofix.test.ts",
+      "extension": ".ts",
+      "size_bytes": 15340,
+      "line_count": 595,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../../../src/levels/level4/autofix.js",
+        "../../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "checks.test.ts",
+      "path": "tests/levels/level4/checks.test.ts",
+      "extension": ".ts",
+      "size_bytes": 12368,
+      "line_count": 460,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../../../src/levels/level4/checks.js",
+        "../../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "orphans.test.ts",
+      "path": "tests/levels/level4/orphans.test.ts",
+      "extension": ".ts",
+      "size_bytes": 12040,
+      "line_count": 488,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../../src/levels/level4/orphans.js",
+        "../../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "validator.test.ts",
+      "path": "tests/levels/level4/validator.test.ts",
+      "extension": ".ts",
+      "size_bytes": 17690,
+      "line_count": 673,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs",
+        "node:path",
+        "node:os",
+        "../../../src/levels/level4/validator.js",
+        "../../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "engine.test.ts",
+      "path": "tests/query/engine.test.ts",
+      "extension": ".ts",
+      "size_bytes": 20190,
+      "line_count": 677,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs/promises",
+        "node:path",
+        "node:os",
+        "../../src/query/engine.js",
+        "../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "filter.test.ts",
+      "path": "tests/query/filter.test.ts",
+      "extension": ".ts",
+      "size_bytes": 10984,
+      "line_count": 310,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/query/filter.js",
+        "../../src/core/types.js",
+        "../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "formatter.test.ts",
+      "path": "tests/query/formatter.test.ts",
+      "extension": ".ts",
+      "size_bytes": 21707,
+      "line_count": 787,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/query/formatter.js",
+        "../../src/core/types.js",
+        "../../src/query/ranking.js"
+      ]
+    },
+    {
+      "name": "ranking.test.ts",
+      "path": "tests/query/ranking.test.ts",
+      "extension": ".ts",
+      "size_bytes": 15239,
+      "line_count": 488,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/query/ranking.js",
+        "../../src/core/types.js"
+      ]
+    },
+    {
+      "name": "schemas.test.ts",
+      "path": "tests/query/schemas.test.ts",
+      "extension": ".ts",
+      "size_bytes": 14258,
+      "line_count": 549,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/query/schemas.js",
+        "../../src/core/constants.js"
+      ]
+    },
+    {
+      "name": "validation.test.ts",
+      "path": "tests/query/validation.test.ts",
+      "extension": ".ts",
+      "size_bytes": 9961,
+      "line_count": 398,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "node:fs/promises",
+        "node:path",
+        "node:os",
+        "../../src/query/engine.js"
+      ]
+    },
+    {
+      "name": "tsconfig.json",
+      "path": "tsconfig.json",
+      "extension": ".json",
+      "size_bytes": 572,
+      "line_count": 24,
+      "language": "JSON",
+      "raw_imports": []
+    },
+    {
+      "name": "tsup.config.ts",
+      "path": "tsup.config.ts",
+      "extension": ".ts",
+      "size_bytes": 421,
+      "line_count": 22,
+      "language": "TypeScript",
+      "raw_imports": [
+        "tsup"
+      ]
+    }
+  ],
+  "git_commit": "ce9680d28ad677cc02f02e9483c514bf41555560",
+  "timestamp": "2026-04-04T19:55:32.893Z",
+  "total_files": 147,
+  "total_size_bytes": 1259947,
+  "ignoreStats": {
+    "totalChecked": 147,
+    "ignoredCount": 0,
+    "passedCount": 147,
+    "ignoredPercent": 0
+  },
+  "rmapignoreCreated": false
+}

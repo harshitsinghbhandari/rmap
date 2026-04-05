@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0",
+  "map_version": 1,
+  "git_commit": "ce9680d28ad677cc02f02e9483c514bf41555560",
+  "created_at": "2026-04-04T21:38:37.155Z",
+  "last_updated": "2026-04-04T21:38:37.155Z",
+  "parent_version": null,
+  "update_type": "full",
+  "files_changed": null,
+  "repo_name": "rmap",
+  "purpose": "Analyzes codebases to build queryable repository maps for AI agents to get focused context.",
+  "stack": "TypeScript, Node.js",
+  "languages": [
+    "TypeScript",
+    "JavaScript",
+    "Shell"
+  ],
+  "entrypoints": [
+    "src/index.ts",
+    "src/cli/index.ts"
+  ],
+  "modules": [
+    {
+      "path": "src/cli",
+      "description": "CLI commands and terminal UI with progress display"
+    },
+    {
+      "path": "src/config",
+      "description": "Configuration loading from environment and defaults"
+    },
+    {
+      "path": "src/coordinator",
+      "description": "Pipeline orchestration, checkpoints, and graph management"
+    },
+    {
+      "path": "src/core",
+      "description": "Shared utilities: LLM client, validation, metrics, rate limiting"
+    },
+    {
+      "path": "src/levels",
+      "description": "Multi-level code analysis pipeline (harvest, detect, divide, annotate, validate)"
+    },
+    {
+      "path": "src/query",
+      "description": "Query engine for filtering, ranking, and formatting results"
+    }
+  ],
+  "config_files": [
+    "package.json",
+    "tsconfig.json",
+    "tsup.config.ts",
+    ".env",
+    "agent-orchestrator.yaml"
+  ],
+  "conventions": [
+    "Use barrel exports (index.ts) for module public interfaces",
+    "Tests mirror src/ structure in tests/ directory with .test.ts suffix",
+    "Environment configuration parsed through src/config/env.ts",
+    "Each processing level (0-4) in src/levels/ has isolated logic with validation",
+    "CLI commands in src/cli/commands/ export default command function",
+    "Core types defined in src/core/types.ts, level-specific types in respective index files",
+    "Error handling uses custom error classes from src/core/errors.ts",
+    "Metrics and logging use src/core/metrics-logger.ts and src/core/prompt-logger.ts"
+  ]
+}

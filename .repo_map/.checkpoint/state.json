@@ -1,0 +1,59 @@
+{
+  "version": "1.0",
+  "started_at": "2026-04-04T19:55:32.604Z",
+  "git_commit": "ce9680d28ad677cc02f02e9483c514bf41555560",
+  "current_level": 3,
+  "levels": {
+    "0": {
+      "status": "completed",
+      "started_at": "2026-04-04T19:55:32.607Z",
+      "completed_at": "2026-04-04T19:55:32.894Z",
+      "output_file": "level0.json"
+    },
+    "1": {
+      "status": "completed",
+      "started_at": "2026-04-04T19:55:32.894Z",
+      "completed_at": "2026-04-04T19:55:37.265Z",
+      "output_file": "level1.json"
+    },
+    "2": {
+      "status": "completed",
+      "started_at": "2026-04-04T19:55:37.266Z",
+      "completed_at": "2026-04-04T19:55:44.431Z",
+      "output_file": "level2.json"
+    },
+    "3": {
+      "status": "completed",
+      "started_at": "2026-04-04T19:55:44.437Z",
+      "tasks_total": 18,
+      "tasks_completed": 18,
+      "completed_task_ids": [
+        "task_0___",
+        "task_2_scripts_",
+        "task_14_tests_integration_",
+        "task_10_tests_cli_",
+        "task_1_docs_",
+        "task_4_src_config_",
+        "task_11_tests_config_",
+        "task_16_tests_query_",
+        "task_3_src_cli_",
+        "task_8_src_query_",
+        "task_12_tests_coordinator_",
+        "task_13_tests_core_",
+        "task_5_src_core_",
+        "task_6_src_coordinator_",
+        "task_15_tests_levels_",
+        "task_7_src_levels_",
+        "task_17_tests_",
+        "task_9_src_"
+      ],
+      "annotations_saved": 252,
+      "last_saved_at": "2026-04-04T21:38:37.140Z",
+      "completed_at": "2026-04-04T21:38:37.148Z",
+      "output_file": "level3_progress.json"
+    },
+    "4": {
+      "status": "pending"
+    }
+  }
+}

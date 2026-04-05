@@ -1,0 +1,96 @@
+{
+  "tasks": [
+    {
+      "scope": "./",
+      "agent_size": "small",
+      "estimated_files": 15
+    },
+    {
+      "scope": "docs/",
+      "agent_size": "small",
+      "estimated_files": 4
+    },
+    {
+      "scope": "scripts/",
+      "agent_size": "small",
+      "estimated_files": 1
+    },
+    {
+      "scope": "src/cli/",
+      "agent_size": "medium",
+      "estimated_files": 8
+    },
+    {
+      "scope": "src/config/",
+      "agent_size": "small",
+      "estimated_files": 5
+    },
+    {
+      "scope": "src/core/",
+      "agent_size": "medium",
+      "estimated_files": 13
+    },
+    {
+      "scope": "src/coordinator/",
+      "agent_size": "medium",
+      "estimated_files": 13
+    },
+    {
+      "scope": "src/levels/",
+      "agent_size": "medium",
+      "estimated_files": 26
+    },
+    {
+      "scope": "src/query/",
+      "agent_size": "medium",
+      "estimated_files": 7
+    },
+    {
+      "scope": "src/",
+      "agent_size": "small",
+      "estimated_files": 2
+    },
+    {
+      "scope": "tests/cli/",
+      "agent_size": "small",
+      "estimated_files": 3
+    },
+    {
+      "scope": "tests/config/",
+      "agent_size": "small",
+      "estimated_files": 5
+    },
+    {
+      "scope": "tests/coordinator/",
+      "agent_size": "small",
+      "estimated_files": 9
+    },
+    {
+      "scope": "tests/core/",
+      "agent_size": "small",
+      "estimated_files": 11
+    },
+    {
+      "scope": "tests/integration/",
+      "agent_size": "small",
+      "estimated_files": 2
+    },
+    {
+      "scope": "tests/levels/",
+      "agent_size": "small",
+      "estimated_files": 17
+    },
+    {
+      "scope": "tests/query/",
+      "agent_size": "small",
+      "estimated_files": 6
+    },
+    {
+      "scope": "tests/",
+      "agent_size": "small",
+      "estimated_files": 2
+    }
+  ],
+  "execution": "parallel",
+  "estimated_total_minutes": 12
+}
