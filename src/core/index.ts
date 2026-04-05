@@ -74,7 +74,22 @@ export {
   formatMetricsSummary,
   printCompactSummary,
   getLatestMetrics,
+  printLatencyAnalysis,
+  writeLatencyLog,
 } from './metrics-logger.js';
+export type { ExtendedMetricsSummary } from './metrics-logger.js';
+// Export latency tracking
+export {
+  LatencyTracker,
+  globalLatencyTracker,
+  extractTaskIdFromPurpose,
+} from './latency-tracker.js';
+export type {
+  LLMCallRecord,
+  LevelLatencyMetrics,
+  TaskLatencyMetrics,
+  LatencySummary,
+} from './latency-tracker.js';
 // Export error classes
 export {
   RmapError,

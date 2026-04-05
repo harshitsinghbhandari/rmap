@@ -83,4 +83,40 @@ describe('Core module exports', () => {
     assert.ok(exportedKeys.includes('MAX_TAGS_PER_FILE'));
     assert.ok(exportedKeys.includes('MAX_FILES_PER_TASK'));
   });
+
+  it('should export latency tracking utilities', () => {
+    const exportedKeys = Object.keys(core);
+
+    // Check latency tracker exports
+    assert.ok(exportedKeys.includes('LatencyTracker'), 'LatencyTracker should be exported');
+    assert.ok(
+      exportedKeys.includes('globalLatencyTracker'),
+      'globalLatencyTracker should be exported'
+    );
+    assert.ok(
+      exportedKeys.includes('extractTaskIdFromPurpose'),
+      'extractTaskIdFromPurpose should be exported'
+    );
+    assert.ok(
+      exportedKeys.includes('printLatencyAnalysis'),
+      'printLatencyAnalysis should be exported'
+    );
+    assert.ok(exportedKeys.includes('writeLatencyLog'), 'writeLatencyLog should be exported');
+  });
+
+  it('should export globalLatencyTracker as an instance of LatencyTracker', () => {
+    assert.ok(core.globalLatencyTracker instanceof core.LatencyTracker);
+  });
+
+  it('should export extractTaskIdFromPurpose as a function', () => {
+    assert.strictEqual(typeof core.extractTaskIdFromPurpose, 'function');
+  });
+
+  it('should export printLatencyAnalysis as a function', () => {
+    assert.strictEqual(typeof core.printLatencyAnalysis, 'function');
+  });
+
+  it('should export writeLatencyLog as a function', () => {
+    assert.strictEqual(typeof core.writeLatencyLog, 'function');
+  });
 });
