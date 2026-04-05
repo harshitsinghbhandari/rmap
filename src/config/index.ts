@@ -49,6 +49,7 @@ export {
   FILE,
   RATE_LIMIT,
   LOC,
+  LLM_PROVIDER,
 } from './env.js';
 
 // Import for validation

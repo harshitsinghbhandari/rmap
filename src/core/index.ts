@@ -56,6 +56,20 @@ export type { ConcurrencyPoolOptions, TaskResult } from './concurrency.js';
 // Export LLM client with retry logic
 export { LLMClient, withRetry } from './llm-client.js';
 export type { RetryConfig, LLMCallOptions, LLMResponse } from './llm-client.js';
+// Export LLM providers
+export {
+  ClaudeProvider,
+  createProvider,
+  isProviderImplemented,
+  getSupportedProviderTypes,
+  getImplementedProviderTypes,
+} from './providers/index.js';
+export type {
+  LLMProvider,
+  LLMProviderCallOptions,
+  LLMProviderResponse,
+  ProviderType,
+} from './providers/index.js';
 // Export rate limiter
 export {
   TokenBucket,
