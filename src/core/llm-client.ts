@@ -2,7 +2,7 @@
  * LLM Client with Built-in Retry Logic
  *
  * Centralized client for making LLM API calls with exponential backoff and retry handling.
- * Eliminates duplicate retry logic across level processors.
+ * Supports multiple LLM providers through the provider abstraction layer.
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -11,6 +11,9 @@ import { RETRY } from '../config/index.js';
 import { globalRateLimiter, estimateTokens } from './rate-limiter.js';
 import { logPromptResponse, type PromptLogContext } from './prompt-logger.js';
 import { globalLatencyTracker, extractTaskIdFromPurpose } from './latency-tracker.js';
+import type { LLMProvider, ProviderType } from './providers/types.js';
+import { ClaudeProvider } from './providers/claude-provider.js';
+import { createProvider } from './providers/factory.js';
 
 /**
  * Configuration for retry behavior
@@ -136,12 +139,22 @@ function calculateRateLimitBackoff(
 /**
  * LLM Client with built-in retry logic
  *
- * Wraps the Anthropic SDK client and provides automatic retry handling
+ * Wraps an LLM provider and provides automatic retry handling
  * with exponential backoff for rate limit errors.
  *
- * @example
+ * Supports two initialization modes:
+ * 1. Legacy mode: Pass an Anthropic client directly (backward compatible)
+ * 2. Provider mode: Use static factory to create with provider type
+ *
+ * @example Legacy mode (backward compatible)
  * ```typescript
+ * const anthropicClient = new Anthropic({ apiKey });
  * const client = new LLMClient(anthropicClient);
+ * ```
+ *
+ * @example Provider mode
+ * ```typescript
+ * const client = LLMClient.withProvider('anthropic');
  * const response = await client.sendMessage(prompt, {
  *   model: 'claude-haiku-4-5-20251001',
  *   maxTokens: 2000
@@ -149,11 +162,37 @@ function calculateRateLimitBackoff(
  * ```
  */
 export class LLMClient {
-  private client: Anthropic;
+  private provider: LLMProvider;
+  private legacyClient: Anthropic | null = null;
   private defaultRetryConfig: Required<RetryConfig>;
 
-  constructor(client: Anthropic, retryConfig?: RetryConfig) {
-    this.client = client;
+  /**
+   * Create an LLMClient with an Anthropic client (legacy/backward compatible)
+   *
+   * @param client - Anthropic SDK client instance
+   * @param retryConfig - Optional retry configuration
+   */
+  constructor(client: Anthropic, retryConfig?: RetryConfig);
+
+  /**
+   * Create an LLMClient with an LLM provider
+   *
+   * @param provider - LLM provider instance
+   * @param retryConfig - Optional retry configuration
+   */
+  constructor(provider: LLMProvider, retryConfig?: RetryConfig);
+
+  constructor(clientOrProvider: Anthropic | LLMProvider, retryConfig?: RetryConfig) {
+    // Determine if we received an Anthropic client or a provider
+    if (this.isAnthropicClient(clientOrProvider)) {
+      // Legacy mode: wrap Anthropic client in ClaudeProvider
+      this.legacyClient = clientOrProvider;
+      this.provider = new ClaudeProvider(undefined, clientOrProvider);
+    } else {
+      // Provider mode: use the provider directly
+      this.provider = clientOrProvider;
+    }
+
     this.defaultRetryConfig = {
       maxRetries: retryConfig?.maxRetries ?? RETRY_CONFIG.MAX_RETRIES,
       baseDelayMs: retryConfig?.baseDelayMs ?? RETRY_CONFIG.BASE_BACKOFF_MS,
@@ -161,6 +200,44 @@ export class LLMClient {
       initialRateLimitDelayMs: retryConfig?.initialRateLimitDelayMs ?? RETRY.INITIAL_RATE_LIMIT_DELAY_MS,
       useJitter: retryConfig?.useJitter ?? true,
     };
+  }
+
+  /**
+   * Create an LLMClient with a specific provider type
+   *
+   * Static factory method for creating clients with a provider abstraction.
+   * This is the recommended approach for new code.
+   *
+   * @param providerType - Type of provider to use ('anthropic', 'gemini', 'openai')
+   * @param apiKey - Optional API key (uses environment variable if not provided)
+   * @param retryConfig - Optional retry configuration
+   * @returns Configured LLMClient instance
+   *
+   * @example
+   * ```typescript
+   * const client = LLMClient.withProvider('anthropic');
+   * ```
+   */
+  static withProvider(
+    providerType: ProviderType = 'anthropic',
+    apiKey?: string,
+    retryConfig?: RetryConfig
+  ): LLMClient {
+    const provider = createProvider(providerType, apiKey);
+    return new LLMClient(provider, retryConfig);
+  }
+
+  /**
+   * Type guard to check if a value is an Anthropic client
+   */
+  private isAnthropicClient(value: unknown): value is Anthropic {
+    // Check if it has the messages.create method (Anthropic SDK signature)
+    return (
+      value !== null &&
+      typeof value === 'object' &&
+      'messages' in value &&
+      typeof (value as Anthropic).messages?.create === 'function'
+    );
   }
 
   /**
@@ -189,31 +266,21 @@ export class LLMClient {
         const startTime = Date.now();
         const startedAt = new Date().toISOString();
 
-        const response = await this.client.messages.create({
+        // Make the API call through the provider
+        const response = await this.provider.call({
+          prompt,
           model: options.model,
-          max_tokens: options.maxTokens,
+          maxTokens: options.maxTokens,
           temperature: options.temperature ?? 0,
-          messages: [
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
         });
 
         // Track latency: calculate duration
         const latencyMs = Date.now() - startTime;
 
-        // Extract text from response
-        const content = response.content[0];
-        if (content.type !== 'text') {
-          throw new Error('Unexpected response type from Claude');
-        }
-
         const result = {
-          text: content.text,
-          inputTokens: response.usage.input_tokens,
-          outputTokens: response.usage.output_tokens,
+          text: response.content,
+          inputTokens: response.usage.inputTokens,
+          outputTokens: response.usage.outputTokens,
           model: options.model,
         };
 
@@ -285,12 +352,46 @@ export class LLMClient {
   }
 
   /**
-   * Get the underlying Anthropic client
+   * Get the underlying Anthropic client (legacy compatibility)
    *
-   * Useful for direct API access when retry logic is not needed
+   * Useful for direct API access when retry logic is not needed.
+   * Only works when the client was created with an Anthropic client.
+   *
+   * @returns The Anthropic SDK client instance
+   * @throws Error if the client was created with a non-Anthropic provider
    */
   getClient(): Anthropic {
-    return this.client;
+    if (this.legacyClient) {
+      return this.legacyClient;
+    }
+
+    // Try to get client from ClaudeProvider
+    if (this.provider instanceof ClaudeProvider) {
+      return this.provider.getClient();
+    }
+
+    throw new Error(
+      'getClient() is only available when using Anthropic/Claude provider. ' +
+      'Use getProvider() instead for provider-agnostic access.'
+    );
+  }
+
+  /**
+   * Get the underlying LLM provider
+   *
+   * @returns The LLM provider instance
+   */
+  getProvider(): LLMProvider {
+    return this.provider;
+  }
+
+  /**
+   * Get the name of the current provider
+   *
+   * @returns Provider name string (e.g., "anthropic")
+   */
+  getProviderName(): string {
+    return this.provider.getName();
   }
 }
 

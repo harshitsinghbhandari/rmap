@@ -517,6 +517,47 @@ export const LOC = {
 } as const;
 
 /**
+ * LLM Provider configuration with environment overrides
+ *
+ * Environment variables:
+ * - RMAP_LLM_PROVIDER: Default LLM provider for all levels (default: 'anthropic')
+ * - RMAP_LEVEL1_PROVIDER: Override provider for Level 1 (default: RMAP_LLM_PROVIDER)
+ * - RMAP_LEVEL2_PROVIDER: Override provider for Level 2 (default: RMAP_LLM_PROVIDER)
+ * - RMAP_LEVEL3_PROVIDER: Override provider for Level 3 (default: RMAP_LLM_PROVIDER)
+ *
+ * Note: Currently only 'anthropic' is implemented. Future providers will be added.
+ */
+function parseProviderType(
+  envValue: string | undefined,
+  defaultValue: string,
+): 'anthropic' | 'gemini' | 'openai' {
+  const value = envValue?.toLowerCase() || defaultValue;
+  if (value === 'anthropic' || value === 'gemini' || value === 'openai') {
+    return value;
+  }
+  console.warn(
+    `Warning: Invalid provider "${envValue}". Using default: ${defaultValue}`,
+  );
+  return defaultValue as 'anthropic' | 'gemini' | 'openai';
+}
+
+const defaultProvider = parseProviderType(
+  process.env.RMAP_LLM_PROVIDER,
+  'anthropic',
+);
+
+export const LLM_PROVIDER = {
+  /** Default provider for all levels */
+  DEFAULT: defaultProvider,
+  /** Provider for Level 1 (structure detection) */
+  LEVEL1: parseProviderType(process.env.RMAP_LEVEL1_PROVIDER, defaultProvider),
+  /** Provider for Level 2 (work division) */
+  LEVEL2: parseProviderType(process.env.RMAP_LEVEL2_PROVIDER, defaultProvider),
+  /** Provider for Level 3 (file annotation) */
+  LEVEL3: parseProviderType(process.env.RMAP_LEVEL3_PROVIDER, defaultProvider),
+} as const;
+
+/**
  * Complete configuration object with all settings
  */
 export const CONFIG = {
@@ -530,4 +571,5 @@ export const CONFIG = {
   file: FILE,
   rateLimit: RATE_LIMIT,
   loc: LOC,
+  llmProvider: LLM_PROVIDER,
 } as const;
