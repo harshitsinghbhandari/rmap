@@ -371,6 +371,47 @@ export const RATE_LIMIT_CONFIG = {
 } as const;
 
 /**
+ * LOC-based task division configuration (Level 2.5)
+ *
+ * Controls how files are grouped into tasks based on lines of code.
+ */
+export const LOC_CONFIG = {
+  /**
+   * Target LOC per task for balanced workloads
+   * Tasks will be grouped to stay at or below this target
+   * @default 500
+   */
+  TARGET_LOC_PER_TASK: 500,
+
+  /**
+   * Maximum LOC to send to LLM per file
+   * Files exceeding this will be trimmed (middle section removed)
+   * @default 500
+   */
+  MAX_LOC_PER_FILE_FOR_LLM: 500,
+
+  /**
+   * Ratio of beginning content to keep when trimming large files
+   * @default 0.7 (70% from start, 30% from end)
+   */
+  TRIM_HEAD_RATIO: 0.7,
+
+  /**
+   * Large file threshold for complexity classification
+   * Files exceeding this are considered complex (medium agent)
+   * @default 300
+   */
+  LARGE_FILE_THRESHOLD: 300,
+
+  /**
+   * Minimum LOC for a standalone task
+   * Very small files will be grouped together
+   * @default 50
+   */
+  MIN_LOC_FOR_STANDALONE_TASK: 50,
+} as const;
+
+/**
  * All configuration grouped for convenience
  */
 export const DEFAULT_CONFIG = {
@@ -383,4 +424,5 @@ export const DEFAULT_CONFIG = {
   token: TOKEN_CONFIG,
   file: FILE_CONFIG,
   rateLimit: RATE_LIMIT_CONFIG,
+  loc: LOC_CONFIG,
 } as const;

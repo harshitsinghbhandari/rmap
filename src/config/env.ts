@@ -15,6 +15,7 @@ import {
   TOKEN_CONFIG,
   FILE_CONFIG,
   RATE_LIMIT_CONFIG,
+  LOC_CONFIG,
 } from './defaults.js';
 
 /**
@@ -485,6 +486,37 @@ export const RATE_LIMIT = {
 } as const;
 
 /**
+ * LOC-based task division configuration with environment overrides
+ *
+ * Environment variables:
+ * - RMAP_LOC_TARGET_PER_TASK: Target LOC per task (default: 500)
+ * - RMAP_LOC_MAX_PER_FILE: Max LOC to send to LLM per file (default: 500)
+ * - RMAP_LOC_LARGE_FILE_THRESHOLD: LOC threshold for complex files (default: 300)
+ */
+export const LOC = {
+  TARGET_LOC_PER_TASK: parseEnvInt(
+    process.env.RMAP_LOC_TARGET_PER_TASK,
+    LOC_CONFIG.TARGET_LOC_PER_TASK,
+    50,
+    5000,
+  ),
+  MAX_LOC_PER_FILE_FOR_LLM: parseEnvInt(
+    process.env.RMAP_LOC_MAX_PER_FILE,
+    LOC_CONFIG.MAX_LOC_PER_FILE_FOR_LLM,
+    100,
+    10000,
+  ),
+  TRIM_HEAD_RATIO: LOC_CONFIG.TRIM_HEAD_RATIO,
+  LARGE_FILE_THRESHOLD: parseEnvInt(
+    process.env.RMAP_LOC_LARGE_FILE_THRESHOLD,
+    LOC_CONFIG.LARGE_FILE_THRESHOLD,
+    50,
+    2000,
+  ),
+  MIN_LOC_FOR_STANDALONE_TASK: LOC_CONFIG.MIN_LOC_FOR_STANDALONE_TASK,
+} as const;
+
+/**
  * Complete configuration object with all settings
  */
 export const CONFIG = {
@@ -497,4 +529,5 @@ export const CONFIG = {
   token: TOKEN,
   file: FILE,
   rateLimit: RATE_LIMIT,
+  loc: LOC,
 } as const;

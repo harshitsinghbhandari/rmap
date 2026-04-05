@@ -8,7 +8,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { FileAnnotation, RawFileMetadata, DelegationTask } from '../../core/types.js';
+import type { FileAnnotation, RawFileMetadata, DelegationTask, ExplicitTask } from '../../core/types.js';
 import { ConcurrencyPool } from '../../core/concurrency.js';
 import { buildAnnotationPrompt } from './prompt.js';
 import {
@@ -482,6 +482,75 @@ export async function annotateTask(
     return result;
   } catch (error) {
     onProgress?.('error', task.scope);
+    throw error;
+  }
+}
+
+/**
+ * Options for explicit task annotation (Level 2.5)
+ */
+export interface ExplicitTaskAnnotationOptions {
+  /** Explicit task from Level 2.5 with file list */
+  task: ExplicitTask;
+  /** All file metadata from Level 0 */
+  allFiles: RawFileMetadata[];
+  /** Repository root path */
+  repoRoot: string;
+  /** Optional metrics collector for tracking token usage */
+  metrics?: MetricsCollector;
+  /**
+   * Optional callback for progress tracking.
+   * Called with status updates during task processing.
+   */
+  onProgress?: (status: 'start' | 'complete' | 'error', taskName: string) => void;
+}
+
+/**
+ * Annotate files based on an explicit task from Level 2.5
+ *
+ * This function uses the explicit file list from the task plan,
+ * rather than filtering files by scope.
+ *
+ * @param options - Explicit task annotation options
+ * @returns Array of FileAnnotation
+ */
+export async function annotateExplicitTask(
+  options: ExplicitTaskAnnotationOptions
+): Promise<FileAnnotation[]> {
+  const { task, allFiles, repoRoot, metrics, onProgress } = options;
+
+  // Import UI constants for consistent emoji/plain-text handling
+  const { getUI } = await import('../../cli/ui-constants.js');
+  const UI = getUI();
+
+  // Notify progress callback if provided
+  onProgress?.('start', task.taskId);
+
+  // Get exact files for this task from the explicit file list
+  const taskFilePaths = new Set(task.files.map((f) => f.path));
+  const taskFiles = allFiles.filter((file) => taskFilePaths.has(file.path));
+
+  if (taskFiles.length === 0) {
+    if (!onProgress) {
+      console.warn(`${UI.EMOJI.WARNING} Warning: No files found for task ${task.taskId}`);
+    }
+    onProgress?.('complete', task.taskId);
+    return [];
+  }
+
+  try {
+    // Annotate the files in quiet mode (no duplicate headers)
+    const result = await annotateFiles(taskFiles, {
+      agentSize: task.agentSize,
+      repoRoot,
+      metrics,
+      quiet: !!onProgress, // Quiet mode when progress callback is provided
+    });
+
+    onProgress?.('complete', task.taskId);
+    return result;
+  } catch (error) {
+    onProgress?.('error', task.taskId);
     throw error;
   }
 }

@@ -11,3 +11,11 @@ export {
   DivisionRuleError,
 } from './validation.js';
 export { buildWorkDivisionPrompt, buildDirectoryGroups } from './prompt.js';
+
+// Level 2.5 - LOC-based task builder (algorithmic, no LLM)
+export {
+  buildTaskAssignmentPlan,
+  printTaskPlanSummary,
+  getFilesForTask,
+  validateTaskPlan,
+} from './task-builder.js';
