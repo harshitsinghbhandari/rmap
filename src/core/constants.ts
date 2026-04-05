@@ -343,6 +343,7 @@ export const CHECKPOINT_FILES = {
   LEVEL0: 'level0.json',
   LEVEL1: 'level1.json',
   LEVEL2: 'level2.json',
+  LEVEL2_5: 'level2_5_task_plan.json',
   LEVEL3_PROGRESS: 'level3_progress.json',
   LEVEL3_TASKS: 'level3_tasks.json',
   LEVEL3_INCREMENTAL: 'level3_annotations.jsonl',

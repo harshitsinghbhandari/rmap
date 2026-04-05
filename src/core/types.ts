@@ -235,6 +235,88 @@ export interface TaskDelegation {
 }
 
 /**
+ * File assignment to a specific task (Level 2.5)
+ *
+ * Maps a single file to its task with LOC information
+ */
+export interface FileTaskAssignment {
+  /** Relative path from repo root */
+  path: string;
+
+  /** Task ID this file belongs to */
+  taskId: string;
+
+  /** Lines of code in the file */
+  loc: number;
+
+  /** Lines of code to send to LLM (may be trimmed for large files) */
+  effectiveLoc: number;
+
+  /** Whether this file was trimmed for LLM context */
+  trimmed: boolean;
+
+  /** Programming language */
+  language?: string;
+}
+
+/**
+ * Task with explicit file assignments (Level 2.5)
+ *
+ * Each task represents one LLM session with specific files
+ */
+export interface ExplicitTask {
+  /** Unique task identifier */
+  taskId: string;
+
+  /** Files assigned to this task */
+  files: FileTaskAssignment[];
+
+  /** Total LOC in this task (sum of effectiveLoc) */
+  totalLoc: number;
+
+  /** Total original LOC before trimming */
+  originalLoc: number;
+
+  /** Number of files in this task */
+  fileCount: number;
+
+  /** Primary directory for this task (most common directory among files) */
+  primaryDirectory: string;
+
+  /** Agent size based on file complexity */
+  agentSize: 'small' | 'medium' | 'large';
+}
+
+/**
+ * Level 2.5 Output: Explicit file-to-task mapping
+ *
+ * This is a deterministic, algorithmic task division based on LOC.
+ * Each file is explicitly assigned to exactly one task.
+ */
+export interface TaskAssignmentPlan {
+  /** All tasks with their file assignments */
+  tasks: ExplicitTask[];
+
+  /** Lookup map: file path -> task ID */
+  fileToTask: Record<string, string>;
+
+  /** Total files to annotate */
+  totalFiles: number;
+
+  /** Total LOC across all files */
+  totalLoc: number;
+
+  /** Target LOC per task used for division */
+  targetLocPerTask: number;
+
+  /** Number of files that were trimmed */
+  trimmedFileCount: number;
+
+  /** Timestamp when plan was created */
+  createdAt: string;
+}
+
+/**
  * Information about a re-export statement
  */
 export interface ReExportInfo {

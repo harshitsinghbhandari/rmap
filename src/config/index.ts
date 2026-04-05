@@ -26,6 +26,7 @@ export {
   OUTPUT_CONFIG,
   TOKEN_CONFIG,
   FILE_CONFIG,
+  LOC_CONFIG,
   DEFAULT_CONFIG,
 } from './defaults.js';
 
@@ -47,6 +48,7 @@ export {
   TOKEN,
   FILE,
   RATE_LIMIT,
+  LOC,
 } from './env.js';
 
 // Import for validation

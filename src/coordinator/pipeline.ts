@@ -14,6 +14,7 @@ import type {
   Level0Output,
   Level1Output,
   TaskDelegation,
+  TaskAssignmentPlan,
   FileAnnotation,
   GraphJson,
   MetaJson,
@@ -23,8 +24,8 @@ import type {
 import { SCHEMA_VERSION, CHECKPOINT_FILES } from '../core/constants.js';
 import { harvest } from '../levels/level0/index.js';
 import { detectStructure } from '../levels/level1/index.js';
-import { divideWork } from '../levels/level2/index.js';
-import { annotateTask } from '../levels/level3/index.js';
+import { divideWork, buildTaskAssignmentPlan, printTaskPlanSummary } from '../levels/level2/index.js';
+import { annotateTask, annotateFiles, annotateExplicitTask } from '../levels/level3/index.js';
 import { validateMap } from '../levels/level4/index.js';
 import { buildGraph } from './graph.js';
 import { ProgressTracker } from './progress.js';
@@ -56,6 +57,12 @@ export interface PipelineOptions {
   parallel?: boolean;
   /** Resume from checkpoint if available (default: true) */
   resume?: boolean;
+  /**
+   * Use LOC-based task division (Level 2.5) instead of LLM-based division
+   * This is a deterministic algorithm that groups files by LOC (~500 per task)
+   * @default true
+   */
+  useLocBasedDivision?: boolean;
 }
 
 /**
@@ -106,7 +113,14 @@ function getGitCommit(repoRoot: string): string {
  * @returns Pipeline result with all generated data
  */
 export async function runPipeline(options: PipelineOptions): Promise<PipelineResult> {
-  const { repoRoot, forceFullRebuild = false, autofix = true, parallel = true, resume = true } = options;
+  const {
+    repoRoot,
+    forceFullRebuild = false,
+    autofix = true,
+    parallel = true,
+    resume = true,
+    useLocBasedDivision = true,  // Default to LOC-based division
+  } = options;
   const tracker = new ProgressTracker();
   const metrics = new MetricsCollector();
 
@@ -116,6 +130,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   console.log('\n🗺️  Starting rmap pipeline...');
   console.log(`Repository: ${repoRoot}`);
   console.log(`Mode: ${forceFullRebuild ? 'FULL REBUILD' : 'AUTO'}`);
+  console.log(`Task division: ${useLocBasedDivision ? 'LOC-based (Level 2.5)' : 'LLM-based (Level 2)'}`);
 
   // Get current git commit for checkpoint
   const currentCommit = getGitCommit(repoRoot);
@@ -127,6 +142,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   let level0: Level0Output | null = null;
   let level1: Level1Output | null = null;
   let delegation: TaskDelegation | null = null;
+  let taskPlan: TaskAssignmentPlan | null = null;
   let level3Annotations: FileAnnotation[] = [];
   let completedTaskIds: Set<string> = new Set();
 
@@ -228,23 +244,56 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
     tracker.completeLevel('Level 1: Structure Detector');
   }
 
-  // ===== LEVEL 2: Work Divider =====
-  if (!delegation) {
-    tracker.startLevel('Level 2: Work Divider');
-    metrics.startLevel(2, 'Level 2: Work Divider');
+  // ===== LEVEL 2 / 2.5: Work Divider =====
+  if (useLocBasedDivision) {
+    // Level 2.5: LOC-based algorithmic task division (no LLM)
+    tracker.startLevel('Level 2.5: LOC-based Task Builder');
+    metrics.startLevel(2, 'Level 2.5: LOC-based Task Builder');
     checkpointer.startLevel(2);
 
-    delegation = await divideWork(level0, level1, metrics);
-    tracker.trackLLMCall();
+    taskPlan = buildTaskAssignmentPlan(level0);
 
-    checkpointer.completeLevel(2, delegation, 'level2.json');
+    // Print task plan summary
+    printTaskPlanSummary(taskPlan);
+
+    // Convert to TaskDelegation for compatibility with rest of pipeline
+    delegation = {
+      tasks: taskPlan.tasks.map((t) => ({
+        scope: t.taskId,  // Use taskId as scope for explicit lookup
+        agent_size: t.agentSize,
+        estimated_files: t.fileCount,
+      })),
+      execution: 'parallel',
+      estimated_total_minutes: Math.ceil(taskPlan.tasks.length * 0.5),  // Rough estimate
+    };
+
+    // Save both the task plan and delegation
+    checkpointer.completeLevel(2, { taskPlan, delegation }, 'level2.json');
     metrics.endLevel(2);
-    tracker.completeLevel('Level 2: Work Divider');
-  }
+    tracker.completeLevel('Level 2.5: LOC-based Task Builder');
 
-  tracker.logProgress(
-    `Work division: ${delegation.tasks.length} tasks, ${delegation.execution} execution`
-  );
+    tracker.logProgress(
+      `LOC-based division: ${taskPlan.tasks.length} tasks, ~${taskPlan.targetLocPerTask} LOC/task`
+    );
+  } else {
+    // Level 2: LLM-based work division (original behavior)
+    if (!delegation) {
+      tracker.startLevel('Level 2: Work Divider');
+      metrics.startLevel(2, 'Level 2: Work Divider');
+      checkpointer.startLevel(2);
+
+      delegation = await divideWork(level0, level1, metrics);
+      tracker.trackLLMCall();
+
+      checkpointer.completeLevel(2, delegation, 'level2.json');
+      metrics.endLevel(2);
+      tracker.completeLevel('Level 2: Work Divider');
+    }
+
+    tracker.logProgress(
+      `Work division: ${delegation.tasks.length} tasks, ${delegation.execution} execution`
+    );
+  }
 
   // ===== LEVEL 3: Deep File Annotator =====
   const checkpoint = checkpointer.getCheckpoint();
@@ -298,9 +347,91 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
       taskTracker.completeTask(taskId);
     }
 
-    if (parallel && delegation.execution === 'parallel') {
+    if (useLocBasedDivision && taskPlan) {
+      // ===== LOC-based division: Use explicit task assignments =====
+      // Filter to remaining tasks (not yet completed)
+      const remainingExplicitTasks = taskPlan.tasks.filter(
+        (t) => !completedTaskIds.has(t.taskId)
+      );
+
+      if (parallel) {
+        // Run explicit tasks in parallel
+        const taskPromises = remainingExplicitTasks.map(async (explicitTask) => {
+          const taskAnnotations = await annotateExplicitTask({
+            task: explicitTask,
+            allFiles: level0.files,
+            repoRoot,
+            metrics,
+            onProgress: (status, taskName) => {
+              if (status === 'start') {
+                taskTracker.startTask(taskName);
+              } else if (status === 'complete') {
+                taskTracker.completeTask(taskName);
+              } else if (status === 'error') {
+                taskTracker.errorTask(taskName);
+              }
+            },
+          });
+
+          // Save this task's annotations incrementally
+          await checkpointer.saveAnnotationsIncremental(taskAnnotations);
+
+          // Mark task completed using taskId
+          completedTaskIds.add(explicitTask.taskId);
+          checkpointer.updateCheckpoint(3, {
+            tasks_completed: completedTaskIds.size,
+            completed_task_ids: Array.from(completedTaskIds),
+          });
+
+          return taskAnnotations;
+        });
+
+        const results = await Promise.all(taskPromises);
+        const newAnnotations = results.flat();
+        annotations.push(...newAnnotations);
+
+        // Save to level3_progress.json for backward compatibility
+        checkpointer.saveLevel3Progress(annotations);
+
+        tracker.trackLLMCall(remainingExplicitTasks.length);
+      } else {
+        // Run explicit tasks sequentially
+        for (const explicitTask of remainingExplicitTasks) {
+          const taskAnnotations = await annotateExplicitTask({
+            task: explicitTask,
+            allFiles: level0.files,
+            repoRoot,
+            metrics,
+            onProgress: (status, taskName) => {
+              if (status === 'start') {
+                taskTracker.startTask(taskName);
+              } else if (status === 'complete') {
+                taskTracker.completeTask(taskName);
+              } else if (status === 'error') {
+                taskTracker.errorTask(taskName);
+              }
+            },
+          });
+
+          annotations.push(...taskAnnotations);
+
+          // Save annotations incrementally
+          await checkpointer.saveAnnotationsIncremental(taskAnnotations);
+
+          // Mark task completed
+          completedTaskIds.add(explicitTask.taskId);
+          checkpointer.updateCheckpoint(3, {
+            tasks_completed: completedTaskIds.size,
+            completed_task_ids: Array.from(completedTaskIds),
+          });
+          checkpointer.saveLevel3Progress(annotations);
+
+          tracker.trackLLMCall();
+        }
+      }
+    } else if (parallel && delegation.execution === 'parallel') {
+      // ===== LLM-based division: Original scope-based matching =====
       // Run remaining tasks in parallel with incremental saves and progress tracking
-      // Process tasks in parallel but save incrementally as each completes
       const taskPromises = remainingTasks.map(async (task) => {
         const taskAnnotations = await annotateTask({
           task,
@@ -336,7 +467,7 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
 
       tracker.trackLLMCall(remainingTasks.length);
     } else {
-      // Run tasks sequentially with checkpointing after each
+      // ===== LLM-based division: Sequential execution =====
       for (const task of remainingTasks) {
         const taskAnnotations = await annotateTask({
           task,
