@@ -11,6 +11,7 @@ import { buildWorkDivisionPrompt } from './prompt.js';
 import { FILE, TOKEN, LLM_PROVIDER } from '../../config/index.js';
 import { getDivisionModel } from '../../config/models.js';
 import { LLMClient, MetricsCollector } from '../../core/index.js';
+import { extractJson, fixCommonJsonIssues } from '../../core/json-utils.js';
 
 /**
  * Validation error for task delegation
@@ -112,30 +113,7 @@ function validateTaskDelegation(data: unknown, totalFiles: number): TaskDelegati
   };
 }
 
-/**
- * Extract JSON from LLM response text
- * Handles various formats: raw JSON, markdown code blocks, mixed text
- */
-function extractJson(responseText: string): string {
-  let text = responseText.trim();
-
-  // Try to extract JSON from markdown code blocks
-  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-  if (codeBlockMatch) {
-    text = codeBlockMatch[1].trim();
-  }
-
-  // If still not starting with {, try to find JSON object in text
-  if (!text.startsWith('{')) {
-    const jsonStart = text.indexOf('{');
-    const jsonEnd = text.lastIndexOf('}');
-    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-      text = text.slice(jsonStart, jsonEnd + 1);
-    }
-  }
-
-  return text;
-}
+// Removed redundant extractJson function that is now in json-utils.ts
 
 /**
  * Parse and validate JSON response from LLM
@@ -150,15 +128,7 @@ function parseAndValidateResponse(responseText: string, totalFiles: number): Tas
   } catch (error) {
     // Try to fix common JSON issues from LLMs
     try {
-      const fixedJson = jsonText
-        .replace(/:\s*"([^"]*?)"/g, (match, content) => {
-          const escaped = content
-            .replace(/\n/g, '\\n')
-            .replace(/\r/g, '\\r')
-            .replace(/\t/g, '\\t');
-          return `: "${escaped}"`;
-        });
-      parsed = JSON.parse(fixedJson);
+      parsed = JSON.parse(fixCommonJsonIssues(jsonText));
     } catch {
       const preview = jsonText.slice(0, 200);
       throw new DivisionValidationError(

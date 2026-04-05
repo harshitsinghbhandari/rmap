@@ -1,4 +1,5 @@
 import assert from 'node:assert';
+import { describe, test } from 'node:test';
 import { displayMapStatus } from '../../src/cli/display.js';
 import type { MapStatusResult } from '../../src/cli/types.js';
 

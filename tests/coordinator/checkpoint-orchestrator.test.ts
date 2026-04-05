@@ -1,4 +1,5 @@
 import assert from 'node:assert';
+import { describe, test, before, after } from 'node:test';
 import { tryLoadCheckpoint } from '../../src/coordinator/checkpoint-orchestrator.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -19,10 +20,13 @@ describe('Checkpoint Orchestrator', () => {
   });
 
   test('tryLoadCheckpoint returns invalid when no checkpoint exists', () => {
-    // We need an instance of the orchestrator.
-    // Since the orchestrator takes repoRoot and currentCommit in constructor.
     const { CheckpointOrchestrator } = require('../../src/coordinator/checkpoint-orchestrator.js');
     const orchestrator = new CheckpointOrchestrator(testRepoRoot, 'abc1234');
+
+    // Manually clear checkpoint directory to ensure no existing state
+    if (fs.existsSync(path.join(testRepoRoot, '.repo_map', '.checkpoint'))) {
+      fs.rmSync(path.join(testRepoRoot, '.repo_map', '.checkpoint'), { recursive: true, force: true });
+    }
 
     const result = orchestrator.tryLoadCheckpoint('abc1234', true);
     assert.strictEqual(result.valid, false);

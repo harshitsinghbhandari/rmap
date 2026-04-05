@@ -19,8 +19,8 @@ export const CLAUDE_MODELS = {
  * Available Gemini models (Google)
  */
 export const GEMINI_MODELS = {
-  FLASH: 'gemini-2.5-flash',
-  PRO: 'gemini-2.5-pro',
+  FLASH: 'gemma-4-31b-it',
+  PRO: 'gemini-3.1-flash-lite-preview',
 } as const;
 
 /**

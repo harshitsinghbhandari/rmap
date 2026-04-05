@@ -4,6 +4,7 @@ build/
 .next/
 .nuxt/
 out/
+.gitkeep/
 
 # Dependencies
 node_modules/
