@@ -38,6 +38,16 @@ import {
   TagsJsonSchema,
   AnnotationsJsonSchema,
 } from './schemas.js';
+import { ZodIssue } from 'zod';
+
+/**
+ * Format Zod issues into a human-readable string
+ */
+function formatZodIssues(issues: ZodIssue[]): string {
+  return issues
+    .map((e) => `  - ${e.path.join('.')}: ${e.message}`)
+    .join('\n');
+}
 
 /**
  * Query engine configuration
@@ -134,45 +144,29 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
     // Validate parsed JSON against schemas
     const metaResult = MetaJsonSchema.safeParse(metaRaw);
     if (!metaResult.success) {
-      const errors = metaResult.error.issues
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
-        .join('\n');
       throw new ValidationError(
-        `Invalid meta.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
+        `Invalid meta.json schema:\n${formatZodIssues(metaResult.error.issues)}\n\nPlease rebuild the map with "rmap map --full".`
       );
     }
 
     const graphResult = GraphJsonSchema.safeParse(graphRaw);
     if (!graphResult.success) {
-      const errors = graphResult.error.issues
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
-        .join('\n');
       throw new ValidationError(
-        `Invalid graph.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
+        `Invalid graph.json schema:\n${formatZodIssues(graphResult.error.issues)}\n\nPlease rebuild the map with "rmap map --full".`
       );
     }
 
     const tagsResult = TagsJsonSchema.safeParse(tagsRaw);
     if (!tagsResult.success) {
-      const errors = tagsResult.error.issues
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
-        .join('\n');
       throw new ValidationError(
-        `Invalid tags.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
+        `Invalid tags.json schema:\n${formatZodIssues(tagsResult.error.issues)}\n\nPlease rebuild the map with "rmap map --full".`
       );
     }
 
     const filesResult = AnnotationsJsonSchema.safeParse(filesRaw);
     if (!filesResult.success) {
-      const errors = filesResult.error.issues
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((e: any) => `  - ${e.path.join('.')}: ${e.message}`)
-        .join('\n');
       throw new ValidationError(
-        `Invalid annotations.json schema:\n${errors}\n\nPlease rebuild the map with "rmap map --full".`
+        `Invalid annotations.json schema:\n${formatZodIssues(filesResult.error.issues)}\n\nPlease rebuild the map with "rmap map --full".`
       );
     }
 

@@ -87,7 +87,7 @@ export function writeMetricsLog(
   fs.mkdirSync(logsDir, { recursive: true });
 
   // Generate filename with timestamp
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('.')[0];
+  const timestamp = new Date().toISOString().replace(TIMESTAMP_REGEX, '-').split('.')[0];
   const filename = `run-${timestamp}.json`;
   const filepath = path.join(logsDir, filename);
 
