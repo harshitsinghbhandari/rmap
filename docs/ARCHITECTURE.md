@@ -51,6 +51,13 @@ Deep dive into how `rmap` works internally.
                            │
                            ▼
          ┌─────────────────────────────────────┐
+         │  Level 2.5: LOC Balancer           │
+         │  (Script - LOC based grouping)      │
+         │  Output: Refined task list          │
+         └─────────────────────────────────────┘
+                           │
+                           ▼
+         ┌─────────────────────────────────────┐
          │  Level 3: Deep Annotator            │
          │  (LLM: Haiku/Sonnet, Parallel)      │
          │  Output: Purpose, tags, exports     │
@@ -747,10 +754,10 @@ Predefined set of semantic tags used for file annotation.
 ## Design Decisions
 
 ### Why 5 levels?
-
 - **Level 0**: Fast baseline (no LLM cost)
 - **Level 1**: Structure understanding (enables smart division)
 - **Level 2**: Work division (enables parallelization)
+- **Level 2.5**: LOC balancing (optimizes token usage and task size)
 - **Level 3**: Core value (semantic annotations)
 - **Level 4**: Quality assurance (catch errors)
 

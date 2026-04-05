@@ -252,13 +252,21 @@ Wait 15s → retry → success (likely works on first retry)
 ```
 
 ### RMAP_RETRY_VALIDATION_ERRORS
-
 **Default**: `1`
 **Type**: Integer (0-10)
 **Description**: Retry attempts specifically for validation errors in Level 3
 
 ```bash
 export RMAP_RETRY_VALIDATION_ERRORS=1
+```
+
+### RMAP_RETRY_TAG_VALIDATION_ERRORS
+**Default**: `2`
+**Type**: Integer (0-10)
+**Description**: Maximum retry attempts for tag validation errors when LLM outputs invalid tags
+
+```bash
+export RMAP_RETRY_TAG_VALIDATION_ERRORS=2
 ```
 
 ---
@@ -607,9 +615,55 @@ Larger tasks = fewer API calls but longer processing.
 export RMAP_FILE_MAX_PER_TASK=50
 ```
 
----
+### LOC-based Task Division
+Controls how files are grouped into tasks based on lines of code (Level 2.5).
 
-## Model Configuration
+#### RMAP_TARGET_LOC_PER_TASK
+**Default**: `500`
+**Type**: Integer
+**Description**: Target LOC per task for balanced workloads.
+
+```bash
+export RMAP_TARGET_LOC_PER_TASK=500
+```
+
+#### RMAP_MAX_LOC_PER_FILE_FOR_LLM
+**Default**: `500`
+**Type**: Integer
+**Description**: Maximum LOC to send to LLM per file; exceeding files are trimmed.
+
+```bash
+export RMAP_MAX_LOC_PER_FILE_FOR_LLM=500
+```
+
+#### RMAP_TRIM_HEAD_RATIO
+**Default**: `0.7`
+**Type**: Float (0.1-0.9)
+**Description**: Ratio of beginning content to keep when trimming large files.
+
+```bash
+export RMAP_TRIM_HEAD_RATIO=0.7
+```
+
+#### RMAP_LARGE_FILE_THRESHOLD
+**Default**: `300`
+**Type**: Integer
+**Description**: LOC threshold for complexity classification (determines agent size).
+
+```bash
+export RMAP_LARGE_FILE_THRESHOLD=300
+```
+
+#### RMAP_MIN_LOC_FOR_STANDALONE_TASK
+**Default**: `50`
+**Type**: Integer
+**Description**: Minimum LOC for a standalone task; smaller files are grouped.
+
+```bash
+export RMAP_MIN_LOC_FOR_STANDALONE_TASK=50
+```
+
+---
 
 Model selection is controlled programmatically, not via environment variables.
 
