@@ -10,6 +10,7 @@ import { RETRY_CONFIG } from '../config/models.js';
 import { RETRY } from '../config/index.js';
 import { globalRateLimiter, estimateTokens } from './rate-limiter.js';
 import { logPromptResponse, type PromptLogContext } from './prompt-logger.js';
+import { globalLatencyTracker, extractTaskIdFromPurpose } from './latency-tracker.js';
 
 /**
  * Configuration for retry behavior
@@ -184,6 +185,10 @@ export class LLMClient {
         const estimatedTokens = estimateTokens(prompt);
         await globalRateLimiter.acquire(estimatedTokens);
 
+        // Track latency: record start time
+        const startTime = Date.now();
+        const startedAt = new Date().toISOString();
+
         const response = await this.client.messages.create({
           model: options.model,
           max_tokens: options.maxTokens,
@@ -195,6 +200,9 @@ export class LLMClient {
             },
           ],
         });
+
+        // Track latency: calculate duration
+        const latencyMs = Date.now() - startTime;
 
         // Extract text from response
         const content = response.content[0];
@@ -208,6 +216,26 @@ export class LLMClient {
           outputTokens: response.usage.output_tokens,
           model: options.model,
         };
+
+        // Record latency metrics to global tracker
+        if (options.logContext) {
+          const levelMatch = options.logContext.level.match(/level(\d+)/i);
+          const levelNum = levelMatch ? parseInt(levelMatch[1], 10) : 0;
+          const taskId = extractTaskIdFromPurpose(options.logContext.purpose);
+          const tokensPerSecond =
+            latencyMs > 0 ? (result.outputTokens / latencyMs) * 1000 : 0;
+
+          globalLatencyTracker.recordCall({
+            startedAt,
+            latencyMs,
+            inputTokens: result.inputTokens,
+            outputTokens: result.outputTokens,
+            tokensPerSecond,
+            model: result.model,
+            level: levelNum,
+            taskId,
+          });
+        }
 
         // Log prompt and response if logging is enabled
         if (options.logContext) {

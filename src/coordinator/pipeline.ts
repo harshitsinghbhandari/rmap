@@ -31,7 +31,13 @@ import { ProgressTracker } from './progress.js';
 import { readExistingMeta } from './assembler.js';
 import { CheckpointOrchestrator } from './checkpoint-orchestrator.js';
 import { GracefulShutdownHandler } from './shutdown-handler.js';
-import { MetricsCollector, writeMetricsLog, printCompactSummary } from '../core/index.js';
+import {
+  MetricsCollector,
+  writeMetricsLog,
+  printCompactSummary,
+  printLatencyAnalysis,
+  globalLatencyTracker,
+} from '../core/index.js';
 import { TaskProgressTracker, printLevelHeader } from '../cli/progress-ui.js';
 import { ANNOTATION_MODEL_MAP, CONCURRENCY_CONFIG } from '../config/index.js';
 import { getUI } from '../cli/ui-constants.js';
@@ -103,6 +109,9 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
   const { repoRoot, forceFullRebuild = false, autofix = true, parallel = true, resume = true } = options;
   const tracker = new ProgressTracker();
   const metrics = new MetricsCollector();
+
+  // Reset latency tracker for fresh run
+  globalLatencyTracker.reset();
 
   console.log('\n🗺️  Starting rmap pipeline...');
   console.log(`Repository: ${repoRoot}`);
@@ -424,6 +433,9 @@ export async function runPipeline(options: PipelineOptions): Promise<PipelineRes
 
   // Print compact metrics summary
   printCompactSummary(metricsSummary, stats.files_annotated, logPath);
+
+  // Print LLM latency analysis
+  printLatencyAnalysis();
 
   // ===== Clean up signal handlers =====
   shutdownHandler.unregister();
