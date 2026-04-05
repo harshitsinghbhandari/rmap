@@ -16,6 +16,7 @@ export type {
 
 // Provider implementations
 export { ClaudeProvider } from './claude-provider.js';
+export { GeminiProvider } from './gemini-provider.js';
 
 // Factory functions
 export {

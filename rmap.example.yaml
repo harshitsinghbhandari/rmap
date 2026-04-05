@@ -1,0 +1,29 @@
+# rmap Configuration
+# Copy this file to rmap.yaml and customize as needed.
+#
+# Configuration priority (highest to lowest):
+# 1. Environment variables (RMAP_LLM_PROVIDER, etc.)
+# 2. This YAML file (rmap.yaml)
+# 3. Default values
+
+# LLM Provider Configuration
+llm:
+  # Default provider for all levels
+  # Options: anthropic, gemini, openai (openai not yet implemented)
+  provider: gemini
+
+  # Override provider for specific levels (optional)
+  # levels:
+  #   level1: anthropic  # Structure detection - fast model
+  #   level2: gemini     # Work division - capable model
+  #   level3: gemini     # File annotation - varies by complexity
+
+# Rate Limiting (optional)
+# rateLimit:
+#   requestsPerMinute: 50
+#   inputTokensPerMinute: 8000
+
+# Concurrency (optional)
+# concurrency:
+#   maxConcurrentAnnotations: 10
+#   taskStartDelayMs: 100

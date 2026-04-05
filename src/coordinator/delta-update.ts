@@ -153,23 +153,25 @@ export function removeDeletedFiles(
  * @param repoRoot - Repository root path
  * @returns Array of all existing annotations
  */
-export function readExistingAnnotations(repoRoot: string): FileAnnotation[] {
+export async function readExistingAnnotations(repoRoot: string): Promise<FileAnnotation[]> {
   const treeDir = path.join(repoRoot, '.repo_map', 'tree');
 
-  if (!fs.existsSync(treeDir)) {
+  try {
+    await fs.promises.access(treeDir, fs.constants.F_OK);
+  } catch {
     return [];
   }
 
   const annotations: FileAnnotation[] = [];
 
   try {
-    const files = fs.readdirSync(treeDir);
+    const files = await fs.promises.readdir(treeDir);
 
     for (const file of files) {
       if (!file.endsWith('.json')) continue;
 
       const filePath = path.join(treeDir, file);
-      const content = fs.readFileSync(filePath, 'utf8');
+      const content = await fs.promises.readFile(filePath, 'utf8');
       const treeAnnotations = JSON.parse(content) as FileAnnotation[];
 
       annotations.push(...treeAnnotations);

@@ -16,6 +16,11 @@
       "sourceType": "github",
       "computedHash": "959ed195a0e080ad0f34671419a833fc60b62f1d73c870e39420a86050e07667"
     },
+    "gemini-api-dev": {
+      "source": "google-gemini/gemini-skills",
+      "sourceType": "github",
+      "computedHash": "a72a3164552bd1764bca52d33806f4578572af3c279611a5bda420b6a9ca68c4"
+    },
     "test-coverage-audit": {
       "source": "harshitsinghbhandari/domain-expansion",
       "sourceType": "github",

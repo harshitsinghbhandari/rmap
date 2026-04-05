@@ -49,7 +49,8 @@ export function checkGraphSymmetry(
   const issues: ValidationIssue[] = [];
   const annotationPaths = new Set(annotations.map((a) => a.path));
 
-  for (const [filePath, node] of Object.entries(graph)) {
+  for (const filePath in graph) {
+    const node = graph[filePath];
     // Check each import has corresponding imported_by
     for (const importPath of node.imports) {
       const importedNode = graph[importPath];

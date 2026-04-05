@@ -1,14 +1,15 @@
 /**
  * Level 2 Work Divider
  *
- * Uses Claude Sonnet (large LLM) to intelligently divide annotation work
- * into tasks for Level 3 agents.
+ * Uses a capable LLM (Claude Sonnet or Gemini Pro) to intelligently divide
+ * annotation work into tasks for Level 3 agents.
+ * The LLM provider is configurable via rmap.yaml or environment variables.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
 import type { Level0Output, Level1Output, TaskDelegation, DelegationTask } from '../../core/types.js';
 import { buildWorkDivisionPrompt } from './prompt.js';
-import { DIVISION_MODEL, FILE, TOKEN } from '../../config/index.js';
+import { FILE, TOKEN, LLM_PROVIDER } from '../../config/index.js';
+import { getDivisionModel } from '../../config/models.js';
 import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
@@ -112,26 +113,59 @@ function validateTaskDelegation(data: unknown, totalFiles: number): TaskDelegati
 }
 
 /**
+ * Extract JSON from LLM response text
+ * Handles various formats: raw JSON, markdown code blocks, mixed text
+ */
+function extractJson(responseText: string): string {
+  let text = responseText.trim();
+
+  // Try to extract JSON from markdown code blocks
+  const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    text = codeBlockMatch[1].trim();
+  }
+
+  // If still not starting with {, try to find JSON object in text
+  if (!text.startsWith('{')) {
+    const jsonStart = text.indexOf('{');
+    const jsonEnd = text.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      text = text.slice(jsonStart, jsonEnd + 1);
+    }
+  }
+
+  return text;
+}
+
+/**
  * Parse and validate JSON response from LLM
  */
 function parseAndValidateResponse(responseText: string, totalFiles: number): TaskDelegation {
-  // Remove markdown code blocks if present
-  let jsonText = responseText.trim();
-
-  if (jsonText.startsWith('```json')) {
-    jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-  } else if (jsonText.startsWith('```')) {
-    jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-  }
+  const jsonText = extractJson(responseText);
 
   // Parse JSON
   let parsed: unknown;
   try {
     parsed = JSON.parse(jsonText);
   } catch (error) {
-    throw new DivisionValidationError(
-      `Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}`
-    );
+    // Try to fix common JSON issues from LLMs
+    try {
+      const fixedJson = jsonText
+        .replace(/:\s*"([^"]*?)"/g, (match, content) => {
+          const escaped = content
+            .replace(/\n/g, '\\n')
+            .replace(/\r/g, '\\r')
+            .replace(/\t/g, '\\t');
+          return `: "${escaped}"`;
+        });
+      parsed = JSON.parse(fixedJson);
+    } catch {
+      const preview = jsonText.slice(0, 200);
+      throw new DivisionValidationError(
+        `Failed to parse JSON response: ${error instanceof Error ? error.message : String(error)}\n` +
+        `Response preview: ${preview}...`
+      );
+    }
   }
 
   // Validate structure
@@ -139,7 +173,7 @@ function parseAndValidateResponse(responseText: string, totalFiles: number): Tas
 }
 
 /**
- * Divide annotation work using Claude Sonnet
+ * Divide annotation work using the configured LLM provider
  *
  * @param level0 - Output from Level 0 metadata harvester
  * @param level1 - Output from Level 1 structure detector
@@ -151,31 +185,28 @@ export async function divideWork(
   level1: Level1Output,
   metrics?: MetricsCollector
 ): Promise<TaskDelegation> {
-  // Check for API key
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY environment variable is not set');
-  }
+  // Get provider configuration
+  const providerType = LLM_PROVIDER.LEVEL2;
+  const model = getDivisionModel(providerType);
 
-  // Initialize Anthropic client
-  const anthropicClient = new Anthropic({ apiKey });
-  const llmClient = new LLMClient(anthropicClient);
+  // Initialize LLM client with configured provider
+  const llmClient = LLMClient.withProvider(providerType);
 
   console.log('Starting Level 2 work division...');
-  console.log('Using Claude Sonnet for intelligent task planning');
+  console.log(`Using ${providerType} provider with ${model}`);
   console.log(`Total files to process: ${level0.total_files}`);
 
   // Build prompt
   const prompt = buildWorkDivisionPrompt(level0, level1);
 
-  // Call Claude with retry logic
+  // Call LLM with retry logic
   const response = await llmClient.sendMessage(prompt, {
-    model: DIVISION_MODEL,
+    model,
     maxTokens: TOKEN.MAX_TOKENS_LEVEL2,
     logContext: {
       level: 'level2',
       purpose: 'Work division - divides repository files into annotation tasks with agent size and execution strategy',
-      model: DIVISION_MODEL,
+      model,
     },
   });
 

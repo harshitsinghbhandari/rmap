@@ -17,6 +17,7 @@ import {
   RATE_LIMIT_CONFIG,
   LOC_CONFIG,
 } from './defaults.js';
+import { getYamlLLMProvider } from './yaml-config.js';
 
 /**
  * Parse an environment variable as an integer with validation
@@ -517,44 +518,77 @@ export const LOC = {
 } as const;
 
 /**
- * LLM Provider configuration with environment overrides
+ * LLM Provider configuration
+ *
+ * Configuration priority (highest to lowest):
+ * 1. Environment variables (RMAP_LLM_PROVIDER, RMAP_LEVEL1_PROVIDER, etc.)
+ * 2. YAML config file (rmap.yaml in repo root)
+ * 3. Default value ('anthropic')
  *
  * Environment variables:
- * - RMAP_LLM_PROVIDER: Default LLM provider for all levels (default: 'anthropic')
- * - RMAP_LEVEL1_PROVIDER: Override provider for Level 1 (default: RMAP_LLM_PROVIDER)
- * - RMAP_LEVEL2_PROVIDER: Override provider for Level 2 (default: RMAP_LLM_PROVIDER)
- * - RMAP_LEVEL3_PROVIDER: Override provider for Level 3 (default: RMAP_LLM_PROVIDER)
+ * - RMAP_LLM_PROVIDER: Default LLM provider for all levels
+ * - RMAP_LEVEL1_PROVIDER: Override provider for Level 1
+ * - RMAP_LEVEL2_PROVIDER: Override provider for Level 2
+ * - RMAP_LEVEL3_PROVIDER: Override provider for Level 3
  *
- * Note: Currently only 'anthropic' is implemented. Future providers will be added.
+ * YAML config (rmap.yaml):
+ * ```yaml
+ * llm:
+ *   provider: gemini  # Default for all levels
+ *   levels:
+ *     level1: anthropic  # Override for specific level
+ *     level2: gemini
+ *     level3: gemini
+ * ```
+ *
+ * Supported providers:
+ * - 'anthropic': Claude models (requires ANTHROPIC_API_KEY)
+ * - 'gemini': Google Gemini models (requires GEMINI_API_KEY or GOOGLE_API_KEY)
+ * - 'openai': OpenAI models (not yet implemented)
  */
+
 function parseProviderType(
   envValue: string | undefined,
-  defaultValue: string,
+  yamlValue: 'anthropic' | 'gemini' | 'openai',
 ): 'anthropic' | 'gemini' | 'openai' {
-  const value = envValue?.toLowerCase() || defaultValue;
-  if (value === 'anthropic' || value === 'gemini' || value === 'openai') {
-    return value;
+  // Environment variable takes precedence over YAML
+  if (envValue) {
+    const value = envValue.toLowerCase();
+    if (value === 'anthropic' || value === 'gemini' || value === 'openai') {
+      return value;
+    }
+    console.warn(
+      `Warning: Invalid provider "${envValue}" in environment. Using YAML/default: ${yamlValue}`,
+    );
   }
-  console.warn(
-    `Warning: Invalid provider "${envValue}". Using default: ${defaultValue}`,
-  );
-  return defaultValue as 'anthropic' | 'gemini' | 'openai';
+  return yamlValue;
 }
 
+// Get default provider from YAML config, falling back to 'anthropic'
+const yamlDefaultProvider = getYamlLLMProvider(undefined, 'anthropic');
 const defaultProvider = parseProviderType(
   process.env.RMAP_LLM_PROVIDER,
-  'anthropic',
+  yamlDefaultProvider,
 );
 
 export const LLM_PROVIDER = {
   /** Default provider for all levels */
   DEFAULT: defaultProvider,
   /** Provider for Level 1 (structure detection) */
-  LEVEL1: parseProviderType(process.env.RMAP_LEVEL1_PROVIDER, defaultProvider),
+  LEVEL1: parseProviderType(
+    process.env.RMAP_LEVEL1_PROVIDER,
+    getYamlLLMProvider(1, defaultProvider),
+  ),
   /** Provider for Level 2 (work division) */
-  LEVEL2: parseProviderType(process.env.RMAP_LEVEL2_PROVIDER, defaultProvider),
+  LEVEL2: parseProviderType(
+    process.env.RMAP_LEVEL2_PROVIDER,
+    getYamlLLMProvider(2, defaultProvider),
+  ),
   /** Provider for Level 3 (file annotation) */
-  LEVEL3: parseProviderType(process.env.RMAP_LEVEL3_PROVIDER, defaultProvider),
+  LEVEL3: parseProviderType(
+    process.env.RMAP_LEVEL3_PROVIDER,
+    getYamlLLMProvider(3, defaultProvider),
+  ),
 } as const;
 
 /**

@@ -8,6 +8,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { execFileSync } from 'node:child_process';
 import type { Ignore } from 'ignore';
 import type { RawFileMetadata, Level0Output, FileImportData } from '../../core/types.js';
 import { FILE, OUTPUT } from '../../config/index.js';

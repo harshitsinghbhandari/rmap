@@ -1,8 +1,9 @@
 /**
  * Level 3 - Deep File Annotator
  *
- * Core annotation engine that produces semantic file annotations
- * using Claude Haiku or Sonnet based on task complexity
+ * Core annotation engine that produces semantic file annotations.
+ * Uses fast or capable LLM models based on task complexity.
+ * The LLM provider is configurable via rmap.yaml or environment variables.
  */
 
 export {
