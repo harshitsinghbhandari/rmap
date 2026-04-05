@@ -6,7 +6,8 @@
  */
 
 import { parse } from '@babel/parser';
-import _traverse, { NodePath } from '@babel/traverse';
+import * as _traverse from '@babel/traverse';
+import { NodePath } from '@babel/traverse';
 import type {
   ImportDeclaration,
   Import,
@@ -18,7 +19,7 @@ import type {
 import type { Parser, ParseResult, ImportInfo, ExportInfo, ReExportInfo } from './types.js';
 
 // Handle CommonJS/ESM interop for @babel/traverse
-const traverse = (_traverse as any).default || _traverse;
+const traverse = (_traverse as typeof _traverse).default || _traverse;
 
 /**
  * Parser for JavaScript and TypeScript files using Babel

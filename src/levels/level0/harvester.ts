@@ -8,7 +8,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import type { Ignore } from 'ignore';
 import type { RawFileMetadata, Level0Output, FileImportData } from '../../core/types.js';
 import { FILE, OUTPUT } from '../../config/index.js';
@@ -148,7 +148,7 @@ function countLines(content: string): number {
  */
 function getGitCommit(repoRoot: string): string {
   try {
-    const commit = execSync('git rev-parse HEAD', {
+    const commit = execFileSync('git', ['rev-parse', 'HEAD'], {
       cwd: repoRoot,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'ignore'],

@@ -55,3 +55,6 @@ venv/
 target/
 bin/
 obj/
+
+.claude/
+.agents/

@@ -7,6 +7,7 @@
 
 import type { LLMProvider, ProviderType } from './types.js';
 import { ClaudeProvider } from './claude-provider.js';
+import { GeminiProvider } from './gemini-provider.js';
 
 /**
  * Create an LLM provider instance
@@ -35,10 +36,7 @@ export function createProvider(type: ProviderType, apiKey?: string): LLMProvider
       return new ClaudeProvider(apiKey);
 
     case 'gemini':
-      throw new Error(
-        'Gemini provider not yet implemented. ' +
-        'Contributions welcome at https://github.com/harshitsinghbhandari/rmap'
-      );
+      return new GeminiProvider(apiKey);
 
     case 'openai':
       throw new Error(
@@ -63,8 +61,8 @@ export function createProvider(type: ProviderType, apiKey?: string): LLMProvider
 export function isProviderImplemented(type: ProviderType): boolean {
   switch (type) {
     case 'anthropic':
-      return true;
     case 'gemini':
+      return true;
     case 'openai':
       return false;
     default:

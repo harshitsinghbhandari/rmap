@@ -1,11 +1,12 @@
 /**
  * Level 3 Deep File Annotator
  *
- * Core annotation engine that reads files and produces semantic annotations
- * using Claude Haiku (small) or Sonnet (medium) based on complexity
+ * Core annotation engine that reads files and produces semantic annotations.
+ * Uses fast models (Claude Haiku/Gemini Flash) for simple files and capable
+ * models (Claude Sonnet/Gemini Pro) for complex files based on agent size.
+ * The LLM provider is configurable via rmap.yaml or environment variables.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { FileAnnotation, RawFileMetadata, DelegationTask, ExplicitTask } from '../../core/types.js';
@@ -19,13 +20,14 @@ import {
 } from './parser.js';
 import { buildTagCorrectionPrompt } from './tag-validator.js';
 import {
-  ANNOTATION_MODEL_MAP,
   CONCURRENCY_CONFIG,
   FILE,
   TOKEN,
   RETRY,
   OUTPUT,
+  LLM_PROVIDER,
 } from '../../config/index.js';
+import { getAnnotationModel } from '../../config/models.js';
 import { LLMClient, MetricsCollector } from '../../core/index.js';
 
 /**
@@ -292,24 +294,22 @@ export async function annotateFiles(
 ): Promise<FileAnnotation[]> {
   const { agentSize, repoRoot, llmClient: providedLLMClient, metrics, quiet = false } = options;
 
+  // Get provider configuration
+  const providerType = LLM_PROVIDER.LEVEL3;
+
   // Initialize client if not provided
   let llmClient = providedLLMClient;
   if (!llmClient) {
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error('ANTHROPIC_API_KEY environment variable is not set');
-    }
-    const anthropicClient = new Anthropic({ apiKey });
-    llmClient = new LLMClient(anthropicClient);
+    llmClient = LLMClient.withProvider(providerType);
   }
 
-  // Select model
-  const model = ANNOTATION_MODEL_MAP[agentSize];
+  // Select model based on provider and agent size
+  const model = getAnnotationModel(providerType, agentSize);
 
   // Only print header when not in quiet mode (not called from annotateTask)
   if (!quiet) {
     console.log(`Starting Level 3 annotation...`);
-    console.log(`Agent size: ${agentSize} (${model})`);
+    console.log(`Using ${providerType} provider with ${model} (agent size: ${agentSize})`);
     console.log(`Concurrency: ${CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS} parallel tasks\n`);
   }
 

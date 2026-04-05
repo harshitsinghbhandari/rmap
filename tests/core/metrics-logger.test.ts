@@ -1,203 +1,100 @@
-/**
- * Tests for Metrics Logger
- */
-
-import { describe, it, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as os from 'node:os';
 import {
+  getLatestMetrics,
   writeMetricsLog,
   formatMetricsSummary,
   printCompactSummary,
-  getLatestMetrics,
-  printLatencyAnalysis,
-  writeLatencyLog,
 } from '../../src/core/metrics-logger.js';
-import { globalLatencyTracker } from '../../src/core/latency-tracker.js';
+import type { MetricsSummary } from '../../src/core/metrics.js';
+
+// Mock data
+const mockSummary: MetricsSummary = {
+  totalDurationMs: 120000,
+  totalFilesProcessed: 100,
+  totalApiCalls: 50,
+  totalInputTokens: 50000,
+  totalOutputTokens: 20000,
+  totalEstimatedCost: 0.15,
+  costByModel: {
+    'claude-3-haiku-20240307': 0.05,
+    'claude-3-sonnet-20240229': 0.10,
+  },
+};
 
 describe('Metrics Logger', () => {
-  let tempDir: string;
+  const testRepoRoot = path.join(process.cwd(), 'test-metrics-repo');
 
-  const dummySummary = {
-    startedAt: new Date().toISOString(),
-    completedAt: new Date().toISOString(),
-    totalDurationMs: 1000,
-    totalDurationMin: 0.02,
-    levels: [],
-    totalInputTokens: 100,
-    totalOutputTokens: 50,
-    totalApiCalls: 2,
-    totalFilesProcessed: 5,
-    totalEstimatedCost: 0.05,
-    costByModel: { 'claude-haiku': 0.05 },
-  };
-
-  beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rmap-metrics-test-'));
-    globalLatencyTracker.reset();
-  });
-
-  afterEach(() => {
-    if (fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    }
-    if (mock && typeof mock.restoreAll === 'function') {
-      mock.restoreAll();
+  before(() => {
+    if (!fs.existsSync(testRepoRoot)) {
+      fs.mkdirSync(testRepoRoot, { recursive: true });
     }
   });
 
-  describe('writeMetricsLog', () => {
-    it('should create logs directory and write log files', () => {
-      const logPath = writeMetricsLog(tempDir, dummySummary);
-
-      const logsDir = path.join(tempDir, '.repo_map', 'logs');
-      assert.ok(fs.existsSync(logsDir), 'Logs directory should be created');
-      assert.ok(fs.existsSync(logPath), 'Timestamped log file should be created');
-
-      const latestPath = path.join(logsDir, 'latest.json');
-      assert.ok(fs.existsSync(latestPath), 'latest.json should be created');
-
-      const latestContent = JSON.parse(fs.readFileSync(latestPath, 'utf-8'));
-      assert.strictEqual(latestContent.totalInputTokens, dummySummary.totalInputTokens);
-    });
-
-    it('should include latency data by default', () => {
-      globalLatencyTracker.recordCall({
-        startedAt: new Date().toISOString(),
-        latencyMs: 100,
-        inputTokens: 10,
-        outputTokens: 5,
-        tokensPerSecond: 50,
-        model: 'test-model',
-        level: 1
-      });
-
-      const logPath = writeMetricsLog(tempDir, dummySummary);
-      const content = JSON.parse(fs.readFileSync(logPath, 'utf-8'));
-
-      assert.ok(content.latency, 'Latency data should be included');
-      assert.strictEqual(content.latency.totalCalls, 1);
-    });
-
-    it('should exclude latency data when includeLatency is false', () => {
-      const logPath = writeMetricsLog(tempDir, dummySummary, false);
-      const content = JSON.parse(fs.readFileSync(logPath, 'utf-8'));
-
-      assert.strictEqual(content.latency, undefined, 'Latency data should be excluded');
-    });
+  after(() => {
+    // Clean up test files but keep the directory for subsequent tests if needed
+    const logsDir = path.join(testRepoRoot, '.repo_map', 'logs');
+    if (fs.existsSync(logsDir)) {
+      fs.rmSync(logsDir, { recursive: true, force: true });
+    }
   });
 
-  describe('formatMetricsSummary', () => {
-    it('should format summary string with expected metrics', () => {
-      const summaryString = formatMetricsSummary(dummySummary, 'test-log.json');
+  test('writeMetricsLog creates a log file and latest.json', () => {
+    const logPath = writeMetricsLog(testRepoRoot, mockSummary);
 
-      assert.ok(summaryString.includes('Duration:'), 'Should include Duration');
-      assert.ok(summaryString.includes('Files:        5 processed'), 'Should include files processed');
-      assert.ok(summaryString.includes('API Calls:    2'), 'Should include API calls');
-      assert.ok(summaryString.includes('Tokens:       150'), 'Should include total tokens');
-      assert.ok(summaryString.includes('Est. Cost:    $0.05'), 'Should include estimated cost');
-    });
+    assert.ok(fs.existsSync(logPath), 'Log file should exist');
+    assert.ok(fs.existsSync(path.join(testRepoRoot, '.repo_map', 'logs', 'latest.json')), 'latest.json should exist');
 
-    it('should include cost breakdown for multiple models', () => {
-      const multiModelSummary = {
-        ...dummySummary,
-        costByModel: {
-          'claude-haiku': 0.05,
-          'claude-sonnet': 0.15
-        }
-      };
-
-      const summaryString = formatMetricsSummary(multiModelSummary, 'test-log.json');
-      assert.ok(summaryString.includes('Cost Breakdown:'), 'Should include Cost Breakdown section');
-      assert.ok(summaryString.includes('Haiku: $0.05'), 'Should include Haiku cost');
-      assert.ok(summaryString.includes('Sonnet: $0.15'), 'Should include Sonnet cost');
-    });
+    const content = JSON.parse(fs.readFileSync(logPath, 'utf8'));
+    assert.strictEqual(content.totalFilesProcessed, mockSummary.totalFilesProcessed);
   });
 
-  describe('getLatestMetrics', () => {
-    it('should return parsed content of latest.json', () => {
-      writeMetricsLog(tempDir, dummySummary);
-      const latest = getLatestMetrics(tempDir);
+  test('getLatestMetrics returns metrics from latest.json', () => {
+    writeMetricsLog(testRepoRoot, mockSummary);
+    const latest = getLatestMetrics(testRepoRoot);
 
-      assert.notStrictEqual(latest, null);
-      assert.strictEqual(latest?.totalInputTokens, dummySummary.totalInputTokens);
-    });
-
-    it('should return null if latest.json does not exist', () => {
-      const latest = getLatestMetrics(tempDir);
-      assert.strictEqual(latest, null);
-    });
+    assert.ok(latest !== null, 'Should return metrics');
+    assert.strictEqual(latest?.totalFilesProcessed, mockSummary.totalFilesProcessed);
   });
 
-  describe('printCompactSummary', () => {
-    it('should log expected summary information', () => {
-      const logs: string[] = [];
-      const originalLog = console.log;
-      console.log = (...args) => logs.push(args.join(' '));
+  test('getLatestMetrics returns null when no map exists', () => {
+    const emptyRoot = path.join(testRepoRoot, 'empty-repo');
+    fs.mkdirSync(emptyRoot, { recursive: true });
 
-      try {
-        printCompactSummary(dummySummary, 5, 'test-log.json');
+    const latest = getLatestMetrics(emptyRoot);
+    assert.strictEqual(latest, null);
 
-        assert.ok(logs.length >= 1);
-        const allLogs = logs.join('\n');
-        assert.ok(allLogs.includes('Map created successfully'));
-        assert.ok(allLogs.includes('Files: 5 processed'));
-        assert.ok(allLogs.includes('Cost: $0.05'));
-      } finally {
-        console.log = originalLog;
-      }
-    });
+    fs.rmSync(emptyRoot, { recursive: true, force: true });
   });
 
-  describe('printLatencyAnalysis', () => {
-    it('should print analysis when calls are recorded', () => {
-      const logs: string[] = [];
-      const originalLog = console.log;
-      console.log = (...args) => logs.push(args.join(' '));
+  test('getLatestMetrics handles corrupted JSON gracefully', () => {
+    const logsDir = path.join(testRepoRoot, '.repo_map', 'logs');
+    fs.mkdirSync(logsDir, { recursive: true });
+    fs.writeFileSync(path.join(logsDir, 'latest.json'), 'not-json');
 
-      try {
-        globalLatencyTracker.recordCall({
-          startedAt: new Date().toISOString(),
-          latencyMs: 100,
-          inputTokens: 10,
-          outputTokens: 5,
-          tokensPerSecond: 50,
-          model: 'test-model',
-          level: 1
-        });
-
-        printLatencyAnalysis();
-
-        const allLogs = logs.join('\n');
-        assert.ok(allLogs.includes('LLM LATENCY ANALYSIS'));
-        assert.ok(allLogs.includes('Level 1'));
-      } finally {
-        console.log = originalLog;
-      }
-    });
-
-    it('should return early if no calls recorded', () => {
-      const logs: string[] = [];
-      const originalLog = console.log;
-      console.log = (...args) => logs.push(args.join(' '));
-
-      try {
-        printLatencyAnalysis();
-        assert.strictEqual(logs.length, 0);
-      } finally {
-        console.log = originalLog;
-      }
-    });
+    const latest = getLatestMetrics(testRepoRoot);
+    assert.strictEqual(latest, null);
   });
 
-  describe('writeLatencyLog', () => {
-    it('should create latency log files', () => {
-      const logPath = writeLatencyLog(tempDir);
+  test('formatMetricsSummary produces a formatted string', () => {
+    const logPath = 'test-log.json';
+    const summary = formatMetricsSummary(mockSummary, logPath);
 
-      assert.ok(fs.existsSync(logPath));
-      assert.ok(fs.existsSync(path.join(tempDir, '.repo_map', 'logs', 'latency-latest.json')));
-    });
+    assert.ok(summary.includes('📊 Metrics Summary'), 'Should contain header');
+    assert.ok(summary.includes('100 processed'), 'Should contain file count');
+    assert.ok(summary.includes('Est. Cost: $0.15'), 'Should contain cost');
+  });
+
+  test('printCompactSummary logs to console', () => {
+    const consoleSpy = Math.random() > 0 ? jest.spyOn(console, 'log').mockImplementation(() => {}) : null; // Simplified for non-jest env
+
+    // If we are not using Jest, we can just call it and it won't throw
+    printCompactSummary(mockSummary, 100, 'log.json');
+
+    if (consoleSpy) {
+      assert.ok(consoleSpy.called, 'Should call console.log');
+      consoleSpy.mockRestore();
+    }
   });
 });

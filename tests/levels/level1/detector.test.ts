@@ -10,26 +10,42 @@ import { detectStructure } from '../../../src/levels/level1/detector.js';
 import type { Level0Output } from '../../../src/core/types.js';
 
 describe('Level 1 Detector - Edge Cases', () => {
-  let originalApiKey: string | undefined;
+  let originalAnthropicKey: string | undefined;
+  let originalGeminiKey: string | undefined;
+  let originalGoogleKey: string | undefined;
 
   beforeEach(() => {
-    // Save original API key
-    originalApiKey = process.env.ANTHROPIC_API_KEY;
+    // Save original API keys
+    originalAnthropicKey = process.env.ANTHROPIC_API_KEY;
+    originalGeminiKey = process.env.GEMINI_API_KEY;
+    originalGoogleKey = process.env.GOOGLE_API_KEY;
   });
 
   afterEach(() => {
-    // Restore original API key
-    if (originalApiKey) {
-      process.env.ANTHROPIC_API_KEY = originalApiKey;
+    // Restore original API keys
+    if (originalAnthropicKey) {
+      process.env.ANTHROPIC_API_KEY = originalAnthropicKey;
     } else {
       delete process.env.ANTHROPIC_API_KEY;
+    }
+    if (originalGeminiKey) {
+      process.env.GEMINI_API_KEY = originalGeminiKey;
+    } else {
+      delete process.env.GEMINI_API_KEY;
+    }
+    if (originalGoogleKey) {
+      process.env.GOOGLE_API_KEY = originalGoogleKey;
+    } else {
+      delete process.env.GOOGLE_API_KEY;
     }
   });
 
   describe('API key validation', () => {
-    it('should throw error when ANTHROPIC_API_KEY is not set', async () => {
-      // Remove API key
+    it('should throw error when API key is not set for the configured provider', async () => {
+      // Remove all API keys to ensure the provider can't find one
       delete process.env.ANTHROPIC_API_KEY;
+      delete process.env.GEMINI_API_KEY;
+      delete process.env.GOOGLE_API_KEY;
 
       const mockLevel0: Level0Output = {
         files: [
@@ -52,16 +68,28 @@ describe('Level 1 Detector - Edge Cases', () => {
       await assert.rejects(
         async () => await detectStructure(mockLevel0, '/fake/repo'),
         (error: Error) => {
-          assert.ok(error.message.includes('ANTHROPIC_API_KEY'));
+          // Provider will throw an error about missing API key or authentication
+          // Anthropic SDK: "Could not resolve authentication method"
+          // Gemini SDK: "API key is required"
+          const msg = error.message.toLowerCase();
+          assert.ok(
+            msg.includes('api key') ||
+            msg.includes('api_key') ||
+            msg.includes('authentication') ||
+            msg.includes('apikey'),
+            `Expected API key error, got: ${error.message}`
+          );
           return true;
         },
         'Should throw error when API key is missing'
       );
     });
 
-    it('should throw error when ANTHROPIC_API_KEY is empty string', async () => {
-      // Set empty API key
+    it('should throw error when API key is empty string', async () => {
+      // Set empty API keys
       process.env.ANTHROPIC_API_KEY = '';
+      delete process.env.GEMINI_API_KEY;
+      delete process.env.GOOGLE_API_KEY;
 
       const mockLevel0: Level0Output = {
         files: [
@@ -84,8 +112,15 @@ describe('Level 1 Detector - Edge Cases', () => {
       await assert.rejects(
         async () => await detectStructure(mockLevel0, '/fake/repo'),
         (error: Error) => {
-          // Empty string is falsy, so it should fail the same check
-          assert.ok(error.message.includes('ANTHROPIC_API_KEY') || error.message.includes('API'));
+          // Empty string should cause an API-related error
+          const msg = error.message.toLowerCase();
+          assert.ok(
+            msg.includes('api') ||
+            msg.includes('key') ||
+            msg.includes('auth') ||
+            msg.includes('invalid'),
+            `Expected API-related error, got: ${error.message}`
+          );
           return true;
         },
         'Should throw error when API key is empty'
