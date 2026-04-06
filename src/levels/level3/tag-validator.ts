@@ -3,9 +3,9 @@ import {
   TAG_TIERS,
   BANNED_TAG_COMBINATIONS,
   BARREL_FILE_DISCOURAGED_TAGS,
-  MAX_TAGS_PER_FILE,
   type Tag,
 } from '../../core/constants.js';
+import { FILE } from '../../config/index.js';
 
 export interface TagValidationWarning {
   type: 'banned_combination' | 'barrel_file_discouraged' | 'low_signal_tag' | 'too_many_low_signal';
@@ -25,8 +25,9 @@ export interface TagValidationResult {
  * Validates a single tag against the taxonomy.
  */
 export function validateTag(tag: string): Tag | null {
-  if (TAG_TAXONOMY.includes(tag as Tag)) {
-    return tag as Tag;
+  const normalized = tag.toLowerCase() as Tag;
+  if (TAG_TAXONOMY.includes(normalized)) {
+    return normalized;
   }
   return null;
 }
@@ -35,7 +36,30 @@ export function validateTag(tag: string): Tag | null {
  * Checks if a file is a barrel file (e.g., index.ts, index.js).
  */
 export function isBarrelFile(filepath: string): boolean {
-  return /index\.(ts|js|tsx|jsx)$/.test(filepath);
+  return /(?:^|\/)(?:index\.[a-z]+|mod\.rs|__init__\.py)$/i.test(filepath);
+}
+
+/**
+ * Returns the tier of a tag (1 for high-signal, 2 for architecture, 3 for low-signal).
+ */
+export function getTagTier(tag: Tag): number {
+  if ((TAG_TIERS.HIGH_SIGNAL as readonly Tag[]).includes(tag)) return 1;
+  if ((TAG_TIERS.ARCHITECTURE as readonly Tag[]).includes(tag)) return 2;
+  if ((TAG_TIERS.LOW_SIGNAL as readonly Tag[]).includes(tag)) return 3;
+  return 3;
+}
+
+/**
+ * Detects banned combinations of tags.
+ */
+export function detectBannedCombinations(tags: Tag[]): Array<[Tag, Tag]> {
+  const detected: Array<[Tag, Tag]> = [];
+  for (const combo of BANNED_TAG_COMBINATIONS) {
+    if (tags.includes(combo[0]) && tags.includes(combo[1])) {
+      detected.push([combo[0], combo[1]]);
+    }
+  }
+  return detected;
 }
 
 /**
@@ -57,33 +81,46 @@ export function detectBarrelFileDiscouragedTags(tags: Tag[], filepath: string): 
  * Validates a list of tags and checks for quality issues.
  */
 export function validateTagsWithDetails(tags: string[], filepath: string): TagValidationResult {
-  const valid: Tag[] = [];
-  const invalid: string[] = [];
+  let valid: Tag[] = [];
+  let invalid: string[] = [];
   const warnings: TagValidationWarning[] = [];
 
-  // Categorize valid vs invalid
+  // Categorize valid vs invalid and deduplicate
+  const seenValid = new Set<Tag>();
+  const seenInvalid = new Set<string>();
+
   for (const tag of tags) {
     const validTag = validateTag(tag);
     if (validTag) {
-      valid.push(validTag);
+      if (!seenValid.has(validTag)) {
+        seenValid.add(validTag);
+        valid.push(validTag);
+      }
     } else {
-      invalid.push(tag);
+      if (!seenInvalid.has(tag)) {
+        seenInvalid.add(tag);
+        invalid.push(tag);
+      }
     }
+  }
+
+  // Enforce max tags limit
+  if (valid.length > FILE.MAX_TAGS_PER_FILE) {
+    valid = valid.slice(0, FILE.MAX_TAGS_PER_FILE);
   }
 
   // Quality checks on valid tags
   let passesQualityChecks = true;
 
   // 1. Banned combinations
-  for (const combo of BANNED_TAG_COMBINATIONS) {
-    if (valid.includes(combo[0]) && valid.includes(combo[1])) {
-      warnings.push({
-        type: 'banned_combination',
-        message: `Banned combination: "${combo[0]}" + "${combo[1]}"`,
-        tags: [combo[0], combo[1]],
-      });
-      passesQualityChecks = false;
-    }
+  const bannedCombos = detectBannedCombinations(valid);
+  for (const combo of bannedCombos) {
+    warnings.push({
+      type: 'banned_combination',
+      message: `Banned combination: "${combo[0]}" + "${combo[1]}"`,
+      tags: [combo[0], combo[1]],
+    });
+    passesQualityChecks = false;
   }
 
   // 2. Barrel file discouraged tags
@@ -131,10 +168,10 @@ export function validateTagsWithDetails(tags: string[], filepath: string): TagVa
  */
 export function buildTagCorrectionPrompt(invalidTags: string[], originalResponse: string): string {
   return `
-Your previous response contained invalid tags. The following tags are not in the allowed taxonomy:
+Your previous response contained Invalid tags. The following tags are not in the allowed taxonomy:
 ${invalidTags.map((tag) => `- ${tag}`).join('\n')}
 
-Please provide 1-${MAX_TAGS_PER_FILE} tags from the taxonomy below. Choose the MOST DEFINING tags.
+Please provide 1-${FILE.MAX_TAGS_PER_FILE} tags from the taxonomy below. Choose the MOST DEFINING tags.
 
 HIGH-SIGNAL DOMAIN TAGS:
 ${TAG_TIERS.HIGH_SIGNAL.map((t) => `- ${t}`).join('\n')}
@@ -159,7 +196,7 @@ export function buildTagQualityPrompt(warnings: TagValidationWarning[], original
 Your previous response contained tags with quality warnings:
 ${warningMessages}
 
-Please revise your tags. Choose the MOST DEFINING tags (1-${MAX_TAGS_PER_FILE}).
+Please revise your tags. Choose the MOST DEFINING tags (1-${FILE.MAX_TAGS_PER_FILE}).
 Prefer specific domain tags over generic ones.
 Barrel files should not use domain tags if they only re-export them.
 
