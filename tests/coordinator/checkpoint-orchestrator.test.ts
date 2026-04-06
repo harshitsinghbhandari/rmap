@@ -1,6 +1,5 @@
 import assert from 'node:assert';
 import { describe, test, before, after } from 'node:test';
-import { describe, test, before, after } from 'node:test';
 import { tryLoadCheckpoint } from '../../src/coordinator/checkpoint-orchestrator.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';

@@ -1,96 +1,3317 @@
 {
-  "tasks": [
-    {
-      "scope": "./",
-      "agent_size": "small",
-      "estimated_files": 15
+  "taskPlan": {
+    "tasks": [
+      {
+        "taskId": "task_001",
+        "files": [
+          {
+            "path": ".env",
+            "taskId": "task_001",
+            "loc": 2,
+            "effectiveLoc": 2,
+            "trimmed": false
+          },
+          {
+            "path": ".gitignore",
+            "taskId": "task_001",
+            "loc": 44,
+            "effectiveLoc": 44,
+            "trimmed": false
+          },
+          {
+            "path": ".rmapignore",
+            "taskId": "task_001",
+            "loc": 61,
+            "effectiveLoc": 61,
+            "trimmed": false
+          },
+          {
+            "path": "agent-orchestrator.yaml",
+            "taskId": "task_001",
+            "loc": 28,
+            "effectiveLoc": 28,
+            "trimmed": false,
+            "language": "YAML"
+          },
+          {
+            "path": "CHANGELOG.md",
+            "taskId": "task_001",
+            "loc": 188,
+            "effectiveLoc": 188,
+            "trimmed": false,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 323,
+        "originalLoc": 323,
+        "fileCount": 5,
+        "primaryDirectory": ".",
+        "agentSize": "small"
+      },
+      {
+        "taskId": "task_002",
+        "files": [
+          {
+            "path": "CONTRIBUTING.md",
+            "taskId": "task_002",
+            "loc": 614,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 614,
+        "fileCount": 1,
+        "primaryDirectory": ".",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_003",
+        "files": [
+          {
+            "path": "DEVTEST.md",
+            "taskId": "task_003",
+            "loc": 138,
+            "effectiveLoc": 138,
+            "trimmed": false,
+            "language": "Markdown"
+          },
+          {
+            "path": "LICENSE",
+            "taskId": "task_003",
+            "loc": 22,
+            "effectiveLoc": 22,
+            "trimmed": false
+          },
+          {
+            "path": "package.json",
+            "taskId": "task_003",
+            "loc": 84,
+            "effectiveLoc": 84,
+            "trimmed": false,
+            "language": "JSON"
+          }
+        ],
+        "totalLoc": 244,
+        "originalLoc": 244,
+        "fileCount": 3,
+        "primaryDirectory": ".",
+        "agentSize": "small"
+      },
+      {
+        "taskId": "task_004",
+        "files": [
+          {
+            "path": "plan-ahead.md",
+            "taskId": "task_004",
+            "loc": 948,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 948,
+        "fileCount": 1,
+        "primaryDirectory": ".",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_005",
+        "files": [
+          {
+            "path": "README.md",
+            "taskId": "task_005",
+            "loc": 488,
+            "effectiveLoc": 488,
+            "trimmed": false,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 488,
+        "originalLoc": 488,
+        "fileCount": 1,
+        "primaryDirectory": ".",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_006",
+        "files": [
+          {
+            "path": "rmap.example.yaml",
+            "taskId": "task_006",
+            "loc": 30,
+            "effectiveLoc": 30,
+            "trimmed": false,
+            "language": "YAML"
+          },
+          {
+            "path": "rmap.yaml",
+            "taskId": "task_006",
+            "loc": 30,
+            "effectiveLoc": 30,
+            "trimmed": false,
+            "language": "YAML"
+          },
+          {
+            "path": "skills-lock.json",
+            "taskId": "task_006",
+            "loc": 31,
+            "effectiveLoc": 31,
+            "trimmed": false,
+            "language": "JSON"
+          },
+          {
+            "path": "tsconfig.json",
+            "taskId": "task_006",
+            "loc": 24,
+            "effectiveLoc": 24,
+            "trimmed": false,
+            "language": "JSON"
+          },
+          {
+            "path": "tsup.config.ts",
+            "taskId": "task_006",
+            "loc": 22,
+            "effectiveLoc": 22,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "docs/adding-llm-providers.md",
+            "taskId": "task_006",
+            "loc": 300,
+            "effectiveLoc": 300,
+            "trimmed": false,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 437,
+        "originalLoc": 437,
+        "fileCount": 6,
+        "primaryDirectory": ".",
+        "agentSize": "small"
+      },
+      {
+        "taskId": "task_007",
+        "files": [
+          {
+            "path": "docs/ARCHITECTURE.md",
+            "taskId": "task_007",
+            "loc": 871,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 871,
+        "fileCount": 1,
+        "primaryDirectory": "docs",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_008",
+        "files": [
+          {
+            "path": "docs/CLI.md",
+            "taskId": "task_008",
+            "loc": 677,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 677,
+        "fileCount": 1,
+        "primaryDirectory": "docs",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_009",
+        "files": [
+          {
+            "path": "docs/CONFIGURATION.md",
+            "taskId": "task_009",
+            "loc": 995,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 995,
+        "fileCount": 1,
+        "primaryDirectory": "docs",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_010",
+        "files": [
+          {
+            "path": "docs/VALIDATION.md",
+            "taskId": "task_010",
+            "loc": 130,
+            "effectiveLoc": 130,
+            "trimmed": false,
+            "language": "Markdown"
+          },
+          {
+            "path": "docs/phases/phase-1-foundation.md",
+            "taskId": "task_010",
+            "loc": 228,
+            "effectiveLoc": 228,
+            "trimmed": false,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 358,
+        "originalLoc": 358,
+        "fileCount": 2,
+        "primaryDirectory": "docs",
+        "agentSize": "small"
+      },
+      {
+        "taskId": "task_011",
+        "files": [
+          {
+            "path": "docs/phases/phase-2-event-flows.md",
+            "taskId": "task_011",
+            "loc": 251,
+            "effectiveLoc": 251,
+            "trimmed": false,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 251,
+        "originalLoc": 251,
+        "fileCount": 1,
+        "primaryDirectory": "docs/phases",
+        "agentSize": "small"
+      },
+      {
+        "taskId": "task_012",
+        "files": [
+          {
+            "path": "docs/phases/phase-3-evolution.md",
+            "taskId": "task_012",
+            "loc": 288,
+            "effectiveLoc": 288,
+            "trimmed": false,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 288,
+        "originalLoc": 288,
+        "fileCount": 1,
+        "primaryDirectory": "docs/phases",
+        "agentSize": "small"
+      },
+      {
+        "taskId": "task_013",
+        "files": [
+          {
+            "path": "docs/phases/phase-4-advanced.md",
+            "taskId": "task_013",
+            "loc": 294,
+            "effectiveLoc": 294,
+            "trimmed": false,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 294,
+        "originalLoc": 294,
+        "fileCount": 1,
+        "primaryDirectory": "docs/phases",
+        "agentSize": "small"
+      },
+      {
+        "taskId": "task_014",
+        "files": [
+          {
+            "path": "docs/research/loc-based-task-division.md",
+            "taskId": "task_014",
+            "loc": 516,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "Markdown"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 516,
+        "fileCount": 1,
+        "primaryDirectory": "docs/research",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_015",
+        "files": [
+          {
+            "path": "scripts/preview-tasks.sh",
+            "taskId": "task_015",
+            "loc": 39,
+            "effectiveLoc": 39,
+            "trimmed": false,
+            "language": "Shell"
+          },
+          {
+            "path": "scripts/preview-tasks.ts",
+            "taskId": "task_015",
+            "loc": 276,
+            "effectiveLoc": 276,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 315,
+        "originalLoc": 315,
+        "fileCount": 2,
+        "primaryDirectory": "scripts",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_016",
+        "files": [
+          {
+            "path": "scripts/setup.sh",
+            "taskId": "task_016",
+            "loc": 403,
+            "effectiveLoc": 403,
+            "trimmed": false,
+            "language": "Shell"
+          }
+        ],
+        "totalLoc": 403,
+        "originalLoc": 403,
+        "fileCount": 1,
+        "primaryDirectory": "scripts",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_017",
+        "files": [
+          {
+            "path": "src/index.ts",
+            "taskId": "task_017",
+            "loc": 15,
+            "effectiveLoc": 15,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/version.ts",
+            "taskId": "task_017",
+            "loc": 5,
+            "effectiveLoc": 5,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/cli/display.ts",
+            "taskId": "task_017",
+            "loc": 284,
+            "effectiveLoc": 284,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/cli/index.ts",
+            "taskId": "task_017",
+            "loc": 69,
+            "effectiveLoc": 69,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 373,
+        "originalLoc": 373,
+        "fileCount": 4,
+        "primaryDirectory": "src",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_018",
+        "files": [
+          {
+            "path": "src/cli/progress-ui.ts",
+            "taskId": "task_018",
+            "loc": 493,
+            "effectiveLoc": 493,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 493,
+        "originalLoc": 493,
+        "fileCount": 1,
+        "primaryDirectory": "src/cli",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_019",
+        "files": [
+          {
+            "path": "src/cli/types.ts",
+            "taskId": "task_019",
+            "loc": 124,
+            "effectiveLoc": 124,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/cli/ui-constants.ts",
+            "taskId": "task_019",
+            "loc": 149,
+            "effectiveLoc": 149,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 273,
+        "originalLoc": 273,
+        "fileCount": 2,
+        "primaryDirectory": "src/cli",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_020",
+        "files": [
+          {
+            "path": "src/cli/commands/get-context.ts",
+            "taskId": "task_020",
+            "loc": 114,
+            "effectiveLoc": 114,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/cli/commands/index.ts",
+            "taskId": "task_020",
+            "loc": 9,
+            "effectiveLoc": 9,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 123,
+        "originalLoc": 123,
+        "fileCount": 2,
+        "primaryDirectory": "src/cli/commands",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_021",
+        "files": [
+          {
+            "path": "src/cli/commands/map.ts",
+            "taskId": "task_021",
+            "loc": 440,
+            "effectiveLoc": 440,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 440,
+        "originalLoc": 440,
+        "fileCount": 1,
+        "primaryDirectory": "src/cli/commands",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_022",
+        "files": [
+          {
+            "path": "src/config/defaults.ts",
+            "taskId": "task_022",
+            "loc": 429,
+            "effectiveLoc": 429,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 429,
+        "originalLoc": 429,
+        "fileCount": 1,
+        "primaryDirectory": "src/config",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_023",
+        "files": [
+          {
+            "path": "src/config/env.ts",
+            "taskId": "task_023",
+            "loc": 610,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 610,
+        "fileCount": 1,
+        "primaryDirectory": "src/config",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_024",
+        "files": [
+          {
+            "path": "src/config/index.ts",
+            "taskId": "task_024",
+            "loc": 105,
+            "effectiveLoc": 105,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/config/models.ts",
+            "taskId": "task_024",
+            "loc": 208,
+            "effectiveLoc": 208,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/config/rmapignore-defaults.ts",
+            "taskId": "task_024",
+            "loc": 72,
+            "effectiveLoc": 72,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 385,
+        "originalLoc": 385,
+        "fileCount": 3,
+        "primaryDirectory": "src/config",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_025",
+        "files": [
+          {
+            "path": "src/config/yaml-config.ts",
+            "taskId": "task_025",
+            "loc": 179,
+            "effectiveLoc": 179,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/coordinator/assembler.ts",
+            "taskId": "task_025",
+            "loc": 243,
+            "effectiveLoc": 243,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 422,
+        "originalLoc": 422,
+        "fileCount": 2,
+        "primaryDirectory": "src/config",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_026",
+        "files": [
+          {
+            "path": "src/coordinator/checkpoint-orchestrator.ts",
+            "taskId": "task_026",
+            "loc": 372,
+            "effectiveLoc": 372,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 372,
+        "originalLoc": 372,
+        "fileCount": 1,
+        "primaryDirectory": "src/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_027",
+        "files": [
+          {
+            "path": "src/coordinator/checkpoint.ts",
+            "taskId": "task_027",
+            "loc": 357,
+            "effectiveLoc": 357,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 357,
+        "originalLoc": 357,
+        "fileCount": 1,
+        "primaryDirectory": "src/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_028",
+        "files": [
+          {
+            "path": "src/coordinator/delta-update.ts",
+            "taskId": "task_028",
+            "loc": 210,
+            "effectiveLoc": 210,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 210,
+        "originalLoc": 210,
+        "fileCount": 1,
+        "primaryDirectory": "src/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_029",
+        "files": [
+          {
+            "path": "src/coordinator/delta.ts",
+            "taskId": "task_029",
+            "loc": 327,
+            "effectiveLoc": 327,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 327,
+        "originalLoc": 327,
+        "fileCount": 1,
+        "primaryDirectory": "src/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_030",
+        "files": [
+          {
+            "path": "src/coordinator/graph-repair.ts",
+            "taskId": "task_030",
+            "loc": 266,
+            "effectiveLoc": 266,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/coordinator/graph.ts",
+            "taskId": "task_030",
+            "loc": 153,
+            "effectiveLoc": 153,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 419,
+        "originalLoc": 419,
+        "fileCount": 2,
+        "primaryDirectory": "src/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_031",
+        "files": [
+          {
+            "path": "src/coordinator/incremental-annotations.ts",
+            "taskId": "task_031",
+            "loc": 162,
+            "effectiveLoc": 162,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/coordinator/index.ts",
+            "taskId": "task_031",
+            "loc": 114,
+            "effectiveLoc": 114,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 276,
+        "originalLoc": 276,
+        "fileCount": 2,
+        "primaryDirectory": "src/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_032",
+        "files": [
+          {
+            "path": "src/coordinator/pipeline.ts",
+            "taskId": "task_032",
+            "loc": 640,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 640,
+        "fileCount": 1,
+        "primaryDirectory": "src/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_033",
+        "files": [
+          {
+            "path": "src/coordinator/progress.ts",
+            "taskId": "task_033",
+            "loc": 139,
+            "effectiveLoc": 139,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/coordinator/shutdown-handler.ts",
+            "taskId": "task_033",
+            "loc": 92,
+            "effectiveLoc": 92,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 231,
+        "originalLoc": 231,
+        "fileCount": 2,
+        "primaryDirectory": "src/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_034",
+        "files": [
+          {
+            "path": "src/coordinator/versioning.ts",
+            "taskId": "task_034",
+            "loc": 298,
+            "effectiveLoc": 298,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 298,
+        "originalLoc": 298,
+        "fileCount": 1,
+        "primaryDirectory": "src/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_035",
+        "files": [
+          {
+            "path": "src/core/concurrency.ts",
+            "taskId": "task_035",
+            "loc": 189,
+            "effectiveLoc": 189,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 189,
+        "originalLoc": 189,
+        "fileCount": 1,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_036",
+        "files": [
+          {
+            "path": "src/core/constants.ts",
+            "taskId": "task_036",
+            "loc": 351,
+            "effectiveLoc": 351,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 351,
+        "originalLoc": 351,
+        "fileCount": 1,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_037",
+        "files": [
+          {
+            "path": "src/core/errors.ts",
+            "taskId": "task_037",
+            "loc": 213,
+            "effectiveLoc": 213,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/core/git-utils.ts",
+            "taskId": "task_037",
+            "loc": 204,
+            "effectiveLoc": 204,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 417,
+        "originalLoc": 417,
+        "fileCount": 2,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_038",
+        "files": [
+          {
+            "path": "src/core/ignore-patterns.ts",
+            "taskId": "task_038",
+            "loc": 299,
+            "effectiveLoc": 299,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/core/index.ts",
+            "taskId": "task_038",
+            "loc": 149,
+            "effectiveLoc": 149,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 448,
+        "originalLoc": 448,
+        "fileCount": 2,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_039",
+        "files": [
+          {
+            "path": "src/core/json-utils.ts",
+            "taskId": "task_039",
+            "loc": 56,
+            "effectiveLoc": 56,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/core/latency-tracker.ts",
+            "taskId": "task_039",
+            "loc": 306,
+            "effectiveLoc": 306,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 362,
+        "originalLoc": 362,
+        "fileCount": 2,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_040",
+        "files": [
+          {
+            "path": "src/core/llm-client.ts",
+            "taskId": "task_040",
+            "loc": 462,
+            "effectiveLoc": 462,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 462,
+        "originalLoc": 462,
+        "fileCount": 1,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_041",
+        "files": [
+          {
+            "path": "src/core/metrics-logger.ts",
+            "taskId": "task_041",
+            "loc": 272,
+            "effectiveLoc": 272,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 272,
+        "originalLoc": 272,
+        "fileCount": 1,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_042",
+        "files": [
+          {
+            "path": "src/core/metrics.ts",
+            "taskId": "task_042",
+            "loc": 265,
+            "effectiveLoc": 265,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/core/prompt-logger.ts",
+            "taskId": "task_042",
+            "loc": 185,
+            "effectiveLoc": 185,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 450,
+        "originalLoc": 450,
+        "fileCount": 2,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_043",
+        "files": [
+          {
+            "path": "src/core/rate-limiter.ts",
+            "taskId": "task_043",
+            "loc": 262,
+            "effectiveLoc": 262,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 262,
+        "originalLoc": 262,
+        "fileCount": 1,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_044",
+        "files": [
+          {
+            "path": "src/core/types.ts",
+            "taskId": "task_044",
+            "loc": 518,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 518,
+        "fileCount": 1,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_045",
+        "files": [
+          {
+            "path": "src/core/validation.ts",
+            "taskId": "task_045",
+            "loc": 485,
+            "effectiveLoc": 485,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 485,
+        "originalLoc": 485,
+        "fileCount": 1,
+        "primaryDirectory": "src/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_046",
+        "files": [
+          {
+            "path": "src/core/providers/claude-provider.ts",
+            "taskId": "task_046",
+            "loc": 161,
+            "effectiveLoc": 161,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/core/providers/factory.ts",
+            "taskId": "task_046",
+            "loc": 90,
+            "effectiveLoc": 90,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/core/providers/gemini-provider.ts",
+            "taskId": "task_046",
+            "loc": 165,
+            "effectiveLoc": 165,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/core/providers/index.ts",
+            "taskId": "task_046",
+            "loc": 28,
+            "effectiveLoc": 28,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 444,
+        "originalLoc": 444,
+        "fileCount": 4,
+        "primaryDirectory": "src/core/providers",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_047",
+        "files": [
+          {
+            "path": "src/core/providers/types.ts",
+            "taskId": "task_047",
+            "loc": 90,
+            "effectiveLoc": 90,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 90,
+        "originalLoc": 90,
+        "fileCount": 1,
+        "primaryDirectory": "src/core/providers",
+        "agentSize": "small"
+      },
+      {
+        "taskId": "task_048",
+        "files": [
+          {
+            "path": "src/levels/level0/harvester.ts",
+            "taskId": "task_048",
+            "loc": 445,
+            "effectiveLoc": 445,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/levels/level0/index.ts",
+            "taskId": "task_048",
+            "loc": 9,
+            "effectiveLoc": 9,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 454,
+        "originalLoc": 454,
+        "fileCount": 2,
+        "primaryDirectory": "src/levels/level0",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_049",
+        "files": [
+          {
+            "path": "src/levels/level0/parsers/fallback.ts",
+            "taskId": "task_049",
+            "loc": 117,
+            "effectiveLoc": 117,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/levels/level0/parsers/index.ts",
+            "taskId": "task_049",
+            "loc": 137,
+            "effectiveLoc": 137,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 254,
+        "originalLoc": 254,
+        "fileCount": 2,
+        "primaryDirectory": "src/levels/level0/parsers",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_050",
+        "files": [
+          {
+            "path": "src/levels/level0/parsers/javascript.ts",
+            "taskId": "task_050",
+            "loc": 249,
+            "effectiveLoc": 249,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 249,
+        "originalLoc": 249,
+        "fileCount": 1,
+        "primaryDirectory": "src/levels/level0/parsers",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_051",
+        "files": [
+          {
+            "path": "src/levels/level0/parsers/README.md",
+            "taskId": "task_051",
+            "loc": 393,
+            "effectiveLoc": 393,
+            "trimmed": false,
+            "language": "Markdown"
+          },
+          {
+            "path": "src/levels/level0/parsers/types.ts",
+            "taskId": "task_051",
+            "loc": 85,
+            "effectiveLoc": 85,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 478,
+        "originalLoc": 478,
+        "fileCount": 2,
+        "primaryDirectory": "src/levels/level0/parsers",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_052",
+        "files": [
+          {
+            "path": "src/levels/level1/detector.ts",
+            "taskId": "task_052",
+            "loc": 231,
+            "effectiveLoc": 231,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/levels/level1/index.ts",
+            "taskId": "task_052",
+            "loc": 9,
+            "effectiveLoc": 9,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/levels/level1/validation.ts",
+            "taskId": "task_052",
+            "loc": 113,
+            "effectiveLoc": 113,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 353,
+        "originalLoc": 353,
+        "fileCount": 3,
+        "primaryDirectory": "src/levels/level1",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_053",
+        "files": [
+          {
+            "path": "src/levels/level2/divider.ts",
+            "taskId": "task_053",
+            "loc": 209,
+            "effectiveLoc": 209,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/levels/level2/index.ts",
+            "taskId": "task_053",
+            "loc": 22,
+            "effectiveLoc": 22,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/levels/level2/prompt.ts",
+            "taskId": "task_053",
+            "loc": 165,
+            "effectiveLoc": 165,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 396,
+        "originalLoc": 396,
+        "fileCount": 3,
+        "primaryDirectory": "src/levels/level2",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_054",
+        "files": [
+          {
+            "path": "src/levels/level2/task-builder.ts",
+            "taskId": "task_054",
+            "loc": 411,
+            "effectiveLoc": 411,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 411,
+        "originalLoc": 411,
+        "fileCount": 1,
+        "primaryDirectory": "src/levels/level2",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_055",
+        "files": [
+          {
+            "path": "src/levels/level2/validation.ts",
+            "taskId": "task_055",
+            "loc": 172,
+            "effectiveLoc": 172,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 172,
+        "originalLoc": 172,
+        "fileCount": 1,
+        "primaryDirectory": "src/levels/level2",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_056",
+        "files": [
+          {
+            "path": "src/levels/level3/annotator.ts",
+            "taskId": "task_056",
+            "loc": 557,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 557,
+        "fileCount": 1,
+        "primaryDirectory": "src/levels/level3",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_057",
+        "files": [
+          {
+            "path": "src/levels/level3/index.ts",
+            "taskId": "task_057",
+            "loc": 19,
+            "effectiveLoc": 19,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/levels/level3/parser.ts",
+            "taskId": "task_057",
+            "loc": 320,
+            "effectiveLoc": 320,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 339,
+        "originalLoc": 339,
+        "fileCount": 2,
+        "primaryDirectory": "src/levels/level3",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_058",
+        "files": [
+          {
+            "path": "src/levels/level3/prompt.ts",
+            "taskId": "task_058",
+            "loc": 174,
+            "effectiveLoc": 174,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 174,
+        "originalLoc": 174,
+        "fileCount": 1,
+        "primaryDirectory": "src/levels/level3",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_059",
+        "files": [
+          {
+            "path": "src/levels/level3/tag-validator.ts",
+            "taskId": "task_059",
+            "loc": 332,
+            "effectiveLoc": 332,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 332,
+        "originalLoc": 332,
+        "fileCount": 1,
+        "primaryDirectory": "src/levels/level3",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_060",
+        "files": [
+          {
+            "path": "src/levels/level4/autofix.ts",
+            "taskId": "task_060",
+            "loc": 258,
+            "effectiveLoc": 258,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/levels/level4/checks.ts",
+            "taskId": "task_060",
+            "loc": 224,
+            "effectiveLoc": 224,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 482,
+        "originalLoc": 482,
+        "fileCount": 2,
+        "primaryDirectory": "src/levels/level4",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_061",
+        "files": [
+          {
+            "path": "src/levels/level4/index.ts",
+            "taskId": "task_061",
+            "loc": 43,
+            "effectiveLoc": 43,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/levels/level4/orphans.ts",
+            "taskId": "task_061",
+            "loc": 179,
+            "effectiveLoc": 179,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/levels/level4/validator.ts",
+            "taskId": "task_061",
+            "loc": 170,
+            "effectiveLoc": 170,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 392,
+        "originalLoc": 392,
+        "fileCount": 3,
+        "primaryDirectory": "src/levels/level4",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_062",
+        "files": [
+          {
+            "path": "src/query/.gitkeep",
+            "taskId": "task_062",
+            "loc": 1,
+            "effectiveLoc": 1,
+            "trimmed": false
+          },
+          {
+            "path": "src/query/engine.ts",
+            "taskId": "task_062",
+            "loc": 350,
+            "effectiveLoc": 350,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/query/filter.ts",
+            "taskId": "task_062",
+            "loc": 144,
+            "effectiveLoc": 144,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 495,
+        "originalLoc": 495,
+        "fileCount": 3,
+        "primaryDirectory": "src/query",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_063",
+        "files": [
+          {
+            "path": "src/query/formatter.ts",
+            "taskId": "task_063",
+            "loc": 545,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 545,
+        "fileCount": 1,
+        "primaryDirectory": "src/query",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_064",
+        "files": [
+          {
+            "path": "src/query/index.ts",
+            "taskId": "task_064",
+            "loc": 37,
+            "effectiveLoc": 37,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/query/ranking.ts",
+            "taskId": "task_064",
+            "loc": 217,
+            "effectiveLoc": 217,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "src/query/schemas.ts",
+            "taskId": "task_064",
+            "loc": 103,
+            "effectiveLoc": 103,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 357,
+        "originalLoc": 357,
+        "fileCount": 3,
+        "primaryDirectory": "src/query",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_065",
+        "files": [
+          {
+            "path": "tests/level0.test.ts",
+            "taskId": "task_065",
+            "loc": 441,
+            "effectiveLoc": 441,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 441,
+        "originalLoc": 441,
+        "fileCount": 1,
+        "primaryDirectory": "tests",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_066",
+        "files": [
+          {
+            "path": "tests/level1.test.ts",
+            "taskId": "task_066",
+            "loc": 387,
+            "effectiveLoc": 387,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 387,
+        "originalLoc": 387,
+        "fileCount": 1,
+        "primaryDirectory": "tests",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_067",
+        "files": [
+          {
+            "path": "tests/cli/commands.test.ts",
+            "taskId": "task_067",
+            "loc": 208,
+            "effectiveLoc": 208,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 208,
+        "originalLoc": 208,
+        "fileCount": 1,
+        "primaryDirectory": "tests/cli",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_068",
+        "files": [
+          {
+            "path": "tests/cli/compute.test.ts",
+            "taskId": "task_068",
+            "loc": 423,
+            "effectiveLoc": 423,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "tests/cli/display.test.ts",
+            "taskId": "task_068",
+            "loc": 63,
+            "effectiveLoc": 63,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 486,
+        "originalLoc": 486,
+        "fileCount": 2,
+        "primaryDirectory": "tests/cli",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_069",
+        "files": [
+          {
+            "path": "tests/cli/progress-ui.test.ts",
+            "taskId": "task_069",
+            "loc": 200,
+            "effectiveLoc": 200,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "tests/config/defaults.test.ts",
+            "taskId": "task_069",
+            "loc": 273,
+            "effectiveLoc": 273,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 473,
+        "originalLoc": 473,
+        "fileCount": 2,
+        "primaryDirectory": "tests/cli",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_070",
+        "files": [
+          {
+            "path": "tests/config/env.test.ts",
+            "taskId": "task_070",
+            "loc": 277,
+            "effectiveLoc": 277,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 277,
+        "originalLoc": 277,
+        "fileCount": 1,
+        "primaryDirectory": "tests/config",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_071",
+        "files": [
+          {
+            "path": "tests/config/index.test.ts",
+            "taskId": "task_071",
+            "loc": 266,
+            "effectiveLoc": 266,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "tests/config/models.test.ts",
+            "taskId": "task_071",
+            "loc": 209,
+            "effectiveLoc": 209,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 475,
+        "originalLoc": 475,
+        "fileCount": 2,
+        "primaryDirectory": "tests/config",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_072",
+        "files": [
+          {
+            "path": "tests/config/rmapignore-defaults.test.ts",
+            "taskId": "task_072",
+            "loc": 207,
+            "effectiveLoc": 207,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 207,
+        "originalLoc": 207,
+        "fileCount": 1,
+        "primaryDirectory": "tests/config",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_073",
+        "files": [
+          {
+            "path": "tests/coordinator/assembler.test.ts",
+            "taskId": "task_073",
+            "loc": 669,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 669,
+        "fileCount": 1,
+        "primaryDirectory": "tests/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_074",
+        "files": [
+          {
+            "path": "tests/coordinator/checkpoint-orchestrator.test.ts",
+            "taskId": "task_074",
+            "loc": 45,
+            "effectiveLoc": 45,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 45,
+        "originalLoc": 45,
+        "fileCount": 1,
+        "primaryDirectory": "tests/coordinator",
+        "agentSize": "small"
+      },
+      {
+        "taskId": "task_075",
+        "files": [
+          {
+            "path": "tests/coordinator/checkpoint.test.ts",
+            "taskId": "task_075",
+            "loc": 543,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 543,
+        "fileCount": 1,
+        "primaryDirectory": "tests/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_076",
+        "files": [
+          {
+            "path": "tests/coordinator/delta-update.test.ts",
+            "taskId": "task_076",
+            "loc": 43,
+            "effectiveLoc": 43,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "tests/coordinator/delta.test.ts",
+            "taskId": "task_076",
+            "loc": 142,
+            "effectiveLoc": 142,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 185,
+        "originalLoc": 185,
+        "fileCount": 2,
+        "primaryDirectory": "tests/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_077",
+        "files": [
+          {
+            "path": "tests/coordinator/graph.test.ts",
+            "taskId": "task_077",
+            "loc": 573,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 573,
+        "fileCount": 1,
+        "primaryDirectory": "tests/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_078",
+        "files": [
+          {
+            "path": "tests/coordinator/incremental-annotations.test.ts",
+            "taskId": "task_078",
+            "loc": 233,
+            "effectiveLoc": 233,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 233,
+        "originalLoc": 233,
+        "fileCount": 1,
+        "primaryDirectory": "tests/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_079",
+        "files": [
+          {
+            "path": "tests/coordinator/pipeline.test.ts",
+            "taskId": "task_079",
+            "loc": 571,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 571,
+        "fileCount": 1,
+        "primaryDirectory": "tests/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_080",
+        "files": [
+          {
+            "path": "tests/coordinator/progress.test.ts",
+            "taskId": "task_080",
+            "loc": 494,
+            "effectiveLoc": 494,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 494,
+        "originalLoc": 494,
+        "fileCount": 1,
+        "primaryDirectory": "tests/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_081",
+        "files": [
+          {
+            "path": "tests/coordinator/shutdown-handler.test.ts",
+            "taskId": "task_081",
+            "loc": 276,
+            "effectiveLoc": 276,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 276,
+        "originalLoc": 276,
+        "fileCount": 1,
+        "primaryDirectory": "tests/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_082",
+        "files": [
+          {
+            "path": "tests/coordinator/versioning.test.ts",
+            "taskId": "task_082",
+            "loc": 435,
+            "effectiveLoc": 435,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 435,
+        "originalLoc": 435,
+        "fileCount": 1,
+        "primaryDirectory": "tests/coordinator",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_083",
+        "files": [
+          {
+            "path": "tests/core/concurrency.test.ts",
+            "taskId": "task_083",
+            "loc": 306,
+            "effectiveLoc": 306,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "tests/core/constants.test.ts",
+            "taskId": "task_083",
+            "loc": 85,
+            "effectiveLoc": 85,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 391,
+        "originalLoc": 391,
+        "fileCount": 2,
+        "primaryDirectory": "tests/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_084",
+        "files": [
+          {
+            "path": "tests/core/errors.test.ts",
+            "taskId": "task_084",
+            "loc": 268,
+            "effectiveLoc": 268,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "tests/core/git-utils.test.ts",
+            "taskId": "task_084",
+            "loc": 169,
+            "effectiveLoc": 169,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 437,
+        "originalLoc": 437,
+        "fileCount": 2,
+        "primaryDirectory": "tests/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_085",
+        "files": [
+          {
+            "path": "tests/core/ignore-patterns.test.ts",
+            "taskId": "task_085",
+            "loc": 498,
+            "effectiveLoc": 498,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 498,
+        "originalLoc": 498,
+        "fileCount": 1,
+        "primaryDirectory": "tests/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_086",
+        "files": [
+          {
+            "path": "tests/core/index.test.ts",
+            "taskId": "task_086",
+            "loc": 123,
+            "effectiveLoc": 123,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 123,
+        "originalLoc": 123,
+        "fileCount": 1,
+        "primaryDirectory": "tests/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_087",
+        "files": [
+          {
+            "path": "tests/core/latency-tracker.test.ts",
+            "taskId": "task_087",
+            "loc": 469,
+            "effectiveLoc": 469,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 469,
+        "originalLoc": 469,
+        "fileCount": 1,
+        "primaryDirectory": "tests/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_088",
+        "files": [
+          {
+            "path": "tests/core/llm-client.test.ts",
+            "taskId": "task_088",
+            "loc": 368,
+            "effectiveLoc": 368,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "tests/core/metrics-logger.test.ts",
+            "taskId": "task_088",
+            "loc": 99,
+            "effectiveLoc": 99,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 467,
+        "originalLoc": 467,
+        "fileCount": 2,
+        "primaryDirectory": "tests/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_089",
+        "files": [
+          {
+            "path": "tests/core/metrics.test.ts",
+            "taskId": "task_089",
+            "loc": 230,
+            "effectiveLoc": 230,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "tests/core/prompt-logger.test.ts",
+            "taskId": "task_089",
+            "loc": 64,
+            "effectiveLoc": 64,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 294,
+        "originalLoc": 294,
+        "fileCount": 2,
+        "primaryDirectory": "tests/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_090",
+        "files": [
+          {
+            "path": "tests/core/providers.test.ts",
+            "taskId": "task_090",
+            "loc": 437,
+            "effectiveLoc": 437,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 437,
+        "originalLoc": 437,
+        "fileCount": 1,
+        "primaryDirectory": "tests/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_091",
+        "files": [
+          {
+            "path": "tests/core/rate-limiter.test.ts",
+            "taskId": "task_091",
+            "loc": 308,
+            "effectiveLoc": 308,
+            "trimmed": false,
+            "language": "TypeScript"
+          },
+          {
+            "path": "tests/core/types.test.ts",
+            "taskId": "task_091",
+            "loc": 188,
+            "effectiveLoc": 188,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 496,
+        "originalLoc": 496,
+        "fileCount": 2,
+        "primaryDirectory": "tests/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_092",
+        "files": [
+          {
+            "path": "tests/core/validation.test.ts",
+            "taskId": "task_092",
+            "loc": 721,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 721,
+        "fileCount": 1,
+        "primaryDirectory": "tests/core",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_093",
+        "files": [
+          {
+            "path": "tests/integration/checkpoint.test.ts",
+            "taskId": "task_093",
+            "loc": 555,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 555,
+        "fileCount": 1,
+        "primaryDirectory": "tests/integration",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_094",
+        "files": [
+          {
+            "path": "tests/integration/pipeline.test.ts",
+            "taskId": "task_094",
+            "loc": 766,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 766,
+        "fileCount": 1,
+        "primaryDirectory": "tests/integration",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_095",
+        "files": [
+          {
+            "path": "tests/levels/level0/harvester.test.ts",
+            "taskId": "task_095",
+            "loc": 496,
+            "effectiveLoc": 496,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 496,
+        "originalLoc": 496,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level0",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_096",
+        "files": [
+          {
+            "path": "tests/levels/level0/integration-parser.test.ts",
+            "taskId": "task_096",
+            "loc": 222,
+            "effectiveLoc": 222,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 222,
+        "originalLoc": 222,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level0",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_097",
+        "files": [
+          {
+            "path": "tests/levels/level0/parsers.test.ts",
+            "taskId": "task_097",
+            "loc": 1024,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 1024,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level0",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_098",
+        "files": [
+          {
+            "path": "tests/levels/level1/detector.test.ts",
+            "taskId": "task_098",
+            "loc": 392,
+            "effectiveLoc": 392,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 392,
+        "originalLoc": 392,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level1",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_099",
+        "files": [
+          {
+            "path": "tests/levels/level1/validation.test.ts",
+            "taskId": "task_099",
+            "loc": 521,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 521,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level1",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_100",
+        "files": [
+          {
+            "path": "tests/levels/level2/divider.test.ts",
+            "taskId": "task_100",
+            "loc": 332,
+            "effectiveLoc": 332,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 332,
+        "originalLoc": 332,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level2",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_101",
+        "files": [
+          {
+            "path": "tests/levels/level2/prompt.test.ts",
+            "taskId": "task_101",
+            "loc": 353,
+            "effectiveLoc": 353,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 353,
+        "originalLoc": 353,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level2",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_102",
+        "files": [
+          {
+            "path": "tests/levels/level2/validation.test.ts",
+            "taskId": "task_102",
+            "loc": 432,
+            "effectiveLoc": 432,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 432,
+        "originalLoc": 432,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level2",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_103",
+        "files": [
+          {
+            "path": "tests/levels/level3/annotator.test.ts",
+            "taskId": "task_103",
+            "loc": 577,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 577,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level3",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_104",
+        "files": [
+          {
+            "path": "tests/levels/level3/parser.test.ts",
+            "taskId": "task_104",
+            "loc": 539,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 539,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level3",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_105",
+        "files": [
+          {
+            "path": "tests/levels/level3/prompt.test.ts",
+            "taskId": "task_105",
+            "loc": 416,
+            "effectiveLoc": 416,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 416,
+        "originalLoc": 416,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level3",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_106",
+        "files": [
+          {
+            "path": "tests/levels/level3/raw-imports.test.ts",
+            "taskId": "task_106",
+            "loc": 270,
+            "effectiveLoc": 270,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 270,
+        "originalLoc": 270,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level3",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_107",
+        "files": [
+          {
+            "path": "tests/levels/level3/tag-validator.test.ts",
+            "taskId": "task_107",
+            "loc": 562,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 562,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level3",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_108",
+        "files": [
+          {
+            "path": "tests/levels/level4/autofix.test.ts",
+            "taskId": "task_108",
+            "loc": 595,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 595,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level4",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_109",
+        "files": [
+          {
+            "path": "tests/levels/level4/checks.test.ts",
+            "taskId": "task_109",
+            "loc": 460,
+            "effectiveLoc": 460,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 460,
+        "originalLoc": 460,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level4",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_110",
+        "files": [
+          {
+            "path": "tests/levels/level4/orphans.test.ts",
+            "taskId": "task_110",
+            "loc": 488,
+            "effectiveLoc": 488,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 488,
+        "originalLoc": 488,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level4",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_111",
+        "files": [
+          {
+            "path": "tests/levels/level4/validator.test.ts",
+            "taskId": "task_111",
+            "loc": 673,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 673,
+        "fileCount": 1,
+        "primaryDirectory": "tests/levels/level4",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_112",
+        "files": [
+          {
+            "path": "tests/query/engine.test.ts",
+            "taskId": "task_112",
+            "loc": 677,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 677,
+        "fileCount": 1,
+        "primaryDirectory": "tests/query",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_113",
+        "files": [
+          {
+            "path": "tests/query/filter.test.ts",
+            "taskId": "task_113",
+            "loc": 310,
+            "effectiveLoc": 310,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 310,
+        "originalLoc": 310,
+        "fileCount": 1,
+        "primaryDirectory": "tests/query",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_114",
+        "files": [
+          {
+            "path": "tests/query/formatter.test.ts",
+            "taskId": "task_114",
+            "loc": 787,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 787,
+        "fileCount": 1,
+        "primaryDirectory": "tests/query",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_115",
+        "files": [
+          {
+            "path": "tests/query/ranking.test.ts",
+            "taskId": "task_115",
+            "loc": 488,
+            "effectiveLoc": 488,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 488,
+        "originalLoc": 488,
+        "fileCount": 1,
+        "primaryDirectory": "tests/query",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_116",
+        "files": [
+          {
+            "path": "tests/query/schemas.test.ts",
+            "taskId": "task_116",
+            "loc": 549,
+            "effectiveLoc": 500,
+            "trimmed": true,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 500,
+        "originalLoc": 549,
+        "fileCount": 1,
+        "primaryDirectory": "tests/query",
+        "agentSize": "medium"
+      },
+      {
+        "taskId": "task_117",
+        "files": [
+          {
+            "path": "tests/query/validation.test.ts",
+            "taskId": "task_117",
+            "loc": 398,
+            "effectiveLoc": 398,
+            "trimmed": false,
+            "language": "TypeScript"
+          }
+        ],
+        "totalLoc": 398,
+        "originalLoc": 398,
+        "fileCount": 1,
+        "primaryDirectory": "tests/query",
+        "agentSize": "medium"
+      }
+    ],
+    "fileToTask": {
+      ".env": "task_001",
+      ".gitignore": "task_001",
+      ".rmapignore": "task_001",
+      "agent-orchestrator.yaml": "task_001",
+      "CHANGELOG.md": "task_001",
+      "CONTRIBUTING.md": "task_002",
+      "DEVTEST.md": "task_003",
+      "LICENSE": "task_003",
+      "package.json": "task_003",
+      "plan-ahead.md": "task_004",
+      "README.md": "task_005",
+      "rmap.example.yaml": "task_006",
+      "rmap.yaml": "task_006",
+      "skills-lock.json": "task_006",
+      "tsconfig.json": "task_006",
+      "tsup.config.ts": "task_006",
+      "docs/adding-llm-providers.md": "task_006",
+      "docs/ARCHITECTURE.md": "task_007",
+      "docs/CLI.md": "task_008",
+      "docs/CONFIGURATION.md": "task_009",
+      "docs/VALIDATION.md": "task_010",
+      "docs/phases/phase-1-foundation.md": "task_010",
+      "docs/phases/phase-2-event-flows.md": "task_011",
+      "docs/phases/phase-3-evolution.md": "task_012",
+      "docs/phases/phase-4-advanced.md": "task_013",
+      "docs/research/loc-based-task-division.md": "task_014",
+      "scripts/preview-tasks.sh": "task_015",
+      "scripts/preview-tasks.ts": "task_015",
+      "scripts/setup.sh": "task_016",
+      "src/index.ts": "task_017",
+      "src/version.ts": "task_017",
+      "src/cli/display.ts": "task_017",
+      "src/cli/index.ts": "task_017",
+      "src/cli/progress-ui.ts": "task_018",
+      "src/cli/types.ts": "task_019",
+      "src/cli/ui-constants.ts": "task_019",
+      "src/cli/commands/get-context.ts": "task_020",
+      "src/cli/commands/index.ts": "task_020",
+      "src/cli/commands/map.ts": "task_021",
+      "src/config/defaults.ts": "task_022",
+      "src/config/env.ts": "task_023",
+      "src/config/index.ts": "task_024",
+      "src/config/models.ts": "task_024",
+      "src/config/rmapignore-defaults.ts": "task_024",
+      "src/config/yaml-config.ts": "task_025",
+      "src/coordinator/assembler.ts": "task_025",
+      "src/coordinator/checkpoint-orchestrator.ts": "task_026",
+      "src/coordinator/checkpoint.ts": "task_027",
+      "src/coordinator/delta-update.ts": "task_028",
+      "src/coordinator/delta.ts": "task_029",
+      "src/coordinator/graph-repair.ts": "task_030",
+      "src/coordinator/graph.ts": "task_030",
+      "src/coordinator/incremental-annotations.ts": "task_031",
+      "src/coordinator/index.ts": "task_031",
+      "src/coordinator/pipeline.ts": "task_032",
+      "src/coordinator/progress.ts": "task_033",
+      "src/coordinator/shutdown-handler.ts": "task_033",
+      "src/coordinator/versioning.ts": "task_034",
+      "src/core/concurrency.ts": "task_035",
+      "src/core/constants.ts": "task_036",
+      "src/core/errors.ts": "task_037",
+      "src/core/git-utils.ts": "task_037",
+      "src/core/ignore-patterns.ts": "task_038",
+      "src/core/index.ts": "task_038",
+      "src/core/json-utils.ts": "task_039",
+      "src/core/latency-tracker.ts": "task_039",
+      "src/core/llm-client.ts": "task_040",
+      "src/core/metrics-logger.ts": "task_041",
+      "src/core/metrics.ts": "task_042",
+      "src/core/prompt-logger.ts": "task_042",
+      "src/core/rate-limiter.ts": "task_043",
+      "src/core/types.ts": "task_044",
+      "src/core/validation.ts": "task_045",
+      "src/core/providers/claude-provider.ts": "task_046",
+      "src/core/providers/factory.ts": "task_046",
+      "src/core/providers/gemini-provider.ts": "task_046",
+      "src/core/providers/index.ts": "task_046",
+      "src/core/providers/types.ts": "task_047",
+      "src/levels/level0/harvester.ts": "task_048",
+      "src/levels/level0/index.ts": "task_048",
+      "src/levels/level0/parsers/fallback.ts": "task_049",
+      "src/levels/level0/parsers/index.ts": "task_049",
+      "src/levels/level0/parsers/javascript.ts": "task_050",
+      "src/levels/level0/parsers/README.md": "task_051",
+      "src/levels/level0/parsers/types.ts": "task_051",
+      "src/levels/level1/detector.ts": "task_052",
+      "src/levels/level1/index.ts": "task_052",
+      "src/levels/level1/validation.ts": "task_052",
+      "src/levels/level2/divider.ts": "task_053",
+      "src/levels/level2/index.ts": "task_053",
+      "src/levels/level2/prompt.ts": "task_053",
+      "src/levels/level2/task-builder.ts": "task_054",
+      "src/levels/level2/validation.ts": "task_055",
+      "src/levels/level3/annotator.ts": "task_056",
+      "src/levels/level3/index.ts": "task_057",
+      "src/levels/level3/parser.ts": "task_057",
+      "src/levels/level3/prompt.ts": "task_058",
+      "src/levels/level3/tag-validator.ts": "task_059",
+      "src/levels/level4/autofix.ts": "task_060",
+      "src/levels/level4/checks.ts": "task_060",
+      "src/levels/level4/index.ts": "task_061",
+      "src/levels/level4/orphans.ts": "task_061",
+      "src/levels/level4/validator.ts": "task_061",
+      "src/query/.gitkeep": "task_062",
+      "src/query/engine.ts": "task_062",
+      "src/query/filter.ts": "task_062",
+      "src/query/formatter.ts": "task_063",
+      "src/query/index.ts": "task_064",
+      "src/query/ranking.ts": "task_064",
+      "src/query/schemas.ts": "task_064",
+      "tests/level0.test.ts": "task_065",
+      "tests/level1.test.ts": "task_066",
+      "tests/cli/commands.test.ts": "task_067",
+      "tests/cli/compute.test.ts": "task_068",
+      "tests/cli/display.test.ts": "task_068",
+      "tests/cli/progress-ui.test.ts": "task_069",
+      "tests/config/defaults.test.ts": "task_069",
+      "tests/config/env.test.ts": "task_070",
+      "tests/config/index.test.ts": "task_071",
+      "tests/config/models.test.ts": "task_071",
+      "tests/config/rmapignore-defaults.test.ts": "task_072",
+      "tests/coordinator/assembler.test.ts": "task_073",
+      "tests/coordinator/checkpoint-orchestrator.test.ts": "task_074",
+      "tests/coordinator/checkpoint.test.ts": "task_075",
+      "tests/coordinator/delta-update.test.ts": "task_076",
+      "tests/coordinator/delta.test.ts": "task_076",
+      "tests/coordinator/graph.test.ts": "task_077",
+      "tests/coordinator/incremental-annotations.test.ts": "task_078",
+      "tests/coordinator/pipeline.test.ts": "task_079",
+      "tests/coordinator/progress.test.ts": "task_080",
+      "tests/coordinator/shutdown-handler.test.ts": "task_081",
+      "tests/coordinator/versioning.test.ts": "task_082",
+      "tests/core/concurrency.test.ts": "task_083",
+      "tests/core/constants.test.ts": "task_083",
+      "tests/core/errors.test.ts": "task_084",
+      "tests/core/git-utils.test.ts": "task_084",
+      "tests/core/ignore-patterns.test.ts": "task_085",
+      "tests/core/index.test.ts": "task_086",
+      "tests/core/latency-tracker.test.ts": "task_087",
+      "tests/core/llm-client.test.ts": "task_088",
+      "tests/core/metrics-logger.test.ts": "task_088",
+      "tests/core/metrics.test.ts": "task_089",
+      "tests/core/prompt-logger.test.ts": "task_089",
+      "tests/core/providers.test.ts": "task_090",
+      "tests/core/rate-limiter.test.ts": "task_091",
+      "tests/core/types.test.ts": "task_091",
+      "tests/core/validation.test.ts": "task_092",
+      "tests/integration/checkpoint.test.ts": "task_093",
+      "tests/integration/pipeline.test.ts": "task_094",
+      "tests/levels/level0/harvester.test.ts": "task_095",
+      "tests/levels/level0/integration-parser.test.ts": "task_096",
+      "tests/levels/level0/parsers.test.ts": "task_097",
+      "tests/levels/level1/detector.test.ts": "task_098",
+      "tests/levels/level1/validation.test.ts": "task_099",
+      "tests/levels/level2/divider.test.ts": "task_100",
+      "tests/levels/level2/prompt.test.ts": "task_101",
+      "tests/levels/level2/validation.test.ts": "task_102",
+      "tests/levels/level3/annotator.test.ts": "task_103",
+      "tests/levels/level3/parser.test.ts": "task_104",
+      "tests/levels/level3/prompt.test.ts": "task_105",
+      "tests/levels/level3/raw-imports.test.ts": "task_106",
+      "tests/levels/level3/tag-validator.test.ts": "task_107",
+      "tests/levels/level4/autofix.test.ts": "task_108",
+      "tests/levels/level4/checks.test.ts": "task_109",
+      "tests/levels/level4/orphans.test.ts": "task_110",
+      "tests/levels/level4/validator.test.ts": "task_111",
+      "tests/query/engine.test.ts": "task_112",
+      "tests/query/filter.test.ts": "task_113",
+      "tests/query/formatter.test.ts": "task_114",
+      "tests/query/ranking.test.ts": "task_115",
+      "tests/query/schemas.test.ts": "task_116",
+      "tests/query/validation.test.ts": "task_117"
     },
-    {
-      "scope": "docs/",
-      "agent_size": "small",
-      "estimated_files": 4
-    },
-    {
-      "scope": "scripts/",
-      "agent_size": "small",
-      "estimated_files": 1
-    },
-    {
-      "scope": "src/cli/",
-      "agent_size": "medium",
-      "estimated_files": 8
-    },
-    {
-      "scope": "src/config/",
-      "agent_size": "small",
-      "estimated_files": 5
-    },
-    {
-      "scope": "src/core/",
-      "agent_size": "medium",
-      "estimated_files": 13
-    },
-    {
-      "scope": "src/coordinator/",
-      "agent_size": "medium",
-      "estimated_files": 13
-    },
-    {
-      "scope": "src/levels/",
-      "agent_size": "medium",
-      "estimated_files": 26
-    },
-    {
-      "scope": "src/query/",
-      "agent_size": "medium",
-      "estimated_files": 7
-    },
-    {
-      "scope": "src/",
-      "agent_size": "small",
-      "estimated_files": 2
-    },
-    {
-      "scope": "tests/cli/",
-      "agent_size": "small",
-      "estimated_files": 3
-    },
-    {
-      "scope": "tests/config/",
-      "agent_size": "small",
-      "estimated_files": 5
-    },
-    {
-      "scope": "tests/coordinator/",
-      "agent_size": "small",
-      "estimated_files": 9
-    },
-    {
-      "scope": "tests/core/",
-      "agent_size": "small",
-      "estimated_files": 11
-    },
-    {
-      "scope": "tests/integration/",
-      "agent_size": "small",
-      "estimated_files": 2
-    },
-    {
-      "scope": "tests/levels/",
-      "agent_size": "small",
-      "estimated_files": 17
-    },
-    {
-      "scope": "tests/query/",
-      "agent_size": "small",
-      "estimated_files": 6
-    },
-    {
-      "scope": "tests/",
-      "agent_size": "small",
-      "estimated_files": 2
-    }
-  ],
-  "execution": "parallel",
-  "estimated_total_minutes": 12
+    "totalFiles": 172,
+    "totalLoc": 50083,
+    "targetLocPerTask": 500,
+    "trimmedFileCount": 28,
+    "createdAt": "2026-04-05T18:23:58.709Z"
+  },
+  "delegation": {
+    "tasks": [
+      {
+        "scope": "task_001",
+        "agent_size": "small",
+        "estimated_files": 5
+      },
+      {
+        "scope": "task_002",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_003",
+        "agent_size": "small",
+        "estimated_files": 3
+      },
+      {
+        "scope": "task_004",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_005",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_006",
+        "agent_size": "small",
+        "estimated_files": 6
+      },
+      {
+        "scope": "task_007",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_008",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_009",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_010",
+        "agent_size": "small",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_011",
+        "agent_size": "small",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_012",
+        "agent_size": "small",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_013",
+        "agent_size": "small",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_014",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_015",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_016",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_017",
+        "agent_size": "medium",
+        "estimated_files": 4
+      },
+      {
+        "scope": "task_018",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_019",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_020",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_021",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_022",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_023",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_024",
+        "agent_size": "medium",
+        "estimated_files": 3
+      },
+      {
+        "scope": "task_025",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_026",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_027",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_028",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_029",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_030",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_031",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_032",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_033",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_034",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_035",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_036",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_037",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_038",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_039",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_040",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_041",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_042",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_043",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_044",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_045",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_046",
+        "agent_size": "medium",
+        "estimated_files": 4
+      },
+      {
+        "scope": "task_047",
+        "agent_size": "small",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_048",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_049",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_050",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_051",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_052",
+        "agent_size": "medium",
+        "estimated_files": 3
+      },
+      {
+        "scope": "task_053",
+        "agent_size": "medium",
+        "estimated_files": 3
+      },
+      {
+        "scope": "task_054",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_055",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_056",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_057",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_058",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_059",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_060",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_061",
+        "agent_size": "medium",
+        "estimated_files": 3
+      },
+      {
+        "scope": "task_062",
+        "agent_size": "medium",
+        "estimated_files": 3
+      },
+      {
+        "scope": "task_063",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_064",
+        "agent_size": "medium",
+        "estimated_files": 3
+      },
+      {
+        "scope": "task_065",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_066",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_067",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_068",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_069",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_070",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_071",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_072",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_073",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_074",
+        "agent_size": "small",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_075",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_076",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_077",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_078",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_079",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_080",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_081",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_082",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_083",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_084",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_085",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_086",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_087",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_088",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_089",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_090",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_091",
+        "agent_size": "medium",
+        "estimated_files": 2
+      },
+      {
+        "scope": "task_092",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_093",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_094",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_095",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_096",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_097",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_098",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_099",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_100",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_101",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_102",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_103",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_104",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_105",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_106",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_107",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_108",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_109",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_110",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_111",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_112",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_113",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_114",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_115",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_116",
+        "agent_size": "medium",
+        "estimated_files": 1
+      },
+      {
+        "scope": "task_117",
+        "agent_size": "medium",
+        "estimated_files": 1
+      }
+    ],
+    "execution": "parallel",
+    "estimated_total_minutes": 59
+  }
 }

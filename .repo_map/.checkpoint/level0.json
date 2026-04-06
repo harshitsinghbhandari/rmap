@@ -4,8 +4,8 @@
       "name": ".env",
       "path": ".env",
       "extension": "",
-      "size_bytes": 126,
-      "line_count": 1,
+      "size_bytes": 181,
+      "line_count": 2,
       "raw_imports": []
     },
     {
@@ -20,8 +20,8 @@
       "name": ".rmapignore",
       "path": ".rmapignore",
       "extension": "",
-      "size_bytes": 528,
-      "line_count": 58,
+      "size_bytes": 547,
+      "line_count": 61,
       "raw_imports": []
     },
     {
@@ -81,8 +81,8 @@
       "name": "ARCHITECTURE.md",
       "path": "docs/ARCHITECTURE.md",
       "extension": ".md",
-      "size_bytes": 22000,
-      "line_count": 864,
+      "size_bytes": 22542,
+      "line_count": 871,
       "language": "Markdown",
       "raw_imports": []
     },
@@ -99,8 +99,8 @@
       "name": "CONFIGURATION.md",
       "path": "docs/CONFIGURATION.md",
       "extension": ".md",
-      "size_bytes": 19090,
-      "line_count": 941,
+      "size_bytes": 20402,
+      "line_count": 995,
       "language": "Markdown",
       "raw_imports": []
     },
@@ -114,11 +114,56 @@
       "raw_imports": []
     },
     {
-      "name": "idea.md",
-      "path": "idea.md",
+      "name": "adding-llm-providers.md",
+      "path": "docs/adding-llm-providers.md",
       "extension": ".md",
-      "size_bytes": 23169,
-      "line_count": 626,
+      "size_bytes": 8292,
+      "line_count": 300,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "phase-1-foundation.md",
+      "path": "docs/phases/phase-1-foundation.md",
+      "extension": ".md",
+      "size_bytes": 6866,
+      "line_count": 228,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "phase-2-event-flows.md",
+      "path": "docs/phases/phase-2-event-flows.md",
+      "extension": ".md",
+      "size_bytes": 6152,
+      "line_count": 251,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "phase-3-evolution.md",
+      "path": "docs/phases/phase-3-evolution.md",
+      "extension": ".md",
+      "size_bytes": 7239,
+      "line_count": 288,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "phase-4-advanced.md",
+      "path": "docs/phases/phase-4-advanced.md",
+      "extension": ".md",
+      "size_bytes": 8033,
+      "line_count": 294,
+      "language": "Markdown",
+      "raw_imports": []
+    },
+    {
+      "name": "loc-based-task-division.md",
+      "path": "docs/research/loc-based-task-division.md",
+      "extension": ".md",
+      "size_bytes": 13700,
+      "line_count": 516,
       "language": "Markdown",
       "raw_imports": []
     },
@@ -126,8 +171,8 @@
       "name": "package.json",
       "path": "package.json",
       "extension": ".json",
-      "size_bytes": 2142,
-      "line_count": 82,
+      "size_bytes": 2196,
+      "line_count": 84,
       "language": "JSON",
       "raw_imports": []
     },
@@ -135,10 +180,67 @@
       "name": "plan-ahead.md",
       "path": "plan-ahead.md",
       "extension": ".md",
-      "size_bytes": 22893,
-      "line_count": 540,
+      "size_bytes": 42515,
+      "line_count": 948,
       "language": "Markdown",
       "raw_imports": []
+    },
+    {
+      "name": "rmap.example.yaml",
+      "path": "rmap.example.yaml",
+      "extension": ".yaml",
+      "size_bytes": 834,
+      "line_count": 30,
+      "language": "YAML",
+      "raw_imports": []
+    },
+    {
+      "name": "rmap.yaml",
+      "path": "rmap.yaml",
+      "extension": ".yaml",
+      "size_bytes": 834,
+      "line_count": 30,
+      "language": "YAML",
+      "raw_imports": []
+    },
+    {
+      "name": "preview-tasks.sh",
+      "path": "scripts/preview-tasks.sh",
+      "extension": ".sh",
+      "size_bytes": 1057,
+      "line_count": 39,
+      "language": "Shell",
+      "raw_imports": []
+    },
+    {
+      "name": "preview-tasks.ts",
+      "path": "scripts/preview-tasks.ts",
+      "extension": ".ts",
+      "size_bytes": 9326,
+      "line_count": 276,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "import_data": {
+        "path": "scripts/preview-tasks.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "setup.sh",
@@ -153,8 +255,8 @@
       "name": "skills-lock.json",
       "path": "skills-lock.json",
       "extension": ".json",
-      "size_bytes": 886,
-      "line_count": 26,
+      "size_bytes": 1083,
+      "line_count": 31,
       "language": "JSON",
       "raw_imports": []
     },
@@ -170,7 +272,35 @@
         "../../query/index.js",
         "../display.js",
         "../types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/cli/commands/get-context.ts",
+        "imports": [
+          {
+            "source": "commander",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../query/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../display.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
@@ -182,7 +312,25 @@
       "raw_imports": [
         "./map.js",
         "./get-context.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/cli/commands/index.ts",
+        "imports": [
+          {
+            "source": "./map.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./get-context.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "map.ts",
@@ -202,7 +350,65 @@
         "../ui-constants.js",
         "../display.js",
         "../types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/cli/commands/map.ts",
+        "imports": [
+          {
+            "source": "commander",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../coordinator/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../coordinator/assembler.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../coordinator/delta.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../coordinator/versioning.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../coordinator/checkpoint.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../ui-constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../display.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "display.ts",
@@ -214,7 +420,25 @@
       "raw_imports": [
         "./ui-constants.js",
         "./types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/cli/display.ts",
+        "imports": [
+          {
+            "source": "./ui-constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
@@ -228,7 +452,35 @@
         "../version.js",
         "./commands/index.js",
         "../core/prompt-logger.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/cli/index.ts",
+        "imports": [
+          {
+            "source": "commander",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../version.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./commands/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/prompt-logger.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "progress-ui.ts",
@@ -242,7 +494,35 @@
         "cli-progress",
         "log-update",
         "./ui-constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/cli/progress-ui.ts",
+        "imports": [
+          {
+            "source": "@clack/prompts",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "cli-progress",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "log-update",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./ui-constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "types.ts",
@@ -251,7 +531,14 @@
       "size_bytes": 2632,
       "line_count": 124,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/cli/types.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "ui-constants.ts",
@@ -260,51 +547,138 @@
       "size_bytes": 2822,
       "line_count": 149,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/cli/ui-constants.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "defaults.ts",
       "path": "src/config/defaults.ts",
       "extension": ".ts",
-      "size_bytes": 8680,
-      "line_count": 387,
+      "size_bytes": 9693,
+      "line_count": 429,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/config/defaults.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "env.ts",
       "path": "src/config/env.ts",
       "extension": ".ts",
-      "size_bytes": 12923,
-      "line_count": 501,
+      "size_bytes": 16249,
+      "line_count": 610,
       "language": "TypeScript",
       "raw_imports": [
-        "./defaults.js"
-      ]
+        "./defaults.js",
+        "./yaml-config.js"
+      ],
+      "import_data": {
+        "path": "src/config/env.ts",
+        "imports": [
+          {
+            "source": "./defaults.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./yaml-config.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
       "path": "src/config/index.ts",
       "extension": ".ts",
-      "size_bytes": 2050,
-      "line_count": 84,
+      "size_bytes": 2499,
+      "line_count": 105,
       "language": "TypeScript",
       "raw_imports": [
-        "./models.js",
-        "./defaults.js",
-        "./rmapignore-defaults.js",
         "./env.js",
-        "../core/validation.js"
-      ]
+        "../core/validation.js",
+        "./models.js",
+        "./yaml-config.js",
+        "./defaults.js",
+        "./rmapignore-defaults.js"
+      ],
+      "import_data": {
+        "path": "src/config/index.ts",
+        "imports": [
+          {
+            "source": "./env.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/validation.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./models.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./yaml-config.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./defaults.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./rmapignore-defaults.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "models.ts",
       "path": "src/config/models.ts",
       "extension": ".ts",
-      "size_bytes": 3206,
-      "line_count": 125,
+      "size_bytes": 5400,
+      "line_count": 208,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [
+        "../core/providers/types.js"
+      ],
+      "import_data": {
+        "path": "src/config/models.ts",
+        "imports": [
+          {
+            "source": "../core/providers/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "rmapignore-defaults.ts",
@@ -313,7 +687,56 @@
       "size_bytes": 913,
       "line_count": 72,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/config/rmapignore-defaults.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "yaml-config.ts",
+      "path": "src/config/yaml-config.ts",
+      "extension": ".ts",
+      "size_bytes": 4892,
+      "line_count": 179,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:fs",
+        "node:path",
+        "yaml",
+        "../core/providers/types.js"
+      ],
+      "import_data": {
+        "path": "src/config/yaml-config.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "yaml",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/providers/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "assembler.ts",
@@ -327,7 +750,35 @@
         "node:path",
         "../core/types.js",
         "../core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/assembler.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "checkpoint-orchestrator.ts",
@@ -343,7 +794,45 @@
         "../core/constants.js",
         "./checkpoint.js",
         "./incremental-annotations.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/checkpoint-orchestrator.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./checkpoint.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./incremental-annotations.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "checkpoint.ts",
@@ -358,21 +847,82 @@
         "../core/types.js",
         "../core/constants.js",
         "../core/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/checkpoint.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "delta-update.ts",
       "path": "src/coordinator/delta-update.ts",
       "extension": ".ts",
-      "size_bytes": 6081,
-      "line_count": 208,
+      "size_bytes": 6163,
+      "line_count": 210,
       "language": "TypeScript",
       "raw_imports": [
         "../core/types.js",
         "../levels/level3/index.js",
         "node:fs",
         "node:path"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/delta-update.ts",
+        "imports": [
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../levels/level3/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "delta.ts",
@@ -387,7 +937,40 @@
         "../core/types.js",
         "../core/index.js",
         "../config/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/delta.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "graph-repair.ts",
@@ -400,7 +983,30 @@
         "../core/types.js",
         "../core/constants.js",
         "./graph.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/graph-repair.ts",
+        "imports": [
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./graph.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "graph.ts",
@@ -411,7 +1017,20 @@
       "language": "TypeScript",
       "raw_imports": [
         "../core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/graph.ts",
+        "imports": [
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "incremental-annotations.ts",
@@ -425,7 +1044,35 @@
         "node:path",
         "../core/types.js",
         "../core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/incremental-annotations.ts",
+        "imports": [
+          {
+            "source": "node:fs/promises",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
@@ -441,14 +1088,52 @@
         "./progress.js",
         "./checkpoint-orchestrator.js",
         "./shutdown-handler.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/index.ts",
+        "imports": [
+          {
+            "source": "./pipeline.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./assembler.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./graph.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./progress.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./checkpoint-orchestrator.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./shutdown-handler.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "pipeline.ts",
       "path": "src/coordinator/pipeline.ts",
       "extension": ".ts",
-      "size_bytes": 17356,
-      "line_count": 497,
+      "size_bytes": 22326,
+      "line_count": 640,
       "language": "TypeScript",
       "raw_imports": [
         "node:child_process",
@@ -468,7 +1153,100 @@
         "../cli/progress-ui.js",
         "../config/index.js",
         "../cli/ui-constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/pipeline.ts",
+        "imports": [
+          {
+            "source": "node:child_process",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../levels/level0/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../levels/level1/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../levels/level2/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../levels/level3/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../levels/level4/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./graph.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./progress.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./assembler.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./checkpoint-orchestrator.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./shutdown-handler.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../cli/progress-ui.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../cli/ui-constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "progress.ts",
@@ -479,7 +1257,20 @@
       "language": "TypeScript",
       "raw_imports": [
         "../cli/progress-ui.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/progress.ts",
+        "imports": [
+          {
+            "source": "../cli/progress-ui.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "shutdown-handler.ts",
@@ -488,7 +1279,14 @@
       "size_bytes": 2476,
       "line_count": 92,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/coordinator/shutdown-handler.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "versioning.ts",
@@ -500,7 +1298,25 @@
       "raw_imports": [
         "../core/types.js",
         "../core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/coordinator/versioning.ts",
+        "imports": [
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "concurrency.ts",
@@ -511,16 +1327,36 @@
       "language": "TypeScript",
       "raw_imports": [
         "../config/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/core/concurrency.ts",
+        "imports": [
+          {
+            "source": "../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "constants.ts",
       "path": "src/core/constants.ts",
       "extension": ".ts",
-      "size_bytes": 8002,
-      "line_count": 350,
+      "size_bytes": 8041,
+      "line_count": 351,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/core/constants.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "errors.ts",
@@ -529,7 +1365,14 @@
       "size_bytes": 4883,
       "line_count": 213,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/core/errors.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "git-utils.ts",
@@ -540,7 +1383,20 @@
       "language": "TypeScript",
       "raw_imports": [
         "node:child_process"
-      ]
+      ],
+      "import_data": {
+        "path": "src/core/git-utils.ts",
+        "imports": [
+          {
+            "source": "node:child_process",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "ignore-patterns.ts",
@@ -554,58 +1410,277 @@
         "node:path",
         "ignore",
         "../config/rmapignore-defaults.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/core/ignore-patterns.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "ignore",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../config/rmapignore-defaults.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
       "path": "src/core/index.ts",
       "extension": ".ts",
-      "size_bytes": 2743,
-      "line_count": 120,
+      "size_bytes": 3425,
+      "line_count": 149,
       "language": "TypeScript",
       "raw_imports": [
-        "./types.js",
         "./constants.js",
         "./git-utils.js",
         "./concurrency.js",
         "./llm-client.js",
+        "./providers/index.js",
         "./rate-limiter.js",
-        "../config/models.js",
         "./metrics.js",
         "./metrics-logger.js",
+        "./latency-tracker.js",
         "./errors.js",
         "./validation.js",
         "./prompt-logger.js",
         "./ignore-patterns.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/core/index.ts",
+        "imports": [
+          {
+            "source": "./constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./git-utils.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./concurrency.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./llm-client.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./providers/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./rate-limiter.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./metrics.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./metrics-logger.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./latency-tracker.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./errors.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./validation.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./prompt-logger.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./ignore-patterns.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "json-utils.ts",
+      "path": "src/core/json-utils.ts",
+      "extension": ".ts",
+      "size_bytes": 1655,
+      "line_count": 56,
+      "language": "TypeScript",
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/core/json-utils.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "latency-tracker.ts",
+      "path": "src/core/latency-tracker.ts",
+      "extension": ".ts",
+      "size_bytes": 7928,
+      "line_count": 306,
+      "language": "TypeScript",
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/core/latency-tracker.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "llm-client.ts",
       "path": "src/core/llm-client.ts",
       "extension": ".ts",
-      "size_bytes": 10307,
-      "line_count": 333,
+      "size_bytes": 14770,
+      "line_count": 462,
       "language": "TypeScript",
       "raw_imports": [
         "@anthropic-ai/sdk",
         "../config/models.js",
         "../config/index.js",
         "./rate-limiter.js",
-        "./prompt-logger.js"
-      ]
+        "./prompt-logger.js",
+        "./latency-tracker.js",
+        "./providers/types.js",
+        "./providers/claude-provider.js",
+        "./providers/factory.js"
+      ],
+      "import_data": {
+        "path": "src/core/llm-client.ts",
+        "imports": [
+          {
+            "source": "@anthropic-ai/sdk",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../config/models.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./rate-limiter.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./prompt-logger.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./latency-tracker.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./providers/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./providers/claude-provider.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./providers/factory.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "metrics-logger.ts",
       "path": "src/core/metrics-logger.ts",
       "extension": ".ts",
-      "size_bytes": 4778,
-      "line_count": 146,
+      "size_bytes": 8660,
+      "line_count": 272,
       "language": "TypeScript",
       "raw_imports": [
         "node:fs",
         "node:path",
-        "./metrics.js"
-      ]
+        "./metrics.js",
+        "./latency-tracker.js"
+      ],
+      "import_data": {
+        "path": "src/core/metrics-logger.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./metrics.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./latency-tracker.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "metrics.ts",
@@ -614,7 +1689,14 @@
       "size_bytes": 7105,
       "line_count": 265,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/core/metrics.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "prompt-logger.ts",
@@ -626,7 +1708,173 @@
       "raw_imports": [
         "node:fs",
         "node:path"
-      ]
+      ],
+      "import_data": {
+        "path": "src/core/prompt-logger.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "claude-provider.ts",
+      "path": "src/core/providers/claude-provider.ts",
+      "extension": ".ts",
+      "size_bytes": 4230,
+      "line_count": 161,
+      "language": "TypeScript",
+      "raw_imports": [
+        "@anthropic-ai/sdk",
+        "./types.js"
+      ],
+      "import_data": {
+        "path": "src/core/providers/claude-provider.ts",
+        "imports": [
+          {
+            "source": "@anthropic-ai/sdk",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "factory.ts",
+      "path": "src/core/providers/factory.ts",
+      "extension": ".ts",
+      "size_bytes": 2476,
+      "line_count": 90,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./types.js",
+        "./claude-provider.js",
+        "./gemini-provider.js"
+      ],
+      "import_data": {
+        "path": "src/core/providers/factory.ts",
+        "imports": [
+          {
+            "source": "./types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./claude-provider.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./gemini-provider.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "gemini-provider.ts",
+      "path": "src/core/providers/gemini-provider.ts",
+      "extension": ".ts",
+      "size_bytes": 4609,
+      "line_count": 165,
+      "language": "TypeScript",
+      "raw_imports": [
+        "@google/genai",
+        "./types.js"
+      ],
+      "import_data": {
+        "path": "src/core/providers/gemini-provider.ts",
+        "imports": [
+          {
+            "source": "@google/genai",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "index.ts",
+      "path": "src/core/providers/index.ts",
+      "extension": ".ts",
+      "size_bytes": 664,
+      "line_count": 28,
+      "language": "TypeScript",
+      "raw_imports": [
+        "./claude-provider.js",
+        "./gemini-provider.js",
+        "./factory.js"
+      ],
+      "import_data": {
+        "path": "src/core/providers/index.ts",
+        "imports": [
+          {
+            "source": "./claude-provider.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./gemini-provider.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./factory.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "types.ts",
+      "path": "src/core/providers/types.ts",
+      "extension": ".ts",
+      "size_bytes": 2393,
+      "line_count": 90,
+      "language": "TypeScript",
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/core/providers/types.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "rate-limiter.ts",
@@ -637,18 +1885,56 @@
       "language": "TypeScript",
       "raw_imports": [
         "../config/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/core/rate-limiter.ts",
+        "imports": [
+          {
+            "source": "../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "types.ts",
       "path": "src/core/types.ts",
       "extension": ".ts",
-      "size_bytes": 8769,
-      "line_count": 374,
+      "size_bytes": 12216,
+      "line_count": 518,
       "language": "TypeScript",
       "raw_imports": [
-        "./constants.js"
-      ]
+        "./constants.js",
+        "./mod",
+        "./styles"
+      ],
+      "import_data": {
+        "path": "src/core/types.ts",
+        "imports": [
+          {
+            "source": "./constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./mod",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./styles",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "validation.ts",
@@ -661,7 +1947,30 @@
         "zod",
         "./constants.js",
         "../config/defaults.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/core/validation.ts",
+        "imports": [
+          {
+            "source": "zod",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../config/defaults.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
@@ -672,15 +1981,45 @@
       "language": "TypeScript",
       "raw_imports": [
         "./version.js",
-        "./core/index.js"
-      ]
+        "./core/index.js",
+        "./coordinator/index.js",
+        "./query/index.js"
+      ],
+      "import_data": {
+        "path": "src/index.ts",
+        "imports": [
+          {
+            "source": "./version.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./coordinator/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./query/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "harvester.ts",
       "path": "src/levels/level0/harvester.ts",
       "extension": ".ts",
-      "size_bytes": 10609,
-      "line_count": 435,
+      "size_bytes": 10990,
+      "line_count": 445,
       "language": "TypeScript",
       "raw_imports": [
         "node:fs",
@@ -691,7 +2030,55 @@
         "../../config/index.js",
         "./parsers/index.js",
         "../../core/ignore-patterns.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level0/harvester.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:child_process",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "ignore",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./parsers/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/ignore-patterns.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
@@ -702,7 +2089,20 @@
       "language": "TypeScript",
       "raw_imports": [
         "./harvester.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level0/index.ts",
+        "imports": [
+          {
+            "source": "./harvester.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "README.md",
@@ -722,60 +2122,212 @@
       "language": "TypeScript",
       "raw_imports": [
         "./types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level0/parsers/fallback.ts",
+        "imports": [
+          {
+            "source": "./types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
       "path": "src/levels/level0/parsers/index.ts",
       "extension": ".ts",
-      "size_bytes": 2071,
-      "line_count": 71,
+      "size_bytes": 4093,
+      "line_count": 137,
       "language": "TypeScript",
       "raw_imports": [
         "./types.js",
+        "../../../core/types.js",
         "./javascript.js",
         "./fallback.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level0/parsers/index.ts",
+        "imports": [
+          {
+            "source": "./types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./javascript.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./fallback.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "javascript.ts",
       "path": "src/levels/level0/parsers/javascript.ts",
       "extension": ".ts",
-      "size_bytes": 4121,
-      "line_count": 135,
+      "size_bytes": 9146,
+      "line_count": 249,
       "language": "TypeScript",
       "raw_imports": [
         "@babel/parser",
         "@babel/traverse",
         "@babel/types",
-        "./types.js"
-      ]
+        "./types.js",
+        "bar",
+        "module"
+      ],
+      "import_data": {
+        "path": "src/levels/level0/parsers/javascript.ts",
+        "imports": [
+          {
+            "source": "@babel/parser",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "@babel/traverse",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "@babel/types",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "bar",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "module",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "types.ts",
       "path": "src/levels/level0/parsers/types.ts",
       "extension": ".ts",
-      "size_bytes": 1017,
-      "line_count": 48,
+      "size_bytes": 1890,
+      "line_count": 85,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [
+        "./mod",
+        "./styles"
+      ],
+      "import_data": {
+        "path": "src/levels/level0/parsers/types.ts",
+        "imports": [
+          {
+            "source": "./mod",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./styles",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "detector.ts",
       "path": "src/levels/level1/detector.ts",
       "extension": ".ts",
-      "size_bytes": 7905,
-      "line_count": 229,
+      "size_bytes": 8091,
+      "line_count": 231,
       "language": "TypeScript",
       "raw_imports": [
-        "@anthropic-ai/sdk",
         "node:path",
         "node:fs",
         "../../core/types.js",
         "./validation.js",
         "../../config/index.js",
-        "../../core/index.js"
-      ]
+        "../../config/models.js",
+        "../../core/index.js",
+        "../../core/json-utils.js"
+      ],
+      "import_data": {
+        "path": "src/levels/level1/detector.ts",
+        "imports": [
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./validation.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/models.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/json-utils.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
@@ -787,7 +2339,25 @@
       "raw_imports": [
         "./detector.js",
         "./validation.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level1/index.ts",
+        "imports": [
+          {
+            "source": "./detector.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./validation.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "validation.ts",
@@ -799,35 +2369,121 @@
       "raw_imports": [
         "../../core/types.js",
         "../../core/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level1/validation.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "divider.ts",
       "path": "src/levels/level2/divider.ts",
       "extension": ".ts",
-      "size_bytes": 6642,
-      "line_count": 208,
+      "size_bytes": 6766,
+      "line_count": 209,
       "language": "TypeScript",
       "raw_imports": [
-        "@anthropic-ai/sdk",
         "../../core/types.js",
         "./prompt.js",
         "../../config/index.js",
-        "../../core/index.js"
-      ]
+        "../../config/models.js",
+        "../../core/index.js",
+        "../../core/json-utils.js"
+      ],
+      "import_data": {
+        "path": "src/levels/level2/divider.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./prompt.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/models.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/json-utils.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
       "path": "src/levels/level2/index.ts",
       "extension": ".ts",
-      "size_bytes": 330,
-      "line_count": 14,
+      "size_bytes": 518,
+      "line_count": 22,
       "language": "TypeScript",
       "raw_imports": [
         "./divider.js",
         "./validation.js",
-        "./prompt.js"
-      ]
+        "./prompt.js",
+        "./task-builder.js"
+      ],
+      "import_data": {
+        "path": "src/levels/level2/index.ts",
+        "imports": [
+          {
+            "source": "./divider.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./validation.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./prompt.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./task-builder.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "prompt.ts",
@@ -839,7 +2495,55 @@
       "raw_imports": [
         "../../core/types.js",
         "../../config/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level2/prompt.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "task-builder.ts",
+      "path": "src/levels/level2/task-builder.ts",
+      "extension": ".ts",
+      "size_bytes": 11707,
+      "line_count": 411,
+      "language": "TypeScript",
+      "raw_imports": [
+        "../../core/types.js",
+        "../../config/index.js"
+      ],
+      "import_data": {
+        "path": "src/levels/level2/task-builder.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "validation.ts",
@@ -852,17 +2556,39 @@
         "../../core/types.js",
         "../../config/index.js",
         "../../core/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level2/validation.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "annotator.ts",
       "path": "src/levels/level3/annotator.ts",
       "extension": ".ts",
-      "size_bytes": 15896,
-      "line_count": 488,
+      "size_bytes": 18160,
+      "line_count": 557,
       "language": "TypeScript",
       "raw_imports": [
-        "@anthropic-ai/sdk",
         "node:fs",
         "node:path",
         "../../core/types.js",
@@ -871,38 +2597,157 @@
         "./parser.js",
         "./tag-validator.js",
         "../../config/index.js",
-        "../../core/index.js",
-        "../../cli/progress-ui.js",
-        "../../cli/ui-constants.js"
-      ]
+        "../../config/models.js",
+        "../../core/index.js"
+      ],
+      "import_data": {
+        "path": "src/levels/level3/annotator.ts",
+        "imports": [
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/concurrency.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./prompt.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./parser.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./tag-validator.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/models.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
       "path": "src/levels/level3/index.ts",
       "extension": ".ts",
-      "size_bytes": 455,
-      "line_count": 11,
+      "size_bytes": 607,
+      "line_count": 19,
       "language": "TypeScript",
       "raw_imports": [
         "./annotator.js",
         "./prompt.js",
         "./parser.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level3/index.ts",
+        "imports": [
+          {
+            "source": "./annotator.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./prompt.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./parser.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "parser.ts",
       "path": "src/levels/level3/parser.ts",
       "extension": ".ts",
-      "size_bytes": 9550,
-      "line_count": 317,
+      "size_bytes": 9662,
+      "line_count": 320,
       "language": "TypeScript",
       "raw_imports": [
         "../../core/types.js",
         "../../core/constants.js",
         "../../config/index.js",
         "node:path",
-        "./tag-validator.js"
-      ]
+        "./tag-validator.js",
+        "../../core/json-utils.js"
+      ],
+      "import_data": {
+        "path": "src/levels/level3/parser.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./tag-validator.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/json-utils.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "prompt.ts",
@@ -916,7 +2761,35 @@
         "../../core/constants.js",
         "../../config/index.js",
         "./tag-validator.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level3/prompt.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./tag-validator.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "tag-validator.ts",
@@ -929,7 +2802,30 @@
         "../../core/constants.js",
         "../../config/index.js",
         "node:path"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level3/tag-validator.ts",
+        "imports": [
+          {
+            "source": "../../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "autofix.ts",
@@ -942,20 +2838,72 @@
         "../../core/types.js",
         "node:fs",
         "node:path"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level4/autofix.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "checks.ts",
       "path": "src/levels/level4/checks.ts",
       "extension": ".ts",
-      "size_bytes": 6175,
-      "line_count": 223,
+      "size_bytes": 6185,
+      "line_count": 224,
       "language": "TypeScript",
       "raw_imports": [
         "../../core/types.js",
         "node:fs",
-        "node:path"
-      ]
+        "node:path",
+        "${imp}"
+      ],
+      "import_data": {
+        "path": "src/levels/level4/checks.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "${imp}",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
@@ -969,7 +2917,35 @@
         "./checks.js",
         "./orphans.js",
         "./autofix.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level4/index.ts",
+        "imports": [
+          {
+            "source": "./validator.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./checks.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./orphans.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./autofix.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "orphans.ts",
@@ -980,7 +2956,20 @@
       "language": "TypeScript",
       "raw_imports": [
         "../../core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level4/orphans.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "validator.ts",
@@ -994,7 +2983,35 @@
         "./checks.js",
         "./orphans.js",
         "./autofix.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/levels/level4/validator.ts",
+        "imports": [
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./checks.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./orphans.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./autofix.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": ".gitkeep",
@@ -1008,8 +3025,8 @@
       "name": "engine.ts",
       "path": "src/query/engine.ts",
       "extension": ".ts",
-      "size_bytes": 10145,
-      "line_count": 356,
+      "size_bytes": 9707,
+      "line_count": 350,
       "language": "TypeScript",
       "raw_imports": [
         "node:fs/promises",
@@ -1019,8 +3036,62 @@
         "./filter.js",
         "./formatter.js",
         "./ranking.js",
-        "./schemas.js"
-      ]
+        "./schemas.js",
+        "zod"
+      ],
+      "import_data": {
+        "path": "src/query/engine.ts",
+        "imports": [
+          {
+            "source": "node:fs/promises",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./filter.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./formatter.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./ranking.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./schemas.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "zod",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "filter.ts",
@@ -1032,7 +3103,25 @@
       "raw_imports": [
         "../core/constants.js",
         "../core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/query/filter.ts",
+        "imports": [
+          {
+            "source": "../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "formatter.ts",
@@ -1046,7 +3135,35 @@
         "./ranking.js",
         "../config/index.js",
         "../core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/query/formatter.ts",
+        "imports": [
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./ranking.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.ts",
@@ -1060,7 +3177,35 @@
         "./filter.js",
         "./ranking.js",
         "./formatter.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/query/index.ts",
+        "imports": [
+          {
+            "source": "./engine.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./filter.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./ranking.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./formatter.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "ranking.ts",
@@ -1072,7 +3217,25 @@
       "raw_imports": [
         "../core/types.js",
         "../config/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/query/ranking.ts",
+        "imports": [
+          {
+            "source": "../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "schemas.ts",
@@ -1084,7 +3247,25 @@
       "raw_imports": [
         "zod",
         "../core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "src/query/schemas.ts",
+        "imports": [
+          {
+            "source": "zod",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "version.ts",
@@ -1093,7 +3274,14 @@
       "size_bytes": 59,
       "line_count": 5,
       "language": "TypeScript",
-      "raw_imports": []
+      "raw_imports": [],
+      "import_data": {
+        "path": "src/version.ts",
+        "imports": [],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "commands.test.ts",
@@ -1107,7 +3295,35 @@
         "node:assert",
         "../../src/cli/commands/map.js",
         "../../src/cli/commands/get-context.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/cli/commands.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/cli/commands/map.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/cli/commands/get-context.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "compute.test.ts",
@@ -1120,7 +3336,72 @@
         "node:test",
         "node:assert",
         "../../src/cli/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/cli/compute.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/cli/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "display.test.ts",
+      "path": "tests/cli/display.test.ts",
+      "extension": ".ts",
+      "size_bytes": 1799,
+      "line_count": 63,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:assert",
+        "node:test",
+        "../../src/cli/display.js",
+        "../../src/cli/types.js"
+      ],
+      "import_data": {
+        "path": "tests/cli/display.test.ts",
+        "imports": [
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/cli/display.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/cli/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "progress-ui.test.ts",
@@ -1133,7 +3414,30 @@
         "node:test",
         "node:assert",
         "../../src/cli/progress-ui.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/cli/progress-ui.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/cli/progress-ui.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "defaults.test.ts",
@@ -1146,7 +3450,30 @@
         "node:test",
         "node:assert",
         "../../src/config/defaults.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/config/defaults.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/config/defaults.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "env.test.ts",
@@ -1160,7 +3487,35 @@
         "node:assert",
         "../../src/config/env.js",
         "../../src/config/defaults.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/config/env.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/config/env.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/config/defaults.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.test.ts",
@@ -1173,7 +3528,30 @@
         "node:test",
         "node:assert",
         "../../src/config/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/config/index.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "models.test.ts",
@@ -1186,7 +3564,30 @@
         "node:test",
         "node:assert",
         "../../src/config/models.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/config/models.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/config/models.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "rmapignore-defaults.test.ts",
@@ -1199,7 +3600,30 @@
         "node:test",
         "node:assert",
         "../../src/config/rmapignore-defaults.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/config/rmapignore-defaults.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/config/rmapignore-defaults.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "assembler.test.ts",
@@ -1217,7 +3641,103 @@
         "../../src/core/types.js",
         "../../src/coordinator/assembler.js",
         "../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/coordinator/assembler.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/assembler.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "checkpoint-orchestrator.test.ts",
+      "path": "tests/coordinator/checkpoint-orchestrator.test.ts",
+      "extension": ".ts",
+      "size_bytes": 1756,
+      "line_count": 45,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:assert",
+        "node:test",
+        "../../src/coordinator/checkpoint-orchestrator.js",
+        "node:fs",
+        "node:path"
+      ],
+      "import_data": {
+        "path": "tests/coordinator/checkpoint-orchestrator.test.ts",
+        "imports": [
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/checkpoint-orchestrator.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "checkpoint.test.ts",
@@ -1235,7 +3755,103 @@
         "../../src/coordinator/checkpoint.js",
         "../../src/core/types.js",
         "../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/coordinator/checkpoint.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/checkpoint.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "delta-update.test.ts",
+      "path": "tests/coordinator/delta-update.test.ts",
+      "extension": ".ts",
+      "size_bytes": 1198,
+      "line_count": 43,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:assert",
+        "node:test",
+        "../../src/coordinator/delta-update.js",
+        "node:fs",
+        "node:path"
+      ],
+      "import_data": {
+        "path": "tests/coordinator/delta-update.test.ts",
+        "imports": [
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/delta-update.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "delta.test.ts",
@@ -1254,7 +3870,60 @@
         "../../src/coordinator/delta.js",
         "../../src/core/constants.js",
         "../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/coordinator/delta.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:child_process",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/delta.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "graph.test.ts",
@@ -1268,7 +3937,35 @@
         "node:assert",
         "../../src/core/types.js",
         "../../src/coordinator/graph.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/coordinator/graph.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/graph.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "incremental-annotations.test.ts",
@@ -1285,7 +3982,50 @@
         "node:url",
         "../../src/coordinator/incremental-annotations.js",
         "../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/coordinator/incremental-annotations.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:url",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/incremental-annotations.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "pipeline.test.ts",
@@ -1299,7 +4039,35 @@
         "node:assert",
         "../../src/core/types.js",
         "../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/coordinator/pipeline.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "progress.test.ts",
@@ -1312,7 +4080,30 @@
         "node:test",
         "node:assert",
         "../../src/coordinator/progress.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/coordinator/progress.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/progress.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "shutdown-handler.test.ts",
@@ -1325,7 +4116,30 @@
         "node:test",
         "node:assert",
         "../../src/coordinator/shutdown-handler.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/coordinator/shutdown-handler.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/shutdown-handler.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "versioning.test.ts",
@@ -1340,7 +4154,40 @@
         "../../src/coordinator/versioning.js",
         "../../src/core/types.js",
         "../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/coordinator/versioning.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/versioning.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "concurrency.test.ts",
@@ -1353,7 +4200,30 @@
         "node:test",
         "node:assert",
         "../../src/core/concurrency.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/core/concurrency.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/concurrency.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "constants.test.ts",
@@ -1366,7 +4236,30 @@
         "node:test",
         "node:assert",
         "../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/core/constants.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "errors.test.ts",
@@ -1379,7 +4272,30 @@
         "node:test",
         "node:assert",
         "../../src/core/errors.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/core/errors.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/errors.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "git-utils.test.ts",
@@ -1392,7 +4308,30 @@
         "node:test",
         "node:assert",
         "../../src/core/git-utils.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/core/git-utils.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/git-utils.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "ignore-patterns.test.ts",
@@ -1409,20 +4348,122 @@
         "node:os",
         "../../src/core/ignore-patterns.js",
         "../../src/config/rmapignore-defaults.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/core/ignore-patterns.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/ignore-patterns.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/config/rmapignore-defaults.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "index.test.ts",
       "path": "tests/core/index.test.ts",
       "extension": ".ts",
-      "size_bytes": 3656,
-      "line_count": 87,
+      "size_bytes": 4955,
+      "line_count": 123,
       "language": "TypeScript",
       "raw_imports": [
         "node:test",
         "node:assert",
         "../../src/core/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/core/index.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "latency-tracker.test.ts",
+      "path": "tests/core/latency-tracker.test.ts",
+      "extension": ".ts",
+      "size_bytes": 14041,
+      "line_count": 469,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/latency-tracker.js"
+      ],
+      "import_data": {
+        "path": "tests/core/latency-tracker.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/latency-tracker.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "llm-client.test.ts",
@@ -1435,7 +4476,84 @@
         "node:test",
         "node:assert",
         "../../src/core/llm-client.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/core/llm-client.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/llm-client.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "metrics-logger.test.ts",
+      "path": "tests/core/metrics-logger.test.ts",
+      "extension": ".ts",
+      "size_bytes": 3455,
+      "line_count": 99,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:assert",
+        "node:test",
+        "node:fs",
+        "node:path",
+        "../../src/core/metrics-logger.js",
+        "../../src/core/metrics.js"
+      ],
+      "import_data": {
+        "path": "tests/core/metrics-logger.test.ts",
+        "imports": [
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/metrics-logger.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/metrics.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "metrics.test.ts",
@@ -1448,7 +4566,132 @@
         "node:test",
         "node:assert",
         "../../src/core/metrics.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/core/metrics.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/metrics.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "prompt-logger.test.ts",
+      "path": "tests/core/prompt-logger.test.ts",
+      "extension": ".ts",
+      "size_bytes": 2443,
+      "line_count": 64,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:assert",
+        "node:test",
+        "../../src/core/prompt-logger.js",
+        "node:fs",
+        "node:path"
+      ],
+      "import_data": {
+        "path": "tests/core/prompt-logger.test.ts",
+        "imports": [
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/prompt-logger.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
+    },
+    {
+      "name": "providers.test.ts",
+      "path": "tests/core/providers.test.ts",
+      "extension": ".ts",
+      "size_bytes": 14348,
+      "line_count": 437,
+      "language": "TypeScript",
+      "raw_imports": [
+        "node:test",
+        "node:assert",
+        "../../src/core/providers/types.js",
+        "../../src/core/providers/factory.js",
+        "../../src/core/providers/claude-provider.js",
+        "../../src/core/providers/gemini-provider.js"
+      ],
+      "import_data": {
+        "path": "tests/core/providers.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/providers/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/providers/factory.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/providers/claude-provider.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/providers/gemini-provider.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "rate-limiter.test.ts",
@@ -1461,7 +4704,30 @@
         "node:test",
         "node:assert",
         "../../src/core/rate-limiter.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/core/rate-limiter.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/rate-limiter.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "types.test.ts",
@@ -1474,7 +4740,30 @@
         "node:test",
         "node:assert",
         "../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/core/types.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "validation.test.ts",
@@ -1488,9 +4777,41 @@
         "node:assert",
         "../../src/core/validation.js",
         "../../src/core/constants.js",
-        "../../src/config/defaults.js",
-        "../../src/config/env.js"
-      ]
+        "../../src/config/defaults.js"
+      ],
+      "import_data": {
+        "path": "tests/core/validation.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/validation.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/config/defaults.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "checkpoint.test.ts",
@@ -1508,7 +4829,55 @@
         "../../src/coordinator/checkpoint.js",
         "../../src/core/types.js",
         "../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/integration/checkpoint.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/coordinator/checkpoint.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "pipeline.test.ts",
@@ -1525,7 +4894,50 @@
         "node:os",
         "../../src/core/types.js",
         "../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/integration/pipeline.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "level0.test.ts",
@@ -1541,7 +4953,45 @@
         "node:path",
         "node:fs",
         "node:url"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/level0.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../src/levels/level0/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:url",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "level1.test.ts",
@@ -1555,7 +5005,35 @@
         "node:assert",
         "../src/levels/level1/validation.js",
         "../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/level1.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../src/levels/level1/validation.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "harvester.test.ts",
@@ -1570,8 +5048,52 @@
         "node:fs",
         "node:path",
         "node:os",
-        "../../../src/levels/level0/harvester.js"
-      ]
+        "../../../src/levels/level0/harvester.js",
+        "./custom-ignore/file"
+      ],
+      "import_data": {
+        "path": "tests/levels/level0/harvester.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level0/harvester.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./custom-ignore/file",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "integration-parser.test.ts",
@@ -1585,37 +5107,419 @@
         "node:assert",
         "node:fs",
         "node:path",
-        "../../../src/levels/level0/parsers/index.js"
-      ]
+        "../../../src/levels/level0/parsers/index.js",
+        "../types.js",
+        "./helper.js",
+        "node:child_process",
+        "../../core/types.js",
+        "../../config/index.js",
+        "./module${i}",
+        "react",
+        "./utils",
+        "./helper",
+        "./styles.css",
+        "fs",
+        "./harvester.js",
+        "./components/button",
+        "./components/input"
+      ],
+      "import_data": {
+        "path": "tests/levels/level0/integration-parser.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level0/parsers/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./helper.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:child_process",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./module${i}",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "react",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./utils",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./helper",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./styles.css",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./harvester.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./components/button",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./components/input",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "parsers.test.ts",
       "path": "tests/levels/level0/parsers.test.ts",
       "extension": ".ts",
-      "size_bytes": 18186,
-      "line_count": 635,
+      "size_bytes": 30507,
+      "line_count": 1024,
       "language": "TypeScript",
       "raw_imports": [
         "node:test",
         "node:assert",
         "../../../src/levels/level0/parsers/javascript.js",
         "../../../src/levels/level0/parsers/fallback.js",
-        "../../../src/levels/level0/parsers/index.js"
-      ]
+        "../../../src/levels/level0/parsers/index.js",
+        "react",
+        "lodash",
+        "./utils",
+        "module",
+        "ui-library",
+        "node:fs/promises",
+        "./types",
+        "./config",
+        "./api",
+        "./data.json",
+        "bar",
+        "./components",
+        "string",
+        "esm-module",
+        "@testing-library/react",
+        "@/styles/main.css",
+        "./sibling",
+        "../parent",
+        "../../grandparent",
+        "../../../root",
+        "./module",
+        "./MyComponent",
+        "react-dom",
+        "./styles.css",
+        "polyfill",
+        "fs",
+        "path",
+        "node:fs",
+        "cjs-module",
+        "./foo",
+        "./baz",
+        "./helpers",
+        "./component",
+        "./remote"
+      ],
+      "import_data": {
+        "path": "tests/levels/level0/parsers.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level0/parsers/javascript.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level0/parsers/fallback.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level0/parsers/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "react",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "lodash",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./utils",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "module",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "ui-library",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs/promises",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./types",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./config",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./api",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./data.json",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "bar",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./components",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "string",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "esm-module",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "@testing-library/react",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "@/styles/main.css",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./sibling",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../parent",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../grandparent",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../root",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./module",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./MyComponent",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "react-dom",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./styles.css",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "polyfill",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "cjs-module",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./foo",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./baz",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./helpers",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./component",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./remote",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "detector.test.ts",
       "path": "tests/levels/level1/detector.test.ts",
       "extension": ".ts",
-      "size_bytes": 11445,
-      "line_count": 357,
+      "size_bytes": 12789,
+      "line_count": 392,
       "language": "TypeScript",
       "raw_imports": [
         "node:test",
         "node:assert",
         "../../../src/levels/level1/detector.js",
         "../../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level1/detector.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level1/detector.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "validation.test.ts",
@@ -1629,7 +5533,35 @@
         "node:assert",
         "../../../src/levels/level1/validation.js",
         "../../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level1/validation.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level1/validation.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "divider.test.ts",
@@ -1643,7 +5575,35 @@
         "node:assert",
         "../../../src/core/types.js",
         "../../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level2/divider.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "prompt.test.ts",
@@ -1658,7 +5618,40 @@
         "../../../src/levels/level2/prompt.js",
         "../../../src/core/types.js",
         "../../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level2/prompt.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level2/prompt.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "validation.test.ts",
@@ -1673,7 +5666,40 @@
         "../../../src/levels/level2/validation.js",
         "../../../src/core/types.js",
         "../../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level2/validation.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level2/validation.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "annotator.test.ts",
@@ -1686,10 +5712,36 @@
         "node:test",
         "node:assert",
         "../../../src/core/types.js",
-        "../../../src/config/models.js",
-        "../../../src/config/index.js",
-        "../../../src/core/concurrency.js"
-      ]
+        "../../../src/config/models.js"
+      ],
+      "import_data": {
+        "path": "tests/levels/level3/annotator.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/config/models.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "parser.test.ts",
@@ -1704,7 +5756,40 @@
         "../../../src/levels/level3/parser.js",
         "../../../src/core/types.js",
         "../../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level3/parser.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level3/parser.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "prompt.test.ts",
@@ -1718,8 +5803,47 @@
         "node:assert",
         "../../../src/levels/level3/prompt.js",
         "../../../src/config/index.js",
-        "../../../src/core/types.js"
-      ]
+        "../../../src/core/types.js",
+        "./helper"
+      ],
+      "import_data": {
+        "path": "tests/levels/level3/prompt.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level3/prompt.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "./helper",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "raw-imports.test.ts",
@@ -1733,7 +5857,35 @@
         "node:assert",
         "../../../src/levels/level3/parser.js",
         "../../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level3/raw-imports.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level3/parser.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "tag-validator.test.ts",
@@ -1748,7 +5900,40 @@
         "../../../src/levels/level3/tag-validator.js",
         "../../../src/core/constants.js",
         "../../../src/config/index.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level3/tag-validator.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level3/tag-validator.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/config/index.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "autofix.test.ts",
@@ -1765,7 +5950,50 @@
         "node:os",
         "../../../src/levels/level4/autofix.js",
         "../../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level4/autofix.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level4/autofix.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "checks.test.ts",
@@ -1782,7 +6010,50 @@
         "node:os",
         "../../../src/levels/level4/checks.js",
         "../../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level4/checks.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level4/checks.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "orphans.test.ts",
@@ -1796,7 +6067,35 @@
         "node:assert",
         "../../../src/levels/level4/orphans.js",
         "../../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level4/orphans.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level4/orphans.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "validator.test.ts",
@@ -1813,7 +6112,50 @@
         "node:os",
         "../../../src/levels/level4/validator.js",
         "../../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/levels/level4/validator.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/levels/level4/validator.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "engine.test.ts",
@@ -1830,7 +6172,50 @@
         "node:os",
         "../../src/query/engine.js",
         "../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/query/engine.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs/promises",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/query/engine.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "filter.test.ts",
@@ -1845,7 +6230,40 @@
         "../../src/query/filter.js",
         "../../src/core/types.js",
         "../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/query/filter.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/query/filter.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "formatter.test.ts",
@@ -1860,7 +6278,40 @@
         "../../src/query/formatter.js",
         "../../src/core/types.js",
         "../../src/query/ranking.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/query/formatter.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/query/formatter.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/query/ranking.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "ranking.test.ts",
@@ -1874,7 +6325,35 @@
         "node:assert",
         "../../src/query/ranking.js",
         "../../src/core/types.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/query/ranking.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/query/ranking.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/types.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "schemas.test.ts",
@@ -1888,7 +6367,35 @@
         "node:assert",
         "../../src/query/schemas.js",
         "../../src/core/constants.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/query/schemas.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/query/schemas.js",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/core/constants.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "validation.test.ts",
@@ -1904,7 +6411,45 @@
         "node:path",
         "node:os",
         "../../src/query/engine.js"
-      ]
+      ],
+      "import_data": {
+        "path": "tests/query/validation.test.ts",
+        "imports": [
+          {
+            "source": "node:test",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:assert",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:fs/promises",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:path",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "node:os",
+            "type": "static",
+            "isSideEffect": false
+          },
+          {
+            "source": "../../src/query/engine.js",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     },
     {
       "name": "tsconfig.json",
@@ -1924,17 +6469,30 @@
       "language": "TypeScript",
       "raw_imports": [
         "tsup"
-      ]
+      ],
+      "import_data": {
+        "path": "tsup.config.ts",
+        "imports": [
+          {
+            "source": "tsup",
+            "type": "static",
+            "isSideEffect": false
+          }
+        ],
+        "namedExports": [],
+        "defaultExport": false,
+        "reExports": []
+      }
     }
   ],
-  "git_commit": "ce9680d28ad677cc02f02e9483c514bf41555560",
-  "timestamp": "2026-04-04T19:55:32.893Z",
-  "total_files": 147,
-  "total_size_bytes": 1259947,
+  "git_commit": "5697a34daa3744ab6cdc370aa51cae719f0bd2c7",
+  "timestamp": "2026-04-05T18:23:09.299Z",
+  "total_files": 172,
+  "total_size_bytes": 1450916,
   "ignoreStats": {
-    "totalChecked": 147,
+    "totalChecked": 172,
     "ignoredCount": 0,
-    "passedCount": 147,
+    "passedCount": 172,
     "ignoredPercent": 0
   },
   "rmapignoreCreated": false
