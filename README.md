@@ -2,7 +2,6 @@
 
 A semantic repository map builder for coding agents.
 
-[![npm version](https://badge.fury.io/js/rmap.svg)](https://www.npmjs.com/package/rmap)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/node/v/rmap.svg)](https://nodejs.org)
 
@@ -21,18 +20,6 @@ Modern coding agents need context to make informed decisions. Reading an entire 
 - Understand **dependency relationships** (what imports what)
 - Learn **project conventions** automatically
 - Get **focused context** in 450-800 tokens instead of thousands
-
-## Installation
-
-```bash
-npm install -g rmap
-```
-
-Or with pnpm:
-
-```bash
-pnpm add -g rmap
-```
 
 ## Quick Start
 
@@ -438,7 +425,6 @@ MIT - See [LICENSE](LICENSE) for details
 - **CLI Reference**: [docs/CLI.md](docs/CLI.md)
 - **Architecture**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - **Configuration**: [docs/CONFIGURATION.md](docs/CONFIGURATION.md)
-- **NPM Package**: https://www.npmjs.com/package/rmap
 - **Issues**: https://github.com/harshitsinghbhandari/rmap/issues
 
 ## Acknowledgments

@@ -85,6 +85,7 @@ pnpm pack
 
 # Install it in another location to test
 cd /tmp
+# Manual install from tarball
 npm install /path/to/rmap-1.0.0.tgz
 
 # Test the installed package
@@ -134,4 +135,4 @@ npm publish --dry-run
 - [ ] `rmap --help` works after linking
 - [ ] `rmap map` works on a test repository
 - [ ] `rmap get-context` returns expected output
-- [ ] `npm publish --dry-run` shows correct files
+- [ ] `npm publish --dry-run` shows correct files (once published)
