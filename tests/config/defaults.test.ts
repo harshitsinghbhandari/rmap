@@ -88,7 +88,7 @@ test('RETRY_CONFIG has correct structure', () => {
   assert.ok('MAX_BACKOFF_MS' in RETRY_CONFIG);
   assert.ok('INITIAL_RATE_LIMIT_DELAY_MS' in RETRY_CONFIG);
   assert.ok('VALIDATION_ERROR_RETRIES' in RETRY_CONFIG);
-  assert.ok('TAG_VALIDATION_RETRIES' in RETRY_CONFIG);
+  assert.ok('VALIDATION_ERROR_RETRIES' in RETRY_CONFIG);
 });
 
 test('RETRY_CONFIG.MAX_RETRIES is correct', () => {
@@ -138,7 +138,6 @@ test('CONCURRENCY_CONFIG values are positive', () => {
 
 test('SCORING_CONFIG has correct structure', () => {
   assert.strictEqual(typeof SCORING_CONFIG, 'object');
-  assert.ok('POINTS_PER_TAG' in SCORING_CONFIG);
   assert.ok('POINTS_PER_IMPORTED_BY' in SCORING_CONFIG);
   assert.ok('POINTS_PER_IMPORT' in SCORING_CONFIG);
   assert.ok('POINTS_PER_EXPORT' in SCORING_CONFIG);
@@ -147,7 +146,6 @@ test('SCORING_CONFIG has correct structure', () => {
 });
 
 test('SCORING_CONFIG values are non-negative', () => {
-  assert.ok(SCORING_CONFIG.POINTS_PER_TAG >= 0);
   assert.ok(SCORING_CONFIG.POINTS_PER_IMPORTED_BY >= 0);
   assert.ok(SCORING_CONFIG.POINTS_PER_IMPORT >= 0);
   assert.ok(SCORING_CONFIG.POINTS_PER_EXPORT >= 0);
@@ -155,8 +153,6 @@ test('SCORING_CONFIG values are non-negative', () => {
 });
 
 test('SCORING_CONFIG values create sensible ranking', () => {
-  // Tags should be highly valued
-  assert.ok(SCORING_CONFIG.POINTS_PER_TAG > 0);
   // Imported_by should be valued more than imports
   assert.ok(SCORING_CONFIG.POINTS_PER_IMPORTED_BY > SCORING_CONFIG.POINTS_PER_IMPORT);
 });
@@ -170,7 +166,6 @@ test('OUTPUT_CONFIG has correct structure', () => {
   assert.ok('MAX_FILES_PER_SECTION' in OUTPUT_CONFIG);
   assert.ok('MAX_EXPORTS_PER_FILE' in OUTPUT_CONFIG);
   assert.ok('MAX_CONVENTIONS' in OUTPUT_CONFIG);
-  assert.ok('MAX_DISPLAY_TAGS' in OUTPUT_CONFIG);
   assert.ok('MAX_FILES_IN_PROMPT' in OUTPUT_CONFIG);
   assert.ok('PROGRESS_UPDATE_INTERVAL_FILES' in OUTPUT_CONFIG);
   assert.ok('PROGRESS_UPDATE_INTERVAL_L3' in OUTPUT_CONFIG);
@@ -180,7 +175,6 @@ test('OUTPUT_CONFIG values are positive', () => {
   assert.ok(OUTPUT_CONFIG.MAX_FILES_PER_SECTION > 0);
   assert.ok(OUTPUT_CONFIG.MAX_EXPORTS_PER_FILE > 0);
   assert.ok(OUTPUT_CONFIG.MAX_CONVENTIONS > 0);
-  assert.ok(OUTPUT_CONFIG.MAX_DISPLAY_TAGS > 0);
   assert.ok(OUTPUT_CONFIG.MAX_FILES_IN_PROMPT > 0);
 });
 
@@ -214,12 +208,7 @@ test('FILE_CONFIG has correct structure', () => {
   assert.ok('MAX_LINE_COUNT' in FILE_CONFIG);
   assert.ok('BINARY_DETECTION_BUFFER_SIZE' in FILE_CONFIG);
   assert.ok('TRUNCATION_FIRST_PART_RATIO' in FILE_CONFIG);
-  assert.ok('MAX_TAGS_PER_FILE' in FILE_CONFIG);
   assert.ok('MAX_FILES_PER_TASK' in FILE_CONFIG);
-});
-
-test('FILE_CONFIG.MAX_TAGS_PER_FILE is correct', () => {
-  assert.strictEqual(FILE_CONFIG.MAX_TAGS_PER_FILE, 3);
 });
 
 test('FILE_CONFIG.TRUNCATION_FIRST_PART_RATIO is valid ratio', () => {

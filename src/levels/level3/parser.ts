@@ -5,10 +5,8 @@
  */
 
 import type { FileAnnotation, RawFileMetadata } from '../../core/types.js';
-import type { Tag } from '../../core/constants.js';
 import { FILE } from '../../config/index.js';
 import * as path from 'node:path';
-import { validateTagsWithDetails, type TagValidationResult } from './tag-validator.js';
 import { extractJson, fixCommonJsonIssues } from '../../core/json-utils.js';
 
 /**
@@ -22,13 +20,11 @@ export class AnnotationValidationError extends Error {
 }
 
 /**
- * Result of parsing annotation with validation details
+ * Result of parsing annotation
  */
 export interface AnnotationParseResult {
-  /** The parsed file annotation (may have only partial tags if some were invalid) */
+  /** The parsed file annotation */
   annotation: FileAnnotation | null;
-  /** Tag validation result with valid and invalid tags */
-  tagValidation: TagValidationResult;
   /** The raw response text from the LLM */
   rawResponse: string;
 }
@@ -38,7 +34,6 @@ export interface AnnotationParseResult {
  */
 interface RawAnnotation {
   purpose: string;
-  tags: string[];
   exports: string[];
   imports: string[];
 }
@@ -68,7 +63,6 @@ export function normalizeImportPath(
   // Remove leading './' if present
   return normalized.startsWith('./') ? normalized.slice(2) : normalized;
 }
-
 
 /**
  * Filter out external package imports
@@ -125,7 +119,6 @@ function normalizeImports(
     }
 
     // Normalize to forward slashes for cross-platform consistency
-    // Graph keys and queries use POSIX-style paths, so backslashes would break lookups on Windows
     normalized = normalized.replace(/\\/g, '/');
 
     return normalized;
@@ -134,14 +127,6 @@ function normalizeImports(
 
 /**
  * Process raw_imports from Level 0 parsers into normalized internal imports
- *
- * This function takes the imports extracted by Level 0 parsers (Babel AST or regex)
- * and filters/normalizes them to produce repo-root-relative paths for internal files only.
- *
- * @param rawImports - Import strings from Level 0 (raw_imports field)
- * @param currentFilePath - Path of the file being processed (for resolving relative imports)
- * @param repoRoot - Repository root path
- * @returns Array of normalized internal import paths
  */
 export function processRawImports(
   rawImports: string[],
@@ -172,19 +157,6 @@ function validateRawAnnotation(data: unknown): RawAnnotation {
     purpose = purpose.slice(0, 197) + '...';
   }
 
-  // Validate tags
-  if (!Array.isArray(obj.tags)) {
-    throw new AnnotationValidationError('Field "tags" must be an array');
-  }
-
-  if (obj.tags.length === 0) {
-    throw new AnnotationValidationError('Field "tags" must contain at least one tag');
-  }
-
-  if (!obj.tags.every((tag) => typeof tag === 'string')) {
-    throw new AnnotationValidationError('All tags must be strings');
-  }
-
   // Validate exports
   if (!Array.isArray(obj.exports)) {
     throw new AnnotationValidationError('Field "exports" must be an array');
@@ -194,8 +166,7 @@ function validateRawAnnotation(data: unknown): RawAnnotation {
     throw new AnnotationValidationError('All exports must be strings');
   }
 
-  // Validate imports (optional, since imports are now extracted by Level 0 parsers)
-  // If provided by LLM, validate the structure
+  // Validate imports (optional)
   let imports: string[] = [];
   if (obj.imports !== undefined) {
     if (!Array.isArray(obj.imports)) {
@@ -211,23 +182,20 @@ function validateRawAnnotation(data: unknown): RawAnnotation {
 
   return {
     purpose,
-    tags: obj.tags as string[],
     exports: obj.exports as string[],
     imports,
   };
 }
 
 /**
- * Parse and validate LLM response into FileAnnotation with detailed validation
+ * Parse and validate LLM response into FileAnnotation
  *
  * @param responseText - Raw text response from LLM
  * @param metadata - File metadata from Level 0
  * @param repoRoot - Repository root path (for normalizing imports)
- * @param preExtractedImports - Optional pre-extracted imports from Level 0 parsers (overrides LLM-extracted imports)
+ * @param preExtractedImports - Optional pre-extracted imports from Level 0 parsers
  * @returns Parse result with annotation and validation details
  */
-// Removed redundant extractJson function that is now in json-utils.ts
-
 export function parseAnnotationResponseWithDetails(
   responseText: string,
   metadata: RawFileMetadata,
@@ -241,7 +209,6 @@ export function parseAnnotationResponseWithDetails(
   try {
     parsed = JSON.parse(jsonText);
   } catch (error) {
-    // Try to fix common JSON issues from LLMs
     try {
       parsed = JSON.parse(fixCommonJsonIssues(jsonText));
     } catch {
@@ -256,18 +223,6 @@ export function parseAnnotationResponseWithDetails(
   // Validate structure
   const raw = validateRawAnnotation(parsed);
 
-  // Validate and filter tags with detailed results
-  const tagValidation = validateTagsWithDetails(raw.tags, metadata.path);
-
-  // If no valid tags, return null annotation with validation details
-  if (tagValidation.valid.length === 0) {
-    return {
-      annotation: null,
-      tagValidation,
-      rawResponse: responseText,
-    };
-  }
-
   // Use pre-extracted imports from Level 0 if available, otherwise use LLM-extracted imports
   const normalizedImports = preExtractedImports !== undefined
     ? preExtractedImports
@@ -280,14 +235,12 @@ export function parseAnnotationResponseWithDetails(
     size_bytes: metadata.size_bytes,
     line_count: metadata.line_count,
     purpose: raw.purpose.trim(),
-    tags: tagValidation.valid,
     exports: raw.exports.map((e) => e.trim()).filter((e) => e.length > 0),
     imports: normalizedImports,
   };
 
   return {
     annotation,
-    tagValidation,
     rawResponse: responseText,
   };
 }
@@ -311,7 +264,7 @@ export function parseAnnotationResponse(
 
   if (result.annotation === null) {
     throw new AnnotationValidationError(
-      `No valid tags found for file ${metadata.path}. Tags provided: ${result.tagValidation.invalid.join(', ')}`
+      `Failed to parse annotation for file ${metadata.path}`
     );
   }
 

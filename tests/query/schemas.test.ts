@@ -9,16 +9,14 @@ import assert from 'node:assert';
 import {
   MetaJsonSchema,
   GraphJsonSchema,
-  TagsJsonSchema,
   AnnotationsJsonSchema,
 } from '../../src/query/schemas.js';
 import type {
   ValidatedMetaJson,
   ValidatedGraphJson,
-  ValidatedTagsJson,
   ValidatedAnnotationsJson,
 } from '../../src/query/schemas.js';
-import { SCHEMA_VERSION, TAG_TAXONOMY } from '../../src/core/constants.js';
+import { SCHEMA_VERSION } from '../../src/core/constants.js';
 
 // ============================================================================
 // MetaJsonSchema Tests
@@ -250,58 +248,10 @@ test('GraphJsonSchema: rejects non-string imports', () => {
 });
 
 // ============================================================================
-// TagsJsonSchema Tests
-// ============================================================================
-
-test('TagsJsonSchema: validates correct tags.json', () => {
-  const validTags = {
-    taxonomy_version: '1.0',
-    aliases: {
-      auth: ['authentication', 'authorization'],
-      db: ['database'],
-    },
-    index: {
-      authentication: ['src/auth/login.ts', 'src/auth/jwt.ts'],
-      database: ['src/db/connection.ts'],
-    },
-  };
-
-  const result = TagsJsonSchema.parse(validTags);
-  assert.strictEqual(result.taxonomy_version, '1.0');
-  assert.ok(Array.isArray(result.aliases.auth));
-});
-
-test('TagsJsonSchema: validates empty index', () => {
-  const validTags = {
-    taxonomy_version: '1.0',
-    aliases: {},
-    index: {},
-  };
-
-  const result = TagsJsonSchema.parse(validTags);
-  assert.deepStrictEqual(result.index, {});
-});
-
-test('TagsJsonSchema: rejects missing taxonomy_version', () => {
-  const invalidTags = {
-    // taxonomy_version missing
-    aliases: {},
-    index: {},
-  };
-
-  assert.throws(
-    () => TagsJsonSchema.parse(invalidTags)
-  );
-});
-
-// ============================================================================
 // AnnotationsJsonSchema Tests
 // ============================================================================
 
 test('AnnotationsJsonSchema: validates correct annotations', () => {
-  // Use a valid tag from the taxonomy
-  const validTag = TAG_TAXONOMY[0];
-
   const validAnnotations = [
     {
       path: 'src/auth/login.ts',
@@ -309,7 +259,6 @@ test('AnnotationsJsonSchema: validates correct annotations', () => {
       size_bytes: 2048,
       line_count: 100,
       purpose: 'Handles user login flow',
-      tags: [validTag],
       exports: ['login', 'LoginResult'],
       imports: ['src/auth/jwt.ts'],
     },
@@ -326,8 +275,6 @@ test('AnnotationsJsonSchema: validates empty annotations array', () => {
 });
 
 test('AnnotationsJsonSchema: validates multiple annotations', () => {
-  const validTag = TAG_TAXONOMY[0];
-
   const annotations = [
     {
       path: 'src/a.ts',
@@ -335,7 +282,6 @@ test('AnnotationsJsonSchema: validates multiple annotations', () => {
       size_bytes: 1000,
       line_count: 50,
       purpose: 'File A',
-      tags: [validTag],
       exports: [],
       imports: [],
     },
@@ -345,7 +291,6 @@ test('AnnotationsJsonSchema: validates multiple annotations', () => {
       size_bytes: 2000,
       line_count: 100,
       purpose: 'File B',
-      tags: [validTag],
       exports: [],
       imports: [],
     },
@@ -356,8 +301,6 @@ test('AnnotationsJsonSchema: validates multiple annotations', () => {
 });
 
 test('AnnotationsJsonSchema: rejects negative size_bytes', () => {
-  const validTag = TAG_TAXONOMY[0];
-
   const invalidAnnotations = [
     {
       path: 'src/test.ts',
@@ -365,7 +308,6 @@ test('AnnotationsJsonSchema: rejects negative size_bytes', () => {
       size_bytes: -100, // Invalid
       line_count: 50,
       purpose: 'Test file',
-      tags: [validTag],
       exports: [],
       imports: [],
     },
@@ -378,8 +320,6 @@ test('AnnotationsJsonSchema: rejects negative size_bytes', () => {
 });
 
 test('AnnotationsJsonSchema: rejects negative line_count', () => {
-  const validTag = TAG_TAXONOMY[0];
-
   const invalidAnnotations = [
     {
       path: 'src/test.ts',
@@ -387,7 +327,6 @@ test('AnnotationsJsonSchema: rejects negative line_count', () => {
       size_bytes: 1000,
       line_count: -10, // Invalid
       purpose: 'Test file',
-      tags: [validTag],
       exports: [],
       imports: [],
     },
@@ -396,26 +335,6 @@ test('AnnotationsJsonSchema: rejects negative line_count', () => {
   assert.throws(
     () => AnnotationsJsonSchema.parse(invalidAnnotations),
     /Number must be|too_small/
-  );
-});
-
-test('AnnotationsJsonSchema: rejects invalid tag not in taxonomy', () => {
-  const invalidAnnotations = [
-    {
-      path: 'src/test.ts',
-      language: 'TypeScript',
-      size_bytes: 1000,
-      line_count: 50,
-      purpose: 'Test file',
-      tags: ['not_a_valid_tag'], // Invalid tag
-      exports: [],
-      imports: [],
-    },
-  ];
-
-  assert.throws(
-    () => AnnotationsJsonSchema.parse(invalidAnnotations),
-    /Invalid option|Invalid enum/
   );
 });
 
@@ -479,17 +398,6 @@ test('ValidatedGraphJson type matches schema output', () => {
 
   assert.ok('file.ts' in graph);
   assert.ok(Array.isArray(graph['file.ts'].imports));
-});
-
-test('ValidatedTagsJson type matches schema output', () => {
-  const tags: ValidatedTagsJson = TagsJsonSchema.parse({
-    taxonomy_version: '1.0',
-    aliases: {},
-    index: {},
-  });
-
-  assert.strictEqual(typeof tags.taxonomy_version, 'string');
-  assert.strictEqual(typeof tags.aliases, 'object');
 });
 
 test('ValidatedAnnotationsJson type matches schema output', () => {

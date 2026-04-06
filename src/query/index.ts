@@ -5,22 +5,18 @@
  */
 
 // Main query functions
-export { queryByTags, queryByFile, queryByPath, hasRepoMap } from './engine.js';
+export { queryByFile, queryByPath, hasRepoMap } from './engine.js';
 export type { QueryConfig } from './engine.js';
 
 // Filter functions
 export {
-  expandTagAliases,
-  filterFilesByTags,
   filterFilesByPath,
   findFileByPath,
-  getFilesFromTagIndex,
 } from './filter.js';
 
 // Ranking functions
 export {
   rankFilesByRelevance,
-  getTopFiles,
   getDependents,
   getDependencies,
   getBlastRadius, // @deprecated - use getDependents instead

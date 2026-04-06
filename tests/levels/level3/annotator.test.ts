@@ -57,7 +57,6 @@ test('annotateFiles: returns FileAnnotation array', () => {
       size_bytes: 2048,
       line_count: 100,
       purpose: 'JWT token generation and validation',
-      tags: ['authentication', 'jwt'],
       exports: ['generateToken', 'validateToken', 'decodeToken'],
       imports: ['src/config/env'],
     },
@@ -73,7 +72,6 @@ test('annotateFiles: returns FileAnnotation array', () => {
   assert.ok(typeof annotation.size_bytes === 'number');
   assert.ok(typeof annotation.line_count === 'number');
   assert.ok(typeof annotation.purpose === 'string');
-  assert.ok(Array.isArray(annotation.tags));
   assert.ok(Array.isArray(annotation.exports));
   assert.ok(Array.isArray(annotation.imports));
 });
@@ -87,7 +85,6 @@ test('annotateFiles: preserves file metadata from Level 0', () => {
     size_bytes: metadata.size_bytes,
     line_count: metadata.line_count,
     purpose: 'JWT token operations',
-    tags: ['authentication', 'jwt'],
     exports: ['generateToken'],
     imports: [],
   };
@@ -107,7 +104,6 @@ test('annotateFiles: processes multiple files', () => {
     size_bytes: meta.size_bytes,
     line_count: meta.line_count,
     purpose: `Purpose for ${meta.name}`,
-    tags: ['utility'],
     exports: [`export${i}`],
     imports: [],
   }));
@@ -173,7 +169,6 @@ test('annotateFiles: truncates files exceeding 10k lines', () => {
     size_bytes: largeFileMetadata.size_bytes,
     line_count: largeFileMetadata.line_count, // Original count preserved
     purpose: 'Large file with truncated content',
-    tags: ['generated'],
     exports: [],
     imports: [],
   };
@@ -189,7 +184,6 @@ test('annotateFiles: purpose should be concise', () => {
     size_bytes: 1024,
     line_count: 50,
     purpose: 'Handles user authentication via JWT tokens',
-    tags: ['authentication'],
     exports: [],
     imports: [],
   };
@@ -200,27 +194,6 @@ test('annotateFiles: purpose should be concise', () => {
   assert.ok(typeof annotation.purpose === 'string');
 });
 
-// Test: Tags validation
-test('annotateFiles: validates tags are from taxonomy', async () => {
-  const { FILE } = await import('../../../src/config/index.js');
-
-  const validTags = ['authentication', 'jwt', 'database'];
-  const annotation: FileAnnotation = {
-    path: 'src/test.ts',
-    language: 'TypeScript',
-    size_bytes: 1024,
-    line_count: 50,
-    purpose: 'Test file',
-    tags: validTags.slice(0, 2),
-    exports: [],
-    imports: [],
-  };
-
-  // All tags should be from TAG_TAXONOMY
-  assert.ok(annotation.tags.length >= 1);
-  assert.ok(annotation.tags.length <= FILE.MAX_TAGS_PER_FILE); // MAX_TAGS_PER_FILE is now 3
-});
-
 // Test: Exports extraction
 test('annotateFiles: extracts exports correctly', () => {
   const annotation: FileAnnotation = {
@@ -229,7 +202,6 @@ test('annotateFiles: extracts exports correctly', () => {
     size_bytes: 2048,
     line_count: 100,
     purpose: 'JWT operations',
-    tags: ['authentication', 'jwt'],
     exports: ['generateToken', 'validateToken', 'JWTConfig'],
     imports: [],
   };
@@ -249,7 +221,6 @@ test('annotateFiles: includes only internal imports', () => {
     size_bytes: 3072,
     line_count: 150,
     purpose: 'Session management',
-    tags: ['authentication', 'session'],
     exports: ['createSession'],
     imports: ['src/auth/jwt', 'src/database/users'],
   };
@@ -268,7 +239,7 @@ test('annotateFiles: handles malformed LLM responses', () => {
   const malformedResponses = [
     'Not JSON at all',
     '{"incomplete": true',
-    '{"tags": "not-an-array"}',
+    '{"exports": "not-an-array"}',
     '{}', // Missing required fields
   ];
 
@@ -294,7 +265,6 @@ test('annotateFiles: retries on validation errors', () => {
       size_bytes: 1024,
       line_count: 50,
       purpose: 'Test file',
-      tags: ['testing'],
       exports: [],
       imports: [],
     };
@@ -404,7 +374,6 @@ test('annotateFiles: handles files without detected language', () => {
     size_bytes: metadataNoLang.size_bytes,
     line_count: metadataNoLang.line_count,
     purpose: 'Project documentation',
-    tags: ['documentation'],
     exports: [],
     imports: [],
   };
@@ -420,7 +389,6 @@ test('annotateFiles: allows empty exports and imports', () => {
     size_bytes: 256,
     line_count: 10,
     purpose: 'Application constants',
-    tags: ['constants'],
     exports: [], // No exports
     imports: [], // No imports
   };
@@ -451,9 +419,9 @@ test('annotateFiles: processes files concurrently', async () => {
   const processedFiles: string[] = [];
 
   // Use ConcurrencyPool directly (the mechanism annotateFiles uses internally)
-  const pool = new ConcurrencyPool({ concurrency: 3 });
+  const pool = new ConcurrencyPool<RawFileMetadata, void>({ concurrency: 3 });
 
-  await pool.run(mockFileMetadata, async (file) => {
+  await pool.run(mockFileMetadata, async (file: RawFileMetadata) => {
     inFlight++;
     if (inFlight > maxInFlight) maxInFlight = inFlight;
     try {

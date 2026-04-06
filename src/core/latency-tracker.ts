@@ -292,8 +292,7 @@ export const globalLatencyTracker = new LatencyTracker();
  * Helper to extract taskId from log context purpose string
  *
  * Level 3 purposes are formatted as:
- * - "File annotation - extracts purpose, tags, exports, and imports for: src/core/file.ts"
- * - "Tag correction retry 1/2 for: src/core/file.ts"
+ * - "File annotation - extracts purpose, exports, and imports for: src/core/file.ts"
  *
  * @param purpose - Purpose string from log context
  * @returns Task ID (file path) or undefined

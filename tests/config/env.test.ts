@@ -85,7 +85,6 @@ test('RETRY has correct structure', () => {
   assert.ok('MAX_BACKOFF_MS' in RETRY);
   assert.ok('INITIAL_RATE_LIMIT_DELAY_MS' in RETRY);
   assert.ok('VALIDATION_ERROR_RETRIES' in RETRY);
-  assert.ok('TAG_VALIDATION_RETRIES' in RETRY);
 });
 
 test('RETRY values are within valid ranges', () => {
@@ -121,7 +120,6 @@ test('CONCURRENCY values are within safe limits', () => {
 
 test('SCORING has correct structure', () => {
   assert.strictEqual(typeof SCORING, 'object');
-  assert.ok('POINTS_PER_TAG' in SCORING);
   assert.ok('POINTS_PER_IMPORTED_BY' in SCORING);
   assert.ok('POINTS_PER_IMPORT' in SCORING);
   assert.ok('POINTS_PER_EXPORT' in SCORING);
@@ -130,7 +128,6 @@ test('SCORING has correct structure', () => {
 });
 
 test('SCORING values are non-negative', () => {
-  assert.ok(SCORING.POINTS_PER_TAG >= 0);
   assert.ok(SCORING.POINTS_PER_IMPORTED_BY >= 0);
   assert.ok(SCORING.POINTS_PER_IMPORT >= 0);
   assert.ok(SCORING.POINTS_PER_EXPORT >= 0);
@@ -147,7 +144,6 @@ test('OUTPUT has correct structure', () => {
   assert.ok('MAX_FILES_PER_SECTION' in OUTPUT);
   assert.ok('MAX_EXPORTS_PER_FILE' in OUTPUT);
   assert.ok('MAX_CONVENTIONS' in OUTPUT);
-  assert.ok('MAX_DISPLAY_TAGS' in OUTPUT);
   assert.ok('MAX_FILES_IN_PROMPT' in OUTPUT);
   assert.ok('PROGRESS_UPDATE_INTERVAL_FILES' in OUTPUT);
   assert.ok('PROGRESS_UPDATE_INTERVAL_L3' in OUTPUT);
@@ -157,8 +153,6 @@ test('OUTPUT values are within valid ranges', () => {
   assert.ok(OUTPUT.MAX_FILES_PER_SECTION >= 1);
   assert.ok(OUTPUT.MAX_EXPORTS_PER_FILE >= 1);
   assert.ok(OUTPUT.MAX_CONVENTIONS >= 1);
-  assert.ok(OUTPUT.MAX_DISPLAY_TAGS >= 1);
-  assert.ok(OUTPUT.MAX_DISPLAY_TAGS <= 10);
 });
 
 // ============================================================================
@@ -191,7 +185,6 @@ test('FILE has correct structure', () => {
   assert.ok('MAX_LINE_COUNT' in FILE);
   assert.ok('BINARY_DETECTION_BUFFER_SIZE' in FILE);
   assert.ok('TRUNCATION_FIRST_PART_RATIO' in FILE);
-  assert.ok('MAX_TAGS_PER_FILE' in FILE);
   assert.ok('MAX_FILES_PER_TASK' in FILE);
 });
 
@@ -200,8 +193,6 @@ test('FILE values are within valid ranges', () => {
   assert.ok(FILE.BINARY_DETECTION_BUFFER_SIZE >= 1024);
   assert.ok(FILE.TRUNCATION_FIRST_PART_RATIO >= 0.1);
   assert.ok(FILE.TRUNCATION_FIRST_PART_RATIO <= 0.9);
-  assert.ok(FILE.MAX_TAGS_PER_FILE >= 1);
-  assert.ok(FILE.MAX_TAGS_PER_FILE <= 20);
   assert.ok(FILE.MAX_FILES_PER_TASK >= 1);
 });
 

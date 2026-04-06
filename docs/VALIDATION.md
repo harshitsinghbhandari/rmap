@@ -6,7 +6,6 @@ The runtime validation layer provides configuration consistency checks to ensure
 
 The validation module (`src/core/validation.ts`) validates:
 
-- **Tag Taxonomy**: Ensures no duplicates, valid format (lowercase/snake_case)
 - **Threshold Ordering**: Validates `UPDATE_THRESHOLDS` ordering constraints
 - **Retry Configuration**: Checks ranges and backoff settings
 - **Configuration Consistency**: Validates all config sections for type safety and logical constraints
@@ -29,9 +28,7 @@ You can also run validation manually:
 ```typescript
 import {
   validateConfig,
-  validateTagTaxonomy,
   validateThresholds,
-  validateFileTags,
   validateAll,
 } from './core/validation.js';
 
@@ -39,25 +36,13 @@ import {
 validateConfig(CONFIG);
 
 // Validate specific components
-validateTagTaxonomy();
 validateThresholds();
-
-// Validate file tags
-validateFileTags(['authentication', 'database']);
 
 // Run all validations
 validateAll();
 ```
 
 ## Validation Rules
-
-### Tag Taxonomy
-
-- No duplicate tags
-- Tags must be lowercase or snake_case (e.g., `api_endpoint`)
-- No empty tags
-- No leading/trailing underscores
-- No consecutive underscores
 
 ### Thresholds
 
@@ -80,7 +65,6 @@ validateAll();
 ### File Configuration
 
 - `TRUNCATION_FIRST_PART_RATIO`: 0.1-0.9
-- `MAX_TAGS_PER_FILE`: 1-20
 - All limits must be positive
 
 ## Error Handling
@@ -116,10 +100,6 @@ tsx --test tests/core/validation.test.ts
 # Run all tests
 pnpm test
 ```
-
-## Environment Variables
-
-Validation respects environment variable overrides. See [CONFIGURATION.md](./CONFIGURATION.md) for details on configuring rmap via environment variables.
 
 ## Related
 

@@ -11,7 +11,6 @@ export type {
   MetaJson,
   GraphNode,
   GraphJson,
-  TagsJson,
   StatsJson,
   ValidationSeverity,
   ValidationIssue,
@@ -29,18 +28,12 @@ export type {
 // Export all constants
 export {
   SCHEMA_VERSION,
-  TAG_TAXONOMY,
-  TAG_ALIASES,
   UPDATE_THRESHOLDS,
-  MAX_TAGS_PER_FILE,
   MAX_FILES_PER_TASK,
   CHECKPOINT_DIR,
   CHECKPOINT_VERSION,
   CHECKPOINT_FILES,
 } from './constants.js';
-
-// Export Tag type
-export type { Tag } from './constants.js';
 
 // Export git utilities
 export {
@@ -117,10 +110,8 @@ export {
 } from './errors.js';
 // Export validation functions
 export {
-  validateTagTaxonomy,
   validateThresholds,
   validateConfig,
-  validateFileTags,
   validateAll,
   ConfigValidationError,
 } from './validation.js';

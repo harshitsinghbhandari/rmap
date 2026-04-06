@@ -81,5 +81,4 @@ export const AnnotationsJsonSchema = z.array(FileAnnotationSchema);
  */
 export type ValidatedMetaJson = z.infer<typeof MetaJsonSchema>;
 export type ValidatedGraphJson = z.infer<typeof GraphJsonSchema>;
-export type ValidatedTagsJson = z.infer<typeof TagsJsonSchema>;
 export type ValidatedAnnotationsJson = z.infer<typeof AnnotationsJsonSchema>;

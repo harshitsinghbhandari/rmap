@@ -9,7 +9,6 @@ Deep dive into how `rmap` works internally.
 - [File Formats](#file-formats)
 - [Query Engine](#query-engine)
 - [Delta Update Logic](#delta-update-logic)
-- [Tag Taxonomy](#tag-taxonomy)
 - [Design Decisions](#design-decisions)
 
 ## Overview
@@ -60,7 +59,7 @@ Deep dive into how `rmap` works internally.
          ┌─────────────────────────────────────┐
          │  Level 3: Deep Annotator            │
          │  (LLM: Haiku/Sonnet, Parallel)      │
-         │  Output: Purpose, tags, exports     │
+         │  Output: Purpose, exports           │
          └─────────────────────────────────────┘
                            │
                            ▼
@@ -148,38 +147,6 @@ interface Level1Output {
 }
 ```
 
-**Example Prompt**:
-```
-Analyze this repository structure:
-
-Files (523 total):
-  src/
-    server.ts (entry point, 245 lines)
-    auth/
-      jwt.ts (128 lines)
-      middleware.ts (89 lines)
-    db/
-      models/ (12 files)
-      migrations/ (23 files)
-    api/
-      users.ts (156 lines)
-      ...
-  package.json
-  tsconfig.json
-
-Identify:
-1. Repository purpose (1 line)
-2. Technology stack
-3. Entry points
-4. Module structure
-5. Conventions
-
-Return JSON in this format:
-{ "purpose": "...", "stack": "...", ... }
-```
-
-**Performance**: 1 LLM call, ~10 seconds
-
 **Implementation**: [`src/levels/level1/`](../src/levels/level1/)
 
 ---
@@ -215,20 +182,6 @@ interface DelegationTask {
 }
 ```
 
-**Example Output**:
-```json
-{
-  "tasks": [
-    { "scope": "src/auth/", "agent_size": "medium", "estimated_files": 12 },
-    { "scope": "src/db/models/", "agent_size": "small", "estimated_files": 15 },
-    { "scope": "src/api/", "agent_size": "medium", "estimated_files": 23 },
-    { "scope": "src/utils/", "agent_size": "small", "estimated_files": 8 }
-  ],
-  "execution": "parallel",
-  "estimated_total_minutes": 5
-}
-```
-
 **Performance**: 1 LLM call, ~15 seconds
 
 **Implementation**: [`src/levels/level2/`](../src/levels/level2/)
@@ -242,17 +195,14 @@ interface DelegationTask {
 **Inputs**:
 - Files in task scope (from Level 2)
 - Level 1 structure (for context)
-- Tag taxonomy
 
 **Process** (per file):
 1. Read file content
 2. Send to LLM with structured prompt:
    - File content
-   - Available tags
    - Project context
 3. LLM extracts:
    - **Purpose**: 1-line description of what this file does
-   - **Tags**: 1-3 tags from taxonomy (reduced for precision)
    - **Exports**: Functions, classes, types exported
    - **Imports**: Internal imports (repo-relative paths)
 
@@ -264,7 +214,6 @@ interface FileAnnotation {
   size_bytes: number
   line_count: number
   purpose: string
-  tags: Tag[]
   exports: string[]
   imports: string[]
 }
@@ -295,44 +244,18 @@ export function verifyToken(token: string): TokenPayload {
 }
 ```
 
-Available tags:
-- authentication, authorization, jwt, oauth, session
-- database, orm, query, ...
-[full taxonomy]
-
 Extract:
 1. Purpose (1 line)
-2. Tags (1-5 from taxonomy)
-3. Exports (function/class/type names)
-4. Imports (internal only, repo-relative paths)
+2. Exports (function/class/type names)
+3. Imports (internal only, repo-relative paths)
 
 Return JSON:
 {
   "purpose": "...",
-  "tags": [...],
   "exports": [...],
   "imports": [...]
 }
 ```
-
-**Example Output**:
-```json
-{
-  "path": "src/auth/jwt.ts",
-  "language": "TypeScript",
-  "size_bytes": 1024,
-  "line_count": 32,
-  "purpose": "JWT token generation and validation",
-  "tags": ["authentication", "jwt"],
-  "exports": ["TokenPayload", "generateToken", "verifyToken"],
-  "imports": ["src/db/models/user.ts"]
-}
-```
-
-**Performance**:
-- **Parallel execution**: Multiple tasks run simultaneously
-- **Agent size**: Haiku (fast, cheap) for simple files, Sonnet for complex
-- **Throughput**: ~50 files in 2-5 minutes (depending on agent size)
 
 **Implementation**: [`src/levels/level3/`](../src/levels/level3/)
 
@@ -369,30 +292,6 @@ interface ValidationIssue {
   message: string
 }
 ```
-
-**Example Output**:
-```json
-{
-  "issues": [
-    {
-      "severity": "error",
-      "type": "missing_file",
-      "file": "src/utils/deleted.ts",
-      "message": "File imported by 3 others but not in map"
-    },
-    {
-      "severity": "warning",
-      "type": "orphan_file",
-      "file": "src/legacy/unused.ts",
-      "message": "File has no imports and is not an entry point"
-    }
-  ],
-  "auto_fixed": 3,
-  "requires_attention": 1
-}
-```
-
-**Performance**: ~1-2 seconds for 500 files
 
 **Implementation**: [`src/levels/level4/`](../src/levels/level4/)
 
@@ -478,43 +377,6 @@ Bidirectional dependency graph.
 
 ---
 
-### tags.json
-
-Tag index for fast lookups.
-
-```typescript
-{
-  taxonomy_version: "1.0",
-
-  aliases: {
-    auth: ["authentication", "authorization", "jwt", "oauth", "session"],
-    db: ["database", "orm", "query", "sql", "nosql"],
-    api: ["api_endpoint", "rest", "graphql", "grpc"]
-  },
-
-  index: {
-    authentication: [
-      "src/auth/jwt.ts",
-      "src/auth/middleware.ts",
-      "src/auth/session.ts"
-    ],
-    jwt: [
-      "src/auth/jwt.ts"
-    ],
-    database: [
-      "src/db/connection.ts",
-      "src/db/models/user.ts",
-      "src/db/migrations/001_initial.ts"
-    ],
-    // ... all tags
-  }
-}
-```
-
-**Usage**: Fast tag queries in `get-context`
-
----
-
 ### stats.json
 
 Build statistics.
@@ -557,20 +419,9 @@ Consistency check results.
 
 The `get-context` command uses a multi-stage query engine:
 
-### Stage 1: Tag Resolution
+### Stage 1: Path Resolution
 
-```typescript
-// Input: ["auth", "middleware"]
-// Step 1: Expand aliases
-const expandedTags = expandAliases(["auth", "middleware"]);
-// Result: ["authentication", "authorization", "jwt", "oauth", "session", "middleware"]
-
-// Step 2: Look up files in tag index
-const matchingFiles = tags.index
-  .filter(tag => expandedTags.includes(tag))
-  .flatMap(tag => tags.index[tag]);
-// Result: ["src/auth/jwt.ts", "src/auth/middleware.ts", ...]
-```
+Queries are matched against file paths and directory structures.
 
 ### Stage 2: File Loading
 
@@ -581,21 +432,17 @@ const annotations = matchingFiles.map(path => loadAnnotation(path));
 
 ### Stage 3: Ranking
 
-Rank files by relevance:
+Rank files by relevance using centrality and structural information:
 
 ```typescript
-function rank(file: FileAnnotation, queryTags: Tag[]): number {
+function rank(file: FileAnnotation, graph: GraphJson): number {
   let score = 0;
 
-  // 1. Tag match count (primary)
-  score += file.tags.filter(t => queryTags.includes(t)).length * 10;
-
-  // 2. Centrality (files with more imports/imported_by)
-  const graph = loadGraph();
+  // 1. Centrality (files with more imports/imported_by)
   score += graph[file.path].imports.length * 0.5;
   score += graph[file.path].imported_by.length * 1;
 
-  // 3. File size (prefer smaller for equal scores)
+  // 2. File size (prefer smaller for equal scores)
   score -= file.size_bytes / 10000;
 
   return score;
@@ -624,8 +471,6 @@ const output = formatOutput({
   conventions: meta.conventions
 });
 ```
-
-**Performance**: <100ms for most queries (pure file I/O, no LLM)
 
 **Implementation**: [`src/query/`](../src/query/)
 
@@ -684,70 +529,17 @@ const level3 = await annotateFiles(changedFiles);
 // 4. Update graph (repair imported_by references)
 await repairGraph(changedFiles);
 
-// 5. Regenerate tags.json index
-await rebuildTagIndex();
-
-// 6. Run Level 4 validation
+// 5. Run Level 4 validation
 const level4 = await validate();
 
-// 7. Bump version
+// 6. Bump version
 meta.map_version++;
 meta.parent_version = meta.map_version - 1;
 meta.update_type = 'delta';
 meta.files_changed = changedFiles.length;
 ```
 
-**Performance**: ~30 seconds for <20 files
-
 **Implementation**: [`src/coordinator/delta.ts`](../src/coordinator/)
-
----
-
-## Tag Taxonomy
-
-Predefined set of semantic tags used for file annotation.
-
-### Categories
-
-**Auth & Identity**:
-- authentication, authorization, jwt, oauth, session
-
-**Data**:
-- database, orm, query, migration, sql, nosql, cache
-
-**API & Communication**:
-- api_endpoint, graphql, rest, grpc, websocket, webhook
-
-**Architecture Patterns**:
-- model, entity, dto, schema, controller, service, repository, handler, middleware, factory, adapter, interface
-
-**Infrastructure**:
-- utility, helper, config, env, constants, logging, monitoring, metrics, tracing, error_handling, validation
-
-**Testing**:
-- testing, mock, fixture, e2e_test, unit_test
-
-**Frontend**:
-- frontend, ui, component, state, routing, styling
-
-**Backend**:
-- backend, server, cli, daemon, worker, queue
-
-**DevOps**:
-- build, ci, docker, deployment, infra
-
-**Docs & Meta**:
-- documentation, types, generated, vendor, dependency_manifest
-
-### Design Principles
-
-1. **Closed taxonomy**: No freeform tags (ensures consistency)
-2. **1-3 tags per file**: Prevents over-tagging and improves precision
-3. **Semantic, not syntactic**: Tags describe purpose, not syntax
-4. **Language-agnostic**: Same tags work for all languages
-5. **Aliases for UX**: Shortcuts like `auth` expand to multiple tags
-
-**Implementation**: [`src/core/constants.ts`](../src/core/constants.ts)
 
 ---
 
@@ -761,14 +553,10 @@ Predefined set of semantic tags used for file annotation.
 - **Level 3**: Core value (semantic annotations)
 - **Level 4**: Quality assurance (catch errors)
 
-**Alternative considered**: Single-pass annotation (slower, no parallelization)
-
 ### Why Haiku vs Sonnet?
 
 - **Haiku**: Fast, cheap, good for simple files (80% of codebases)
 - **Sonnet**: Slower, more expensive, better for complex files
-
-Level 2 chooses agent size dynamically.
 
 ### Why script-based validation?
 
@@ -777,16 +565,12 @@ Level 2 chooses agent size dynamically.
 - **Cheap**: No API costs
 - **Sufficient**: Most issues are structural (missing files, broken refs)
 
-LLM validation (tag quality) can be added optionally in future.
-
 ### Why bidirectional graph?
 
 Both `imports` and `imported_by` are stored to enable:
 - **Forward queries**: What does X depend on?
 - **Reverse queries**: What depends on X? (blast radius)
 - **Fast lookups**: No graph traversal needed
-
-**Alternative considered**: Store only `imports`, compute `imported_by` on demand (slower queries)
 
 ### Why 800-token output cap?
 
@@ -796,75 +580,3 @@ Balance between:
 - **Relevance**: More files != better context (top 10 usually sufficient)
 
 Empirical testing showed 450-800 tokens is optimal for most queries.
-
----
-
-## Performance Characteristics
-
-### Build Times (500-file repo)
-
-| Build Type | Time | LLM Calls | Cost (est.) |
-|------------|------|-----------|-------------|
-| Full build | 4-5 min | ~60 | $0.30-0.50 |
-| Delta (<20) | 30 sec | ~5 | $0.05 |
-| Delta (20-100) | 2 min | ~20 | $0.15 |
-
-### Query Times
-
-| Query Type | Time | LLM Calls |
-|------------|------|-----------|
-| Tag query | <100ms | 0 |
-| File query | <50ms | 0 |
-| Path query | <150ms | 0 |
-
-### Memory Usage
-
-| Repo Size | Memory |
-|-----------|--------|
-| 500 files | ~50 MB |
-| 2000 files | ~150 MB |
-| 5000 files | ~300 MB |
-
-### Disk Usage (.repo_map/)
-
-| Repo Size | Disk |
-|-----------|------|
-| 500 files | ~2 MB |
-| 2000 files | ~8 MB |
-| 5000 files | ~20 MB |
-
----
-
-## Future Improvements
-
-### Potential Optimizations
-
-1. **Incremental graph updates**: Only recompute affected subgraphs
-2. **Caching**: Cache Level 1 results for unchanged structure
-3. **Streaming**: Process Level 3 results as they arrive
-4. **Batching**: Group small files into single LLM calls
-5. **Custom taxonomies**: Allow users to define project-specific tags
-
-### Potential Features
-
-1. **Multi-repo maps**: Support monorepos with multiple sub-projects
-2. **Historical maps**: Track map evolution over time
-3. **Diff mode**: Compare maps across commits
-4. **Web UI**: Visual graph explorer
-5. **VS Code extension**: Inline context in editor
-
----
-
-## Contributing
-
-To contribute to the architecture:
-1. Understand the pipeline flow
-2. Maintain backward compatibility for file formats
-3. Add tests for new levels or validators
-4. Update this document with changes
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for details.
-
----
-
-**Next**: [CLI.md](CLI.md) - Command-line reference

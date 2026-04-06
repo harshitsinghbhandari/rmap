@@ -140,7 +140,12 @@ export function findFilesWithNoExports(
       continue;
     }
 
-    if (annotation.tags.includes('testing') || annotation.tags.includes('unit_test') || annotation.tags.includes('e2e_test')) {
+    const isTestFile =
+      annotation.path.includes('test') ||
+      annotation.path.includes('spec') ||
+      annotation.path.includes('__tests__');
+
+    if (isTestFile) {
       continue;
     }
 

@@ -69,7 +69,6 @@ function makeMeta(gitCommit: string): MetaJson {
     last_updated: new Date().toISOString(),
     total_files: 0,
     languages: [],
-    top_tags: [],
   } as unknown as MetaJson;
 }
 

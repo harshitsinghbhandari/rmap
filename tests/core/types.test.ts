@@ -10,7 +10,6 @@ import type {
   MetaJson,
   GraphNode,
   GraphJson,
-  TagsJson,
   StatsJson,
   ValidationSeverity,
   ValidationIssue,
@@ -18,7 +17,6 @@ import type {
   DelegationTask,
   TaskDelegation,
   RawFileMetadata,
-  Tag,
 } from '../../src/core/types.js';
 
 test('FileAnnotation type can be used', () => {
@@ -28,14 +26,12 @@ test('FileAnnotation type can be used', () => {
     size_bytes: 1024,
     line_count: 50,
     purpose: 'Test file',
-    tags: ['testing'],
     exports: ['testFunction'],
     imports: ['src/utils'],
   };
 
   assert.strictEqual(annotation.path, 'src/test.ts');
   assert.strictEqual(annotation.language, 'TypeScript');
-  assert.ok(Array.isArray(annotation.tags));
   assert.ok(Array.isArray(annotation.exports));
   assert.ok(Array.isArray(annotation.imports));
 });
@@ -88,22 +84,6 @@ test('GraphNode and GraphJson types can be used', () => {
   assert.ok(Array.isArray(node.imports));
   assert.ok(Array.isArray(node.imported_by));
   assert.ok('src/test.ts' in graph);
-});
-
-test('TagsJson type can be used', () => {
-  const tags: TagsJson = {
-    taxonomy_version: '1.0',
-    aliases: {
-      auth: ['authentication', 'authorization'],
-    },
-    index: {
-      authentication: ['src/auth.ts'],
-    },
-  };
-
-  assert.strictEqual(tags.taxonomy_version, '1.0');
-  assert.ok('auth' in tags.aliases);
-  assert.ok('authentication' in tags.index);
 });
 
 test('StatsJson type can be used', () => {
@@ -175,13 +155,11 @@ test('RawFileMetadata type can be used', () => {
     size_bytes: 1024,
     line_count: 50,
     language: 'TypeScript',
+    raw_imports: [],
   };
 
   assert.strictEqual(metadata.name, 'test.ts');
   assert.strictEqual(metadata.extension, '.ts');
 });
 
-test('Tag type works with TAG_TAXONOMY values', () => {
-  const tag: Tag = 'authentication';
-  assert.strictEqual(tag, 'authentication');
-});
+
