@@ -140,7 +140,13 @@ function shouldSkipDirectory(dirName: string): boolean {
  * Count lines in a string
  */
 function countLines(content: string): number {
-  return content.split('\n').length;
+  let count = 1;
+  let pos = content.indexOf('\n');
+  while (pos !== -1) {
+    count++;
+    pos = content.indexOf('\n', pos + 1);
+  }
+  return count;
 }
 
 /**
