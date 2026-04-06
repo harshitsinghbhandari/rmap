@@ -1,83 +1,10 @@
 /**
- * Tag filtering with alias expansion for query engine
+ * File filtering for query engine
  *
- * Handles tag normalization, alias expansion, and file filtering
+ * Handles file filtering by path and exact path lookup
  */
 
-import { TAG_ALIASES, TAG_TAXONOMY } from '../core/constants.js';
-import type { Tag } from '../core/constants.js';
-import type { FileAnnotation, TagsJson } from '../core/types.js';
-
-/**
- * Expand query tags using aliases
- *
- * Converts shorthand tags (e.g., "auth") to their full set of related tags
- * (e.g., ["authentication", "authorization", "jwt", "oauth", "session"])
- *
- * @param queryTags - Raw tags from user input
- * @returns Expanded set of tags to search for
- *
- * @example
- * expandTagAliases(["auth", "database"])
- * // Returns: ["authentication", "authorization", "jwt", "oauth", "session", "database"]
- */
-export function expandTagAliases(queryTags: string[]): Tag[] {
-  const expandedTags = new Set<Tag>();
-
-  for (const queryTag of queryTags) {
-    const normalizedTag = queryTag.toLowerCase().trim();
-
-    // Check if it's an alias
-    if (normalizedTag in TAG_ALIASES) {
-      const aliasedTags = TAG_ALIASES[normalizedTag];
-      aliasedTags.forEach((tag) => expandedTags.add(tag));
-    }
-    // Check if it's a valid tag in the taxonomy
-    else if (TAG_TAXONOMY.includes(normalizedTag as Tag)) {
-      expandedTags.add(normalizedTag as Tag);
-    }
-    // Otherwise, try prefix matching (fallback)
-    else {
-      // Try to find prefix matches in taxonomy
-      const matches = TAG_TAXONOMY.filter((tag) =>
-        tag.startsWith(normalizedTag)
-      );
-      if (matches.length > 0) {
-        matches.forEach((tag) => expandedTags.add(tag));
-      } else {
-        // Warn when no matches found
-        console.warn(`Warning: No tags found matching "${queryTag}". Check spelling or use a valid tag from the taxonomy.`);
-      }
-    }
-  }
-
-  return Array.from(expandedTags);
-}
-
-/**
- * Filter files by tags
- *
- * Returns files that have at least one of the specified tags
- *
- * @param files - Array of file annotations
- * @param tags - Tags to filter by (should be expanded tags)
- * @returns Files matching at least one tag
- */
-export function filterFilesByTags(
-  files: FileAnnotation[],
-  tags: Tag[]
-): FileAnnotation[] {
-  if (tags.length === 0) {
-    return [];
-  }
-
-  const tagSet = new Set(tags);
-
-  return files.filter((file) => {
-    // Check if any of the file's tags match the query tags
-    return file.tags.some((fileTag) => tagSet.has(fileTag));
-  });
-}
+import type { FileAnnotation } from '../core/types.js';
 
 /**
  * Filter files by path prefix
@@ -114,30 +41,4 @@ export function findFileByPath(
   filePath: string
 ): FileAnnotation | undefined {
   return files.find((file) => file.path === filePath);
-}
-
-/**
- * Get files from tag index
- *
- * Uses the pre-built tag index for fast lookup
- *
- * @param tagsJson - Tag index from .repo_map/tags.json
- * @param queryTags - Tags to search for
- * @returns Set of file paths that match the tags
- */
-export function getFilesFromTagIndex(
-  tagsJson: TagsJson,
-  queryTags: string[]
-): Set<string> {
-  const expandedTags = expandTagAliases(queryTags);
-  const filePaths = new Set<string>();
-
-  for (const tag of expandedTags) {
-    const filesForTag = tagsJson.index[tag];
-    if (filesForTag) {
-      filesForTag.forEach((path) => filePaths.add(path));
-    }
-  }
-
-  return filePaths;
 }

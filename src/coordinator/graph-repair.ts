@@ -2,12 +2,10 @@
  * Graph Repair for Delta Updates
  *
  * Updates the dependency graph when files change, ensuring imported_by
- * references remain consistent. Also regenerates the tags.json index.
+ * references remain consistent.
  */
 
-import type { FileAnnotation, GraphJson, TagsJson } from '../core/types.js';
-import type { Tag } from '../core/constants.js';
-import { TAG_TAXONOMY, TAG_ALIASES, SCHEMA_VERSION } from '../core/constants.js';
+import type { FileAnnotation, GraphJson } from '../core/types.js';
 import { updateGraph as graphUpdateUtil } from './graph.js';
 
 /**
@@ -30,8 +28,6 @@ export interface GraphRepairOptions {
 export interface GraphRepairResult {
   /** Repaired dependency graph */
   graph: GraphJson;
-  /** Regenerated tags index */
-  tags: TagsJson;
   /** Number of graph edges updated */
   edgesUpdated: number;
   /** Number of broken references removed */
@@ -45,10 +41,10 @@ export interface GraphRepairResult {
  * broken references from deleted files.
  *
  * @param options - Graph repair options
- * @returns Repaired graph and tags
+ * @returns Repaired graph
  */
 export function repairGraph(options: GraphRepairOptions): GraphRepairResult {
-  const { existingGraph, updatedAnnotations, deletedFiles, allAnnotations } = options;
+  const { existingGraph, updatedAnnotations, deletedFiles } = options;
 
   console.log('\n🔧 Repairing dependency graph...');
 
@@ -64,60 +60,10 @@ export function repairGraph(options: GraphRepairOptions): GraphRepairResult {
   console.log(`   • Updated ${edgesUpdated} graph edges`);
   console.log(`   • Removed ${brokenReferencesRemoved} broken references`);
 
-  // Regenerate tags.json index
-  console.log('🏷️  Regenerating tags index...');
-  const tags = regenerateTagsIndex(allAnnotations);
-
   return {
     graph: repairedGraph,
-    tags,
     edgesUpdated,
     brokenReferencesRemoved,
-  };
-}
-
-/**
- * Regenerate the tags.json index from current annotations
- *
- * Rebuilds the tag index from scratch based on all current file annotations.
- *
- * @param annotations - All current file annotations
- * @returns Complete tags index
- */
-export function regenerateTagsIndex(annotations: FileAnnotation[]): TagsJson {
-  const index: Record<string, string[]> = {};
-
-  // Initialize index with all taxonomy tags
-  for (const tag of TAG_TAXONOMY) {
-    index[tag] = [];
-  }
-
-  // Populate index with file paths
-  for (const annotation of annotations) {
-    for (const tag of annotation.tags) {
-      if (index[tag]) {
-        index[tag].push(annotation.path);
-      }
-    }
-  }
-
-  // Sort file paths in each tag for consistent output
-  for (const tag in index) {
-    index[tag].sort();
-  }
-
-  const totalTaggedFiles = new Set(
-    Object.values(index)
-      .flat()
-      .filter((path) => path)
-  ).size;
-
-  console.log(`   • Indexed ${totalTaggedFiles} files across ${TAG_TAXONOMY.length} tags`);
-
-  return {
-    taxonomy_version: SCHEMA_VERSION,
-    aliases: TAG_ALIASES,
-    index: index as Record<Tag, string[]>,
   };
 }
 

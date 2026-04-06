@@ -18,7 +18,6 @@ Modern coding agents need context to make informed decisions. Reading an entire 
 - **Inefficient**: Most files are irrelevant to the task at hand
 
 `rmap` solves this by creating a semantic map that allows agents to:
-- Find relevant files by **semantic tags** (e.g., "auth", "database", "api")
 - Understand **dependency relationships** (what imports what)
 - Learn **project conventions** automatically
 - Get **focused context** in 450-800 tokens instead of thousands
@@ -55,12 +54,6 @@ This will create a `.repo_map/` directory with structured metadata about your co
 3. **Query the map**:
 
 ```bash
-# Find authentication-related files
-rmap get-context auth
-
-# Find files by multiple tags
-rmap get-context auth middleware
-
 # Get context for a specific file
 rmap get-context --file src/db/users.py
 
@@ -122,23 +115,19 @@ Each log entry includes:
 The `get-context` command is designed to provide compact, relevant context for AI agents:
 
 ```bash
-# Query by tags (space-separated)
-rmap get-context auth middleware
-rmap get-context database orm
-
 # Query by specific file (shows dependencies and dependents)
 rmap get-context --file src/auth/jwt.ts
 
 # Query by directory (aggregates all files in directory)
 rmap get-context --path src/api/
 
-# Combine tags with file/path queries
-rmap get-context auth --file src/middleware/auth.ts
+# Query multiple items
+rmap get-context --file src/middleware/auth.ts --path src/db/
 ```
 
 ### Example Output
 
-When you run `rmap get-context auth`, you get output like this:
+When you run `rmap get-context --file src/auth/jwt.ts`, you get output like this:
 
 ```
 ═══ REPO CONTEXT ═══
@@ -153,19 +142,11 @@ Structure:
 - src/api/ - REST API endpoints
 - src/utils/ - Shared utilities
 
-═══ RELEVANT FILES [auth] ═══
+═══ FILE CONTEXT [src/auth/jwt.ts] ═══
 
-src/auth/jwt.ts (authentication, jwt)
+src/auth/jwt.ts
 Purpose: JWT token generation and validation
 Exports: generateToken, verifyToken, TokenPayload
-
-src/auth/middleware.ts (authentication, middleware)
-Purpose: Express middleware for route protection
-Exports: requireAuth, optionalAuth
-
-src/auth/session.ts (authentication, session)
-Purpose: Session management and storage
-Exports: SessionStore, createSession, destroySession
 
 ═══ BLAST RADIUS ═══
 
@@ -192,7 +173,7 @@ Files that import the above:
 | **Level 0** | Metadata Harvester | Fast file scanning, extract imports | No |
 | **Level 1** | Structure Detector | Identify entry points, modules, conventions | Yes (Haiku) |
 | **Level 2** | Work Divider | Divide annotation work into tasks | Yes (Sonnet) |
-| **Level 3** | Deep Annotator | Semantic file analysis (purpose, tags, exports) | Yes (Haiku/Sonnet) |
+| **Level 3** | Deep Annotator | Semantic file analysis (purpose, exports) | Yes (Haiku/Sonnet) |
 | **Level 4** | Validator | Consistency checks and auto-fixing | Mostly No |
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture information.
@@ -205,7 +186,6 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture infor
 
 - **`meta.json`** - Repository metadata, entry points, modules, and conventions
 - **`graph.json`** - Import/dependency graph (bidirectional)
-- **`tags.json`** - Tag index for fast lookups
 - **`stats.json`** - Build statistics (time, agents used, files processed)
 - **`validation.json`** - Consistency check results
 
@@ -215,7 +195,6 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture infor
 .repo_map/
 ├── meta.json          # High-level project info
 ├── graph.json         # Dependency graph
-├── tags.json          # Tag index
 ├── stats.json         # Build metrics
 └── validation.json    # Validation results
 ```
@@ -231,18 +210,6 @@ Only re-processes files that changed since the last build:
 | < 20 files | Delta update (~30 seconds) |
 | 20-100 files | Delta + re-validation |
 | > 100 files | Full rebuild |
-
-### 🏷️ Tag-Based Search
-
-Files are annotated with semantic tags from a predefined taxonomy:
-
-- **Auth**: authentication, authorization, jwt, oauth, session
-- **Data**: database, orm, query, migration, sql, nosql, cache
-- **API**: api_endpoint, rest, graphql, grpc, websocket
-- **Architecture**: controller, service, repository, middleware, handler
-- **Testing**: testing, mock, fixture, e2e_test, unit_test
-
-See full taxonomy in [src/core/constants.ts](src/core/constants.ts)
 
 ### 🔗 Dependency Tracking
 
@@ -449,7 +416,6 @@ GitHub Actions workflows:
 
 - [ ] Support for more VCS systems (beyond Git)
 - [ ] Incremental graph updates (optimize large repos)
-- [ ] Custom tag taxonomies
 - [ ] Web UI for exploring maps
 - [ ] VS Code extension
 - [ ] Support for additional LLM providers (OpenAI, Cohere, etc.)

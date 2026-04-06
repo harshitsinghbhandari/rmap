@@ -1,13 +1,6 @@
-/**
- * Output formatter for query results
- *
- * Formats query results in the standardized rmap output format
- */
-
 import type { FileAnnotation, MetaJson } from '../core/types.js';
 import type { FileScore } from './ranking.js';
 import { OUTPUT } from '../config/index.js';
-import { TAG_TIERS } from '../core/constants.js';
 
 /**
  * Format options for output
@@ -27,9 +20,6 @@ export interface FormatOptions {
 
   /** Output format: 'text' for human-readable, 'json' for machine-readable */
   outputFormat?: 'text' | 'json';
-
-  /** Maximum number of tags to display per file (filters to highest-signal tags) */
-  maxDisplayTags?: number;
 }
 
 /**
@@ -41,52 +31,7 @@ const DEFAULT_OPTIONS: Required<FormatOptions> = {
   fullPaths: true,
   maxConventions: OUTPUT.MAX_CONVENTIONS,
   outputFormat: 'text',
-  maxDisplayTags: OUTPUT.MAX_DISPLAY_TAGS,
 };
-
-/**
- * Filter tags to show only the highest-signal ones for display
- *
- * Uses TAG_TIERS to prioritize:
- * 1. HIGH_SIGNAL tags (most specific, best for retrieval)
- * 2. ARCHITECTURE tags (pattern-based, still valuable)
- * 3. LOW_SIGNAL tags (generic, only when no better options)
- *
- * @param tags - All tags assigned to the file
- * @param maxTags - Maximum tags to display
- * @returns Filtered array of highest-signal tags
- */
-function filterDisplayTags(tags: string[], maxTags: number): string[] {
-  if (tags.length <= maxTags) {
-    return tags;
-  }
-
-  // Score each tag based on its tier
-  const tagScores = tags.map((tag) => {
-    let score = 0;
-    if (TAG_TIERS.HIGH_SIGNAL.includes(tag as (typeof TAG_TIERS.HIGH_SIGNAL)[number])) {
-      score = 3; // Highest priority
-    } else if (TAG_TIERS.ARCHITECTURE.includes(tag as (typeof TAG_TIERS.ARCHITECTURE)[number])) {
-      score = 2; // Medium priority
-    } else if (TAG_TIERS.LOW_SIGNAL.includes(tag as (typeof TAG_TIERS.LOW_SIGNAL)[number])) {
-      score = 1; // Lowest priority
-    } else {
-      score = 0; // Unknown tags get lowest priority
-    }
-    return { tag, score };
-  });
-
-  // Sort by score descending, then by original order for stability
-  tagScores.sort((a, b) => {
-    if (b.score !== a.score) {
-      return b.score - a.score;
-    }
-    return tags.indexOf(a.tag) - tags.indexOf(b.tag);
-  });
-
-  // Return top N tags
-  return tagScores.slice(0, maxTags).map((t) => t.tag);
-}
 
 /**
  * Format the repository context section
@@ -138,12 +83,6 @@ function formatFile(
   lines.push(`${file.path}`);
   lines.push(`  ${file.purpose}`);
 
-  // Tags - filter to highest-signal tags for display
-  if (file.tags.length > 0) {
-    const displayTags = filterDisplayTags(file.tags, options.maxDisplayTags);
-    lines.push(`  Tags: ${displayTags.join(', ')}`);
-  }
-
   // Exports
   if (file.exports.length > 0) {
     const exports = file.exports.slice(0, options.maxExports);
@@ -159,17 +98,15 @@ function formatFile(
  * Format the relevant files section
  *
  * @param files - Ranked file scores
- * @param queryTags - Tags that were queried
  * @param options - Format options
  * @returns Formatted relevant files string
  */
 function formatRelevantFiles(
   files: FileScore[],
-  queryTags: string[],
   options: Required<FormatOptions>
 ): string {
   const lines = [
-    `═══ RELEVANT FILES [${queryTags.join(', ')}] ═══`,
+    `═══ RELEVANT FILES ═══`,
     '',
   ];
 
@@ -289,7 +226,6 @@ export function formatQueryOutput(
   params: {
     meta: MetaJson;
     relevantFiles: FileScore[];
-    queryTags: string[];
     blastRadiusFiles: FileAnnotation[];
   },
   options: Partial<FormatOptions> = {}
@@ -305,14 +241,10 @@ export function formatQueryOutput(
         stack: params.meta.stack,
         languages: params.meta.languages,
       },
-      query: {
-        tags: params.queryTags,
-      },
       relevantFiles: params.relevantFiles.slice(0, opts.maxFiles).map((scored) => ({
         path: scored.file.path,
         language: scored.file.language,
         purpose: scored.file.purpose,
-        tags: filterDisplayTags(scored.file.tags, opts.maxDisplayTags),
         exports: scored.file.exports.slice(0, opts.maxExports),
         relevanceScore: scored.score,
       })),
@@ -320,7 +252,6 @@ export function formatQueryOutput(
         path: file.path,
         language: file.language,
         purpose: file.purpose,
-        tags: filterDisplayTags(file.tags, opts.maxDisplayTags),
       })),
       conventions: params.meta.conventions.slice(0, opts.maxConventions),
     };
@@ -330,7 +261,7 @@ export function formatQueryOutput(
   // Default text format
   const sections = [
     formatRepoContext(params.meta),
-    formatRelevantFiles(params.relevantFiles, params.queryTags, opts),
+    formatRelevantFiles(params.relevantFiles, opts),
     formatBlastRadius(params.blastRadiusFiles, opts),
     formatConventions(params.meta, opts),
   ];
@@ -367,7 +298,6 @@ export function formatFileQueryOutput(
         path: params.file.path,
         language: params.file.language,
         purpose: params.file.purpose,
-        tags: filterDisplayTags(params.file.tags, opts.maxDisplayTags),
         exports: params.file.exports.slice(0, opts.maxExports),
         sizeBytes: params.file.size_bytes,
         lineCount: params.file.line_count,
@@ -474,7 +404,6 @@ export function formatPathQueryOutput(
         path: scored.file.path,
         language: scored.file.language,
         purpose: scored.file.purpose,
-        tags: filterDisplayTags(scored.file.tags, opts.maxDisplayTags),
         exports: scored.file.exports.slice(0, opts.maxExports),
         relevanceScore: scored.score,
       })),

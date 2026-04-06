@@ -123,13 +123,6 @@ export const RETRY_CONFIG = {
    * @default 1
    */
   VALIDATION_ERROR_RETRIES: 1,
-
-  /**
-   * Maximum retry attempts for tag validation errors
-   * When LLM outputs invalid tags, retry with corrected prompt up to this many times
-   * @default 2
-   */
-  TAG_VALIDATION_RETRIES: 2,
 } as const;
 
 /**
@@ -177,12 +170,6 @@ export const CONCURRENCY_CONFIG = {
  * Point values used to rank files in query results.
  */
 export const SCORING_CONFIG = {
-  /**
-   * Points per matching tag
-   * @default 10
-   */
-  POINTS_PER_TAG: 10,
-
   /**
    * Points per file that imports this file
    * @default 5
@@ -237,14 +224,6 @@ export const OUTPUT_CONFIG = {
    * @default 5
    */
   MAX_CONVENTIONS: 5,
-
-  /**
-   * Maximum tags to display per file in output
-   * Files may have more tags internally, but only the highest-signal
-   * tags are shown for readability. Uses TAG_TIERS for prioritization.
-   * @default 2
-   */
-  MAX_DISPLAY_TAGS: 2,
 
   /**
    * Maximum files to show in Level 2 prompt output
@@ -325,13 +304,6 @@ export const FILE_CONFIG = {
    * @default 0.7 (70%)
    */
   TRUNCATION_FIRST_PART_RATIO: 0.7,
-
-  /**
-   * Maximum number of tags per file
-   * Reduced to 3 to improve tag precision and reduce over-tagging
-   * @default 3
-   */
-  MAX_TAGS_PER_FILE: 3,
 
   /**
    * Maximum number of files per Level 3 annotation task

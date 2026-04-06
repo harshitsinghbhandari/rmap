@@ -6,7 +6,6 @@
  * - annotations.json (all file annotations)
  * - tree/*.json (file annotations organized by directory)
  * - graph.json
- * - tags.json
  * - stats.json
  * - validation.json
  */
@@ -17,12 +16,9 @@ import type {
   FileAnnotation,
   GraphJson,
   MetaJson,
-  TagsJson,
   StatsJson,
   ValidationJson,
 } from '../core/types.js';
-import type { Tag } from '../core/constants.js';
-import { TAG_TAXONOMY, TAG_ALIASES, SCHEMA_VERSION } from '../core/constants.js';
 
 /**
  * Options for assembling the map
@@ -87,12 +83,6 @@ export function assembleMap(
   writeJsonFile(graphPath, graph);
   filesWritten.push(graphPath);
 
-  // Write tags.json
-  const tags = buildTagsIndex(annotations);
-  const tagsPath = path.join(outputPath, 'tags.json');
-  writeJsonFile(tagsPath, tags);
-  filesWritten.push(tagsPath);
-
   // Write stats.json
   const statsPath = path.join(outputPath, 'stats.json');
   writeJsonFile(statsPath, stats);
@@ -110,41 +100,6 @@ export function assembleMap(
   return {
     outputPath,
     filesWritten,
-  };
-}
-
-/**
- * Build the tags index from annotations
- *
- * @param annotations - File annotations
- * @returns Tags index
- */
-function buildTagsIndex(annotations: FileAnnotation[]): TagsJson {
-  const index: Record<string, string[]> = {};
-
-  // Initialize index with all taxonomy tags
-  for (const tag of TAG_TAXONOMY) {
-    index[tag] = [];
-  }
-
-  // Populate index with file paths
-  for (const annotation of annotations) {
-    for (const tag of annotation.tags) {
-      if (index[tag]) {
-        index[tag].push(annotation.path);
-      }
-    }
-  }
-
-  // Sort file paths in each tag
-  for (const tag in index) {
-    index[tag].sort();
-  }
-
-  return {
-    taxonomy_version: SCHEMA_VERSION,
-    aliases: TAG_ALIASES,
-    index: index as Record<Tag, string[]>,
   };
 }
 

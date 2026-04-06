@@ -107,8 +107,8 @@ export interface MapUpdateResult {
  */
 export interface GetContextResult {
   success: boolean;
-  queryType: 'tags' | 'file' | 'path';
-  query: string | string[];
+  queryType: 'file' | 'path';
+  query: string;
   output: string;
   limit: number;
 }

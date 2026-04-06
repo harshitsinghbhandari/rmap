@@ -31,30 +31,18 @@ export interface FileScore {
  * Compute relevance score for a file
  *
  * Scoring factors:
- * - Number of matching tags (if query tags provided)
  * - Graph connectivity (imports + imported_by)
  * - Number of exports (indicates API surface area)
  *
  * @param file - File annotation
  * @param graph - Dependency graph
- * @param queryTags - Tags from the query (optional)
  * @returns Computed score
  */
 function computeScore(
   file: FileAnnotation,
-  graph: GraphJson,
-  queryTags?: string[]
+  graph: GraphJson
 ): number {
   let score = 0;
-
-  // Tag matching score (if query tags provided)
-  if (queryTags && queryTags.length > 0) {
-    const queryTagSet = new Set(queryTags.map((t) => t.toLowerCase()));
-    const matchingTags = file.tags.filter((tag) =>
-      queryTagSet.has(tag.toLowerCase())
-    );
-    score += matchingTags.length * SCORING.POINTS_PER_TAG;
-  }
 
   // Graph connectivity score
   const graphNode = graph[file.path];
@@ -87,16 +75,14 @@ function computeScore(
  *
  * @param files - Array of file annotations to rank
  * @param graph - Dependency graph
- * @param queryTags - Optional tags from query for relevance scoring
  * @returns Array of files with scores, sorted by score (highest first)
  */
 export function rankFilesByRelevance(
   files: FileAnnotation[],
-  graph: GraphJson,
-  queryTags?: string[]
+  graph: GraphJson
 ): FileScore[] {
   const scored = files.map((file) => {
-    const score = computeScore(file, graph, queryTags);
+    const score = computeScore(file, graph);
     const graphNode = graph[file.path];
 
     const importCount = graphNode?.imports.length || 0;

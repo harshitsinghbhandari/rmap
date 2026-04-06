@@ -116,7 +116,7 @@ ${modulesSummary || '- No modules identified'}
 Directory Structure:
 ${directoryTree}
 
-Your task is to divide this repository into annotation tasks for Level 3 agents. Each task will be processed by an LLM agent that reads files and produces semantic annotations (purpose, tags, exports, imports).
+Your task is to divide this repository into annotation tasks for Level 3 agents. Each task will be processed by an LLM agent that reads files and produces semantic annotations (purpose, exports, imports).
 
 Division Rules:
 1. **Max ${FILE.MAX_FILES_PER_TASK} files per task** - Hard limit for manageable context

@@ -1,15 +1,14 @@
 /**
  * Runtime Validation Layer
  *
- * Provides validation for configuration consistency, tag taxonomy,
+ * Provides validation for configuration consistency,
  * threshold ordering, and retry config ranges.
  *
  * All validation functions throw descriptive errors for invalid configs.
  */
 
 import { z } from 'zod';
-import type { Tag } from './constants.js';
-import { TAG_TAXONOMY, UPDATE_THRESHOLDS } from './constants.js';
+import { UPDATE_THRESHOLDS } from './constants.js';
 import {
   DELTA_CONFIG,
   VALIDATION_CONFIG,
@@ -156,10 +155,6 @@ const concurrencyConfigSchema = z.object({
  * Zod schema for SCORING_CONFIG
  */
 const scoringConfigSchema = z.object({
-  POINTS_PER_TAG: z
-    .number()
-    .int()
-    .nonnegative('POINTS_PER_TAG must be non-negative'),
   POINTS_PER_IMPORTED_BY: z
     .number()
     .int()
@@ -254,63 +249,11 @@ const fileConfigSchema = z.object({
     .number()
     .min(0.1, 'TRUNCATION_FIRST_PART_RATIO must be at least 0.1')
     .max(0.9, 'TRUNCATION_FIRST_PART_RATIO must be at most 0.9'),
-  MAX_TAGS_PER_FILE: z
-    .number()
-    .int()
-    .positive('MAX_TAGS_PER_FILE must be positive')
-    .max(20, 'MAX_TAGS_PER_FILE must be at most 20'),
   MAX_FILES_PER_TASK: z
     .number()
     .int()
     .positive('MAX_FILES_PER_TASK must be positive'),
 });
-
-/**
- * Validate tag taxonomy for uniqueness and format
- *
- * Ensures:
- * - No duplicate tags
- * - All tags follow naming convention (lowercase or snake_case)
- * - No empty tags
- * - Tags are strings
- *
- * @param tags - Array of tags to validate (defaults to TAG_TAXONOMY)
- * @throws {ConfigValidationError} If validation fails
- */
-export function validateTagTaxonomy(
-  tags: readonly string[] = TAG_TAXONOMY,
-): void {
-  // Check for empty array
-  if (tags.length === 0) {
-    throw new ConfigValidationError('Tag taxonomy cannot be empty');
-  }
-
-  // Check for duplicates
-  const uniqueTags = new Set(tags);
-  if (uniqueTags.size !== tags.length) {
-    const duplicates = tags.filter(
-      (tag, index) => tags.indexOf(tag) !== index,
-    );
-    throw new ConfigValidationError(
-      `Duplicate tags found in taxonomy: ${[...new Set(duplicates)].join(', ')}`,
-    );
-  }
-
-  // Validate format: lowercase or snake_case (lowercase with underscores)
-  const validFormatRegex = /^[a-z][a-z0-9]*(_[a-z0-9]+)*$/;
-
-  const invalidTags = tags.filter((tag) => {
-    if (typeof tag !== 'string') return true;
-    if (tag.length === 0) return true;
-    return !validFormatRegex.test(tag);
-  });
-
-  if (invalidTags.length > 0) {
-    throw new ConfigValidationError(
-      `Invalid tag format. Tags must be lowercase or snake_case: ${invalidTags.join(', ')}`,
-    );
-  }
-}
 
 /**
  * Validate UPDATE_THRESHOLDS ordering
@@ -430,46 +373,6 @@ export function validateConfig(config: ValidatableConfig = {}): void {
 }
 
 /**
- * Validate a single file annotation's tags
- *
- * Ensures tags are from the taxonomy and within limits
- *
- * @param tags - Tags to validate
- * @param maxTags - Maximum number of tags allowed (default: FILE_CONFIG.MAX_TAGS_PER_FILE = 3)
- * @throws {ConfigValidationError} If validation fails
- */
-export function validateFileTags(
-  tags: string[],
-  maxTags: number = FILE_CONFIG.MAX_TAGS_PER_FILE,
-): asserts tags is Tag[] {
-  if (tags.length === 0) {
-    throw new ConfigValidationError('File must have at least one tag');
-  }
-
-  if (tags.length > maxTags) {
-    throw new ConfigValidationError(
-      `File has ${tags.length} tags but maximum is ${maxTags}`,
-    );
-  }
-
-  // Check if all tags are in taxonomy
-  const taxonomySet = new Set(TAG_TAXONOMY);
-  const invalidTags = tags.filter((tag) => !taxonomySet.has(tag as Tag));
-
-  if (invalidTags.length > 0) {
-    throw new ConfigValidationError(
-      `Invalid tags not in taxonomy: ${invalidTags.join(', ')}`,
-    );
-  }
-
-  // Check for duplicates
-  const uniqueTags = new Set(tags);
-  if (uniqueTags.size !== tags.length) {
-    throw new ConfigValidationError('File tags must be unique');
-  }
-}
-
-/**
  * Run all validations on module load
  *
  * This ensures configuration errors are caught early during initialization.
@@ -478,7 +381,6 @@ export function validateFileTags(
  * @param config - Optional configuration object to validate (defaults to empty, which uses defaults)
  */
 export function validateAll(config: ValidatableConfig = {}): void {
-  validateTagTaxonomy();
   validateThresholds();
   validateConfig(config);
 }

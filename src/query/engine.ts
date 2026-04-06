@@ -1,7 +1,7 @@
 /**
  * Main query engine for rmap
  *
- * Orchestrates tag-based, file-based, and path-based queries
+ * Orchestrates file-based and path-based queries
  */
 
 import { readFile } from 'node:fs/promises';
@@ -10,32 +10,25 @@ import type {
   FileAnnotation,
   GraphJson,
   MetaJson,
-  TagsJson,
 } from '../core/types.js';
 import { ValidationError, FileSystemError } from '../core/index.js';
 import {
-  expandTagAliases,
   filterFilesByPath,
-  filterFilesByTags,
   findFileByPath,
-  getFilesFromTagIndex,
 } from './filter.js';
 import {
   formatFileQueryOutput,
   formatPathQueryOutput,
-  formatQueryOutput,
   type FormatOptions,
 } from './formatter.js';
 import {
   getDependents,
   getDependencies,
-  getTopFiles,
   rankFilesByRelevance,
 } from './ranking.js';
 import {
   MetaJsonSchema,
   GraphJsonSchema,
-  TagsJsonSchema,
   AnnotationsJsonSchema,
 } from './schemas.js';
 import { ZodIssue } from 'zod';
@@ -69,14 +62,13 @@ export interface QueryConfig {
 interface RepoMapData {
   meta: MetaJson;
   graph: GraphJson;
-  tags: TagsJson;
   files: FileAnnotation[];
 }
 
 /**
  * Load repository map files
  *
- * Reads meta.json, graph.json, tags.json, and reconstructs file annotations
+ * Reads meta.json, graph.json, and reconstructs file annotations
  *
  * @param repoMapPath - Path to .repo_map directory
  * @returns Loaded repository map data
@@ -84,11 +76,10 @@ interface RepoMapData {
 async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
   try {
     // Read all map files
-    const [metaContent, graphContent, tagsContent, annotationsContent] =
+    const [metaContent, graphContent, annotationsContent] =
       await Promise.all([
         readFile(join(repoMapPath, 'meta.json'), 'utf-8'),
         readFile(join(repoMapPath, 'graph.json'), 'utf-8'),
-        readFile(join(repoMapPath, 'tags.json'), 'utf-8'),
         readFile(join(repoMapPath, 'annotations.json'), 'utf-8').catch((err) => {
           if (err.code === 'ENOENT') {
             throw new Error(
@@ -102,7 +93,6 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
     // Parse JSON content
     let metaRaw: unknown;
     let graphRaw: unknown;
-    let tagsRaw: unknown;
     let filesRaw: unknown;
 
     try {
@@ -119,15 +109,6 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
     } catch (error) {
       throw new ValidationError(
         `Failed to parse graph.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`,
-        error instanceof Error ? error : undefined
-      );
-    }
-
-    try {
-      tagsRaw = JSON.parse(tagsContent);
-    } catch (error) {
-      throw new ValidationError(
-        `Failed to parse tags.json: ${error instanceof Error ? error.message : 'Invalid JSON'}`,
         error instanceof Error ? error : undefined
       );
     }
@@ -156,13 +137,6 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
       );
     }
 
-    const tagsResult = TagsJsonSchema.safeParse(tagsRaw);
-    if (!tagsResult.success) {
-      throw new ValidationError(
-        `Invalid tags.json schema:\n${formatZodIssues(tagsResult.error.issues)}\n\nPlease rebuild the map with "rmap map --full".`
-      );
-    }
-
     const filesResult = AnnotationsJsonSchema.safeParse(filesRaw);
     if (!filesResult.success) {
       throw new ValidationError(
@@ -172,10 +146,9 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
 
     const meta = metaResult.data as MetaJson;
     const graph = graphResult.data as GraphJson;
-    const tags = tagsResult.data as TagsJson;
     const files = filesResult.data as FileAnnotation[];
 
-    return { meta, graph, tags, files };
+    return { meta, graph, files };
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
       throw new FileSystemError(
@@ -186,62 +159,6 @@ async function loadRepoMap(repoMapPath: string): Promise<RepoMapData> {
     }
     throw error;
   }
-}
-
-/**
- * Query by tags
- *
- * Finds files matching the specified tags, ranks them, and formats output
- *
- * @param queryTags - Tags to search for (can include aliases like "auth")
- * @param config - Query configuration
- * @returns Formatted query output
- */
-export async function queryByTags(
-  queryTags: string[],
-  config: QueryConfig = {}
-): Promise<string> {
-  const repoMapPath = config.repoMapPath || join(process.cwd(), '.repo_map');
-  const data = await loadRepoMap(repoMapPath);
-
-  // Expand tag aliases
-  const expandedTags = expandTagAliases(queryTags);
-
-  // Get matching files using tag index for performance
-  const matchingFilePaths = getFilesFromTagIndex(data.tags, queryTags);
-
-  // Filter files to those that exist in our file list
-  const matchingFiles = data.files.filter((file) =>
-    matchingFilePaths.has(file.path)
-  );
-
-  // Rank files by relevance
-  const rankedFiles = rankFilesByRelevance(
-    matchingFiles,
-    data.graph,
-    expandedTags
-  );
-
-  // Get top files (limit to 10 by default)
-  const topFiles = getTopFiles(rankedFiles, config.formatOptions?.maxFiles || 10);
-
-  // Get blast radius (files that import the top results)
-  const blastRadiusFiles = getDependents(
-    topFiles.map((f) => f.file.path),
-    data.graph,
-    data.files
-  );
-
-  // Format and return output
-  return formatQueryOutput(
-    {
-      meta: data.meta,
-      relevantFiles: topFiles,
-      queryTags,
-      blastRadiusFiles,
-    },
-    config.formatOptions
-  );
 }
 
 /**

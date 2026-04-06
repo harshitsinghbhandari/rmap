@@ -198,7 +198,6 @@ export const VALIDATION = {
  * - RMAP_RETRY_MAX_BACKOFF_MS: Max backoff cap in ms (default: 60000)
  * - RMAP_RATE_LIMIT_INITIAL_DELAY_MS: Initial delay for rate limit errors (default: 15000)
  * - RMAP_RETRY_VALIDATION_ERRORS: Validation error retries (default: 1)
- * - RMAP_RETRY_TAG_VALIDATION: Tag validation retries (default: 2)
  */
 export const RETRY = {
   MAX_RETRIES: parseEnvInt(
@@ -237,12 +236,6 @@ export const RETRY = {
     0,
     10,
   ),
-  TAG_VALIDATION_RETRIES: parseEnvInt(
-    process.env.RMAP_RETRY_TAG_VALIDATION,
-    RETRY_CONFIG.TAG_VALIDATION_RETRIES,
-    0,
-    10,
-  ),
 } as const;
 
 /**
@@ -278,7 +271,6 @@ export const CONCURRENCY = {
  * Scoring configuration with environment overrides
  *
  * Environment variables:
- * - RMAP_SCORING_POINTS_PER_TAG: Points per tag (default: 10)
  * - RMAP_SCORING_POINTS_PER_IMPORTED_BY: Points per import reference (default: 5)
  * - RMAP_SCORING_POINTS_PER_IMPORT: Points per import (default: 2)
  * - RMAP_SCORING_POINTS_PER_EXPORT: Points per export (default: 3)
@@ -286,12 +278,6 @@ export const CONCURRENCY = {
  * - RMAP_SCORING_LARGE_FILE_PENALTY: Penalty for large files (default: 5)
  */
 export const SCORING = {
-  POINTS_PER_TAG: parseEnvInt(
-    process.env.RMAP_SCORING_POINTS_PER_TAG,
-    SCORING_CONFIG.POINTS_PER_TAG,
-    0,
-    1000,
-  ),
   POINTS_PER_IMPORTED_BY: parseEnvInt(
     process.env.RMAP_SCORING_POINTS_PER_IMPORTED_BY,
     SCORING_CONFIG.POINTS_PER_IMPORTED_BY,
@@ -331,7 +317,6 @@ export const SCORING = {
  * - RMAP_OUTPUT_MAX_FILES: Max files per section (default: 10)
  * - RMAP_OUTPUT_MAX_EXPORTS: Max exports per file (default: 5)
  * - RMAP_OUTPUT_MAX_CONVENTIONS: Max conventions (default: 5)
- * - RMAP_OUTPUT_MAX_DISPLAY_TAGS: Max tags to display per file (default: 2)
  */
 export const OUTPUT = {
   MAX_FILES_PER_SECTION: parseEnvInt(
@@ -351,12 +336,6 @@ export const OUTPUT = {
     OUTPUT_CONFIG.MAX_CONVENTIONS,
     1,
     100,
-  ),
-  MAX_DISPLAY_TAGS: parseEnvInt(
-    process.env.RMAP_OUTPUT_MAX_DISPLAY_TAGS,
-    OUTPUT_CONFIG.MAX_DISPLAY_TAGS,
-    1,
-    10,
   ),
   MAX_FILES_IN_PROMPT: parseEnvInt(
     process.env.RMAP_OUTPUT_MAX_FILES_IN_PROMPT,
@@ -425,7 +404,6 @@ export const TOKEN = {
  *
  * Environment variables:
  * - RMAP_FILE_MAX_LINE_COUNT: Max line count for files (default: 10000)
- * - RMAP_FILE_MAX_TAGS: Max tags per file (default: 3)
  * - RMAP_FILE_MAX_PER_TASK: Max files per task (default: 50)
  */
 export const FILE = {
@@ -446,12 +424,6 @@ export const FILE = {
     FILE_CONFIG.TRUNCATION_FIRST_PART_RATIO,
     0.1,
     0.9,
-  ),
-  MAX_TAGS_PER_FILE: parseEnvInt(
-    process.env.RMAP_FILE_MAX_TAGS,
-    FILE_CONFIG.MAX_TAGS_PER_FILE,
-    1,
-    20,
   ),
   MAX_FILES_PER_TASK: parseEnvInt(
     process.env.RMAP_FILE_MAX_PER_TASK,
@@ -569,8 +541,8 @@ const yamlDefaultProvider = getYamlLLMProvider(undefined, 'anthropic');
 const defaultProvider = parseProviderType(
   process.env.RMAP_LLM_PROVIDER,
   yamlDefaultProvider,
-);
-
+  );
+  
 export const LLM_PROVIDER = {
   /** Default provider for all levels */
   DEFAULT: defaultProvider,
@@ -588,7 +560,7 @@ export const LLM_PROVIDER = {
   LEVEL3: parseProviderType(
     process.env.RMAP_LEVEL3_PROVIDER,
     getYamlLLMProvider(3, defaultProvider),
-  ),
+    ),
 } as const;
 
 /**

@@ -120,21 +120,6 @@ export interface GraphJson {
   [filePath: string]: GraphNode;
 }
 
-/**
- * Tag index for fast lookup
- *
- * Stored in .repo_map/tags.json
- */
-export interface TagsJson {
-  /** Version of the tag taxonomy used */
-  taxonomy_version: string;
-
-  /** Alias mappings for shorthand queries */
-  aliases: Record<string, Tag[]>;
-
-  /** Tag → list of file paths that have that tag */
-  index: Record<Tag, string[]>;
-}
 
 /**
  * Build statistics and metadata
