@@ -64,6 +64,12 @@ rmap map --status
 
 # Update based on git changes (explicit delta update)
 rmap map --update
+
+# Explicitly resume from checkpoint (error if none exists)
+rmap map --resume
+
+# Ignore checkpoint and start fresh
+rmap map --no-resume
 ```
 
 ### Debugging with Prompt Logging

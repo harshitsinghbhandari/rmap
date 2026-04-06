@@ -104,7 +104,7 @@ Load and validate `.repo_map/workflows.config.json`:
 ```
 
 User provides: id, name, description, files, entryPoint.
-rmap generates: reason, role, tags, keySymbols, version.
+rmap generates: reason, role, keySymbols, version.
 
 ### 5. Level Workflow (`src/levels/level-workflow/`)
 
@@ -125,7 +125,7 @@ Level 3 → Assembler builds function-graph.json → Level Workflow → Level 4
 - Name the workflow (2-5 words)
 - Describe it (1-2 sentences)
 - Fill `reason` per file (why it's in this flow)
-- Assign `role` and `tags`
+- Assign `role`
 - Prune false positives
 
 ~100 LOC.

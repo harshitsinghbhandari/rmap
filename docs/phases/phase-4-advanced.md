@@ -82,7 +82,6 @@ interface LanguageParser {
 
 - Handle language-specific import patterns
 - Support mixed-language workflows (JS calls Python via subprocess/IPC)
-- Language tags in workflow metadata
 
 ## Success Criteria
 
