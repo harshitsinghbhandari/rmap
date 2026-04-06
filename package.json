@@ -65,9 +65,9 @@
     "@clack/prompts": "^1.2.0",
     "@google/genai": "^1.48.0",
     "cli-progress": "^3.12.0",
-    "commander": "^12.1.0",
+    "commander": "^14.0.3",
     "ignore": "^7.0.5",
-    "log-update": "^7.2.0",
+    "log-update": "^8.0.0",
     "yaml": "^2.8.3",
     "zod": "^4.3.6"
   },
@@ -75,7 +75,7 @@
     "@types/babel__traverse": "^7.28.0",
     "@types/cli-progress": "^3.11.6",
     "@types/node": "^20.17.15",
-    "c8": "^10.1.2",
+    "c8": "^11.0.0",
     "tsup": "^8.3.5",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
