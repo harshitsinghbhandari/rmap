@@ -126,14 +126,6 @@ describe('Get-Context Command', () => {
     assert.strictEqual(options.length, 4, 'Command should have exactly 4 options (--file, --path, --json, --limit)');
   });
 
-  test('should accept variadic tags argument', () => {
-    const args = getContextCommand.registeredArguments;
-    assert(args.length > 0, 'Command should accept arguments');
-
-    const tagsArg = args[0];
-    assert(tagsArg.variadic, 'First argument should be variadic');
-    assert(!tagsArg.required, 'Tags argument should be optional');
-  });
 });
 
 describe('Command Options Validation', () => {

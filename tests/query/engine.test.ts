@@ -11,12 +11,11 @@ import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
-  queryByTags,
   queryByFile,
   queryByPath,
   hasRepoMap,
 } from '../../src/query/engine.js';
-import type { MetaJson, GraphJson, TagsJson, FileAnnotation } from '../../src/core/types.js';
+import type { MetaJson, GraphJson, FileAnnotation } from '../../src/core/types.js';
 
 // Test data
 const mockMeta: MetaJson = {
@@ -64,21 +63,6 @@ const mockGraph: GraphJson = {
   },
 };
 
-const mockTags: TagsJson = {
-  taxonomy_version: '1.0',
-  aliases: {
-    auth: ['authentication', 'authorization', 'jwt', 'oauth', 'session'],
-  },
-  index: {
-    authentication: ['src/auth/jwt.ts', 'src/auth/session.ts', 'src/api/endpoints/auth.ts'],
-    jwt: ['src/auth/jwt.ts'],
-    session: ['src/auth/session.ts'],
-    database: ['src/database/users.ts'],
-    api_endpoint: ['src/api/endpoints/auth.ts'],
-    config: ['src/config/env.ts'],
-  },
-};
-
 const mockAnnotations: FileAnnotation[] = [
   {
     path: 'src/auth/jwt.ts',
@@ -86,7 +70,6 @@ const mockAnnotations: FileAnnotation[] = [
     size_bytes: 2048,
     line_count: 80,
     purpose: 'JWT token generation and validation',
-    tags: ['authentication', 'jwt'],
     exports: ['generateToken', 'validateToken', 'JwtConfig'],
     imports: ['src/config/env.ts'],
   },
@@ -96,7 +79,6 @@ const mockAnnotations: FileAnnotation[] = [
     size_bytes: 1536,
     line_count: 60,
     purpose: 'Session management and storage',
-    tags: ['authentication', 'session'],
     exports: ['createSession', 'destroySession', 'Session'],
     imports: ['src/database/users.ts'],
   },
@@ -106,7 +88,6 @@ const mockAnnotations: FileAnnotation[] = [
     size_bytes: 3072,
     line_count: 120,
     purpose: 'User database operations',
-    tags: ['database'],
     exports: ['findUser', 'createUser', 'updateUser', 'User'],
     imports: [],
   },
@@ -116,7 +97,6 @@ const mockAnnotations: FileAnnotation[] = [
     size_bytes: 2560,
     line_count: 100,
     purpose: 'Authentication API endpoints',
-    tags: ['authentication', 'api_endpoint'],
     exports: ['authRouter', 'loginHandler', 'logoutHandler'],
     imports: ['src/auth/jwt.ts', 'src/auth/session.ts'],
   },
@@ -126,7 +106,6 @@ const mockAnnotations: FileAnnotation[] = [
     size_bytes: 512,
     line_count: 20,
     purpose: 'Environment configuration',
-    tags: ['config'],
     exports: ['env', 'Config'],
     imports: [],
   },
@@ -145,11 +124,6 @@ async function createTestRepoMap(testDir: string) {
   await writeFile(
     join(repoMapDir, 'graph.json'),
     JSON.stringify(mockGraph, null, 2)
-  );
-
-  await writeFile(
-    join(repoMapDir, 'tags.json'),
-    JSON.stringify(mockTags, null, 2)
   );
 
   await writeFile(
@@ -187,175 +161,6 @@ test('hasRepoMap: returns false for empty directory', async () => {
   try {
     const result = await hasRepoMap(join(testDir, '.repo_map'));
     assert.strictEqual(result, false);
-  } finally {
-    await rm(testDir, { recursive: true, force: true });
-  }
-});
-
-// queryByTags tests
-test('queryByTags: returns formatted output for tag query', async () => {
-  const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
-  await mkdir(testDir, { recursive: true });
-
-  try {
-    const repoMapDir = await createTestRepoMap(testDir);
-    const result = await queryByTags(['authentication'], {
-      repoMapPath: repoMapDir,
-    });
-
-    // Should include all expected sections
-    assert.ok(result.includes('═══ REPO CONTEXT ═══'));
-    assert.ok(result.includes('═══ RELEVANT FILES'));
-    assert.ok(result.includes('═══ BLAST RADIUS ═══'));
-    assert.ok(result.includes('═══ CONVENTIONS ═══'));
-
-    // Should include repo metadata
-    assert.ok(result.includes('test-repo'));
-    assert.ok(result.includes('A test repository'));
-  } finally {
-    await rm(testDir, { recursive: true, force: true });
-  }
-});
-
-test('queryByTags: expands tag aliases', async () => {
-  const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
-  await mkdir(testDir, { recursive: true });
-
-  try {
-    const repoMapDir = await createTestRepoMap(testDir);
-    const result = await queryByTags(['auth'], {
-      repoMapPath: repoMapDir,
-    });
-
-    // Should find authentication files via alias expansion
-    assert.ok(result.includes('src/auth/jwt.ts'));
-  } finally {
-    await rm(testDir, { recursive: true, force: true });
-  }
-});
-
-test('queryByTags: loads complete annotations with exports and purpose', async () => {
-  const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
-  await mkdir(testDir, { recursive: true });
-
-  try {
-    const repoMapDir = await createTestRepoMap(testDir);
-    const result = await queryByTags(['jwt'], {
-      repoMapPath: repoMapDir,
-    });
-
-    // Should include complete annotation data
-    // Purpose should be present
-    assert.ok(result.includes('JWT token generation and validation'));
-
-    // Exports should be present
-    assert.ok(result.includes('generateToken'));
-    assert.ok(result.includes('validateToken'));
-    assert.ok(result.includes('JwtConfig'));
-  } finally {
-    await rm(testDir, { recursive: true, force: true });
-  }
-});
-
-test('queryByTags: ranks files by relevance', async () => {
-  const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
-  await mkdir(testDir, { recursive: true });
-
-  try {
-    const repoMapDir = await createTestRepoMap(testDir);
-    const result = await queryByTags(['authentication'], {
-      repoMapPath: repoMapDir,
-    });
-
-    // Should include matching files
-    assert.ok(result.includes('src/auth/jwt.ts'));
-    assert.ok(result.includes('src/auth/session.ts'));
-  } finally {
-    await rm(testDir, { recursive: true, force: true });
-  }
-});
-
-test('queryByTags: includes blast radius', async () => {
-  const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
-  await mkdir(testDir, { recursive: true });
-
-  try {
-    const repoMapDir = await createTestRepoMap(testDir);
-    const result = await queryByTags(['jwt'], {
-      repoMapPath: repoMapDir,
-    });
-
-    // jwt.ts is imported by endpoints/auth.ts
-    assert.ok(result.includes('═══ BLAST RADIUS ═══'));
-  } finally {
-    await rm(testDir, { recursive: true, force: true });
-  }
-});
-
-test('queryByTags: respects maxFiles option', async () => {
-  const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
-  await mkdir(testDir, { recursive: true });
-
-  try {
-    const repoMapDir = await createTestRepoMap(testDir);
-    const result = await queryByTags(['authentication'], {
-      repoMapPath: repoMapDir,
-      formatOptions: { maxFiles: 1 },
-    });
-
-    // Should successfully return formatted output
-    assert.ok(result.includes('RELEVANT FILES'));
-    assert.ok(result.length > 100);
-  } finally {
-    await rm(testDir, { recursive: true, force: true });
-  }
-});
-
-test('queryByTags: throws error when map not found', async () => {
-  const testDir = join(tmpdir(), `rmap-test-nonexistent-${Date.now()}`);
-
-  await assert.rejects(
-    async () => {
-      await queryByTags(['auth'], {
-        repoMapPath: join(testDir, '.repo_map'),
-      });
-    },
-    {
-      message: /Repository map not found/,
-    }
-  );
-});
-
-test('queryByTags: handles empty tag results', async () => {
-  const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
-  await mkdir(testDir, { recursive: true });
-
-  try {
-    const repoMapDir = await createTestRepoMap(testDir);
-    const result = await queryByTags(['nonexistent'], {
-      repoMapPath: repoMapDir,
-    });
-
-    // Should handle no results gracefully
-    assert.ok(result.includes('No matching files found'));
-  } finally {
-    await rm(testDir, { recursive: true, force: true });
-  }
-});
-
-test('queryByTags: handles multiple tags', async () => {
-  const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
-  await mkdir(testDir, { recursive: true });
-
-  try {
-    const repoMapDir = await createTestRepoMap(testDir);
-    const result = await queryByTags(['authentication', 'database'], {
-      repoMapPath: repoMapDir,
-    });
-
-    // Should find files from both tags
-    assert.ok(result.includes('src/auth/jwt.ts'));
-    assert.ok(result.includes('src/database/users.ts'));
   } finally {
     await rm(testDir, { recursive: true, force: true });
   }
@@ -591,27 +396,6 @@ test('queryByPath: ranks files by connectivity', async () => {
 });
 
 // Integration tests
-test('integration: query workflow from tags to formatted output', async () => {
-  const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
-  await mkdir(testDir, { recursive: true });
-
-  try {
-    const repoMapDir = await createTestRepoMap(testDir);
-
-    // Query by tags
-    const tagResult = await queryByTags(['auth'], {
-      repoMapPath: repoMapDir,
-    });
-
-    // Should be complete formatted output
-    assert.ok(tagResult.length > 200);
-    assert.ok(tagResult.includes('test-repo'));
-    assert.ok(tagResult.includes('src/auth'));
-  } finally {
-    await rm(testDir, { recursive: true, force: true });
-  }
-});
-
 test('integration: all query types work with same repo map', async () => {
   const testDir = join(tmpdir(), `rmap-test-${Date.now()}`);
   await mkdir(testDir, { recursive: true });
@@ -619,10 +403,7 @@ test('integration: all query types work with same repo map', async () => {
   try {
     const repoMapDir = await createTestRepoMap(testDir);
 
-    // All three query types should work
-    const tagResult = await queryByTags(['auth'], {
-      repoMapPath: repoMapDir,
-    });
+    // Both query types should work
     const fileResult = await queryByFile('src/auth/jwt.ts', {
       repoMapPath: repoMapDir,
     });
@@ -631,12 +412,10 @@ test('integration: all query types work with same repo map', async () => {
     });
 
     // All should produce output
-    assert.ok(tagResult.length > 0);
     assert.ok(fileResult.length > 0);
     assert.ok(pathResult.length > 0);
 
     // All should reference the same repo
-    assert.ok(tagResult.includes('test-repo'));
     assert.ok(fileResult.includes('test-repo'));
     assert.ok(pathResult.includes('test-repo'));
   } finally {
@@ -653,10 +432,6 @@ test('integration: format options apply across all query types', async () => {
     const formatOptions = { maxFiles: 1, maxExports: 1 };
 
     // All queries with same format options
-    const tagResult = await queryByTags(['authentication'], {
-      repoMapPath: repoMapDir,
-      formatOptions,
-    });
     const fileResult = await queryByFile('src/api/endpoints/auth.ts', {
       repoMapPath: repoMapDir,
       formatOptions,
@@ -667,7 +442,6 @@ test('integration: format options apply across all query types', async () => {
     });
 
     // All should respect the limits
-    assert.ok(tagResult.length > 0);
     assert.ok(fileResult.length > 0);
     assert.ok(pathResult.length > 0);
   } finally {

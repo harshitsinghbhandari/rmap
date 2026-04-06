@@ -102,7 +102,6 @@ describe('Level 3: raw_imports integration', () => {
     it('uses preExtractedImports instead of LLM-extracted imports', () => {
       const llmResponse = JSON.stringify({
         purpose: 'Validates data structures',
-        tags: ['validation'],
         exports: ['validateSchema', 'ValidationError'],
         // Note: imports field no longer requested in prompt (saves tokens)
       });
@@ -129,7 +128,6 @@ describe('Level 3: raw_imports integration', () => {
       const llmImports = ['src/utils/helper', 'src/lib/formatter'];
       const llmResponse = JSON.stringify({
         purpose: 'Helper utilities',
-        tags: ['utility'],
         exports: ['formatData'],
         imports: llmImports, // Optional field, for backward compatibility
       });
@@ -149,7 +147,6 @@ describe('Level 3: raw_imports integration', () => {
       // New prompt doesn't request imports, so LLM won't provide them
       const llmResponse = JSON.stringify({
         purpose: 'Simple utility',
-        tags: ['utility'],
         exports: ['doSomething'],
         // No imports field
       });
@@ -240,7 +237,6 @@ describe('Level 3: raw_imports integration', () => {
       // Step 3: LLM returns annotation (no imports field, per updated prompt)
       const llmResponse = JSON.stringify({
         purpose: 'Orchestrates the map building pipeline',
-        tags: ['build', 'utility'], // Use valid taxonomy tags
         exports: ['runPipeline', 'resumeFromCheckpoint'],
         // Note: imports field omitted (not requested by prompt anymore)
       });
@@ -263,7 +259,6 @@ describe('Level 3: raw_imports integration', () => {
 
       assert.strictEqual(result.annotation.path, 'src/coordinator/pipeline.ts');
       assert.strictEqual(result.annotation.purpose, 'Orchestrates the map building pipeline');
-      assert.deepStrictEqual(result.annotation.tags, ['build', 'utility']);
     });
   });
 });

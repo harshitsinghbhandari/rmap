@@ -39,7 +39,7 @@ describe('Result Type Structures', () => {
         commitAge: 5,
         currentCommit: 'xyz789',
         currentCommitShort: 'xyz789a',
-        commitsBehind: 3,
+        commitsAhead: 3,
       },
       changes: {
         totalChanges: 10,
@@ -54,7 +54,7 @@ describe('Result Type Structures', () => {
     assert.strictEqual(result.hasMap, true);
     assert.strictEqual(result.verdict, 'update-recommended');
     assert(result.metadata);
-    assert.strictEqual(result.metadata.commitsBehind, 3);
+    assert.strictEqual(result.metadata.commitsAhead, 3);
     assert(result.changes);
     assert.strictEqual(result.changes.totalChanges, 10);
   });
@@ -122,21 +122,6 @@ describe('Result Type Structures', () => {
     assert.strictEqual(result.action, 'full-rebuild');
     assert(result.buildResult);
     assert.strictEqual(result.buildResult.stats.filesAnnotated, 200);
-  });
-
-  test('GetContextResult should have correct shape for tags query', () => {
-    const result: GetContextResult = {
-      success: true,
-      queryType: 'tags',
-      query: ['auth', 'middleware'],
-      output: 'Formatted query results...',
-      limit: 10,
-    };
-
-    assert.strictEqual(result.success, true);
-    assert.strictEqual(result.queryType, 'tags');
-    assert(Array.isArray(result.query));
-    assert.strictEqual(result.limit, 10);
   });
 
   test('GetContextResult should have correct shape for file query', () => {
@@ -273,11 +258,11 @@ describe('Business Logic Validation', () => {
       commitAge: 7,
       currentCommit: 'xyz789abc123',
       currentCommitShort: 'xyz789a',
-      commitsBehind: 15,
+      commitsAhead: 15,
     };
 
     assert.strictEqual(metadata.commitAge, 7);
-    assert.strictEqual(metadata.commitsBehind, 15);
+    assert.strictEqual(metadata.commitsAhead, 15);
     assert.strictEqual(metadata.buildCommitShort.length, 7);
     assert.strictEqual(metadata.currentCommitShort.length, 7);
   });
@@ -386,14 +371,6 @@ describe('Integration Patterns', () => {
   });
 
   test('Get-context query types should be mutually exclusive', () => {
-    const tagsQuery: GetContextResult = {
-      success: true,
-      queryType: 'tags',
-      query: ['auth'],
-      output: 'results',
-      limit: 10,
-    };
-
     const fileQuery: GetContextResult = {
       success: true,
       queryType: 'file',
@@ -410,13 +387,12 @@ describe('Integration Patterns', () => {
       limit: 10,
     };
 
-    assert.strictEqual(tagsQuery.queryType, 'tags');
     assert.strictEqual(fileQuery.queryType, 'file');
     assert.strictEqual(pathQuery.queryType, 'path');
 
     // Each query type should have different query structure
-    assert(Array.isArray(tagsQuery.query));
     assert.strictEqual(typeof fileQuery.query, 'string');
     assert.strictEqual(typeof pathQuery.query, 'string');
   });
 });
+

@@ -266,7 +266,10 @@ const fileConfigSchema = z.object({
  * @throws {ConfigValidationError} If validation fails
  */
 export function validateThresholds(
-  thresholds: typeof UPDATE_THRESHOLDS = UPDATE_THRESHOLDS,
+  thresholds: {
+    readonly MIN_DELTA_WITH_VALIDATION: number;
+    readonly MAX_DELTA_UPDATE: number;
+  } = UPDATE_THRESHOLDS,
 ): void {
   const { MIN_DELTA_WITH_VALIDATION, MAX_DELTA_UPDATE } = thresholds;
 

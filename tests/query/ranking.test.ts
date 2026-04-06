@@ -23,7 +23,6 @@ const mockFiles: FileAnnotation[] = [
     size_bytes: 1024,
     line_count: 50,
     purpose: 'JWT token generation and validation',
-    tags: ['authentication', 'jwt'],
     exports: ['generateToken', 'validateToken'],
     imports: ['src/config/env.ts'],
   },
@@ -33,7 +32,6 @@ const mockFiles: FileAnnotation[] = [
     size_bytes: 2048,
     line_count: 100,
     purpose: 'Session management',
-    tags: ['authentication', 'session'],
     exports: ['createSession', 'destroySession'],
     imports: ['src/database/users.ts'],
   },
@@ -43,7 +41,6 @@ const mockFiles: FileAnnotation[] = [
     size_bytes: 3072,
     line_count: 150,
     purpose: 'User database operations',
-    tags: ['database', 'orm'],
     exports: ['User', 'findUser', 'createUser'],
     imports: [],
   },
@@ -53,7 +50,6 @@ const mockFiles: FileAnnotation[] = [
     size_bytes: 2560,
     line_count: 120,
     purpose: 'Authentication API endpoints',
-    tags: ['api_endpoint', 'authentication'],
     exports: ['loginEndpoint', 'logoutEndpoint'],
     imports: ['src/auth/jwt.ts', 'src/auth/session.ts'],
   },
@@ -63,7 +59,6 @@ const mockFiles: FileAnnotation[] = [
     size_bytes: 512,
     line_count: 30,
     purpose: 'Logging utility',
-    tags: ['utility', 'logging'],
     exports: ['log', 'error', 'debug'],
     imports: [],
   },
@@ -73,7 +68,6 @@ const mockFiles: FileAnnotation[] = [
     size_bytes: 256,
     line_count: 20,
     purpose: 'Environment configuration',
-    tags: ['config', 'env'],
     exports: ['getEnvVar'],
     imports: [],
   },
@@ -83,7 +77,6 @@ const mockFiles: FileAnnotation[] = [
     size_bytes: 50000,
     line_count: 1500,
     purpose: 'Very large file',
-    tags: ['utility'],
     exports: ['fn'],
     imports: [],
   },
@@ -164,7 +157,6 @@ test('rankFilesByRelevance: handles files with no graph node', () => {
     size_bytes: 100,
     line_count: 10,
     purpose: 'New file',
-    tags: ['utility'],
     exports: [],
     imports: [],
   };
@@ -177,35 +169,6 @@ test('rankFilesByRelevance: handles files with no graph node', () => {
   assert.strictEqual(newFile.importedByCount, 0);
   assert.strictEqual(newFile.connectivity, 0);
 });
-
-test('rankFilesByRelevance: boosts score for matching tags', () => {
-  const queryTags = ['authentication'];
-  const withTagsResult = rankFilesByRelevance(mockFiles, mockGraph, queryTags);
-  const withoutTagsResult = rankFilesByRelevance(mockFiles, mockGraph);
-
-  // Files with authentication tag should rank higher with query tags
-  const jwtWithTags = withTagsResult.find((f) => f.file.path === 'src/auth/jwt.ts');
-  const jwtWithoutTags = withoutTagsResult.find((f) => f.file.path === 'src/auth/jwt.ts');
-
-  assert.ok(jwtWithTags);
-  assert.ok(jwtWithoutTags);
-  assert.ok(jwtWithTags.score > jwtWithoutTags.score);
-});
-
-test('rankFilesByRelevance: counts multiple matching tags', () => {
-  const queryTags = ['authentication', 'jwt'];
-  const result = rankFilesByRelevance(mockFiles, mockGraph, queryTags);
-
-  const jwtFile = result.find((f) => f.file.path === 'src/auth/jwt.ts');
-  const sessionFile = result.find((f) => f.file.path === 'src/auth/session.ts');
-
-  // jwt.ts has both tags, session.ts has only authentication
-  assert.ok(jwtFile);
-  assert.ok(sessionFile);
-  // jwt.ts should score higher due to matching both tags
-  assert.ok(jwtFile.score > sessionFile.score);
-});
-
 test('rankFilesByRelevance: penalizes very large files', () => {
   const result = rankFilesByRelevance(mockFiles, mockGraph);
 
@@ -242,7 +205,6 @@ test('rankFilesByRelevance: scores exports positively', () => {
     size_bytes: 1000,
     line_count: 100,
     purpose: 'API exports',
-    tags: ['api_endpoint'],
     exports: ['fn1', 'fn2', 'fn3', 'fn4', 'fn5'],
     imports: [],
   };
@@ -253,7 +215,6 @@ test('rankFilesByRelevance: scores exports positively', () => {
     size_bytes: 1000,
     line_count: 100,
     purpose: 'Helper',
-    tags: ['utility'],
     exports: ['fn1'],
     imports: [],
   };
@@ -429,7 +390,6 @@ test('getDependencies: ignores imports not in allFiles', () => {
       size_bytes: 100,
       line_count: 10,
       purpose: 'Test',
-      tags: ['testing'],
       exports: [],
       imports: ['src/exists.ts', 'src/missing.ts'],
     },
@@ -439,7 +399,6 @@ test('getDependencies: ignores imports not in allFiles', () => {
       size_bytes: 100,
       line_count: 10,
       purpose: 'Exists',
-      tags: ['utility'],
       exports: [],
       imports: [],
     },
@@ -459,7 +418,6 @@ test('getDependencies: returns FileAnnotation objects', () => {
     assert.ok('path' in dep);
     assert.ok('language' in dep);
     assert.ok('purpose' in dep);
-    assert.ok('tags' in dep);
     assert.ok('exports' in dep);
     assert.ok('imports' in dep);
   });

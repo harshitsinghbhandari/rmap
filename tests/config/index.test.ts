@@ -107,7 +107,7 @@ test('config/index exports CONCURRENCY_DEFAULTS (aliased from defaults)', () => 
 
 test('config/index exports SCORING_CONFIG', () => {
   assert.strictEqual(typeof SCORING_CONFIG, 'object');
-  assert.ok('POINTS_PER_TAG' in SCORING_CONFIG);
+  assert.ok('POINTS_PER_IMPORTED_BY' in SCORING_CONFIG);
 });
 
 test('config/index exports OUTPUT_CONFIG', () => {
@@ -122,7 +122,7 @@ test('config/index exports TOKEN_CONFIG', () => {
 
 test('config/index exports FILE_CONFIG', () => {
   assert.strictEqual(typeof FILE_CONFIG, 'object');
-  assert.ok('MAX_TAGS_PER_FILE' in FILE_CONFIG);
+  assert.ok('MAX_LINE_COUNT' in FILE_CONFIG);
 });
 
 test('config/index exports DEFAULT_CONFIG aggregate', () => {
@@ -131,6 +131,7 @@ test('config/index exports DEFAULT_CONFIG aggregate', () => {
   assert.ok('validation' in DEFAULT_CONFIG);
   assert.ok('retry' in DEFAULT_CONFIG);
 });
+
 
 // ============================================================================
 // rmapignore Exports Tests
@@ -190,13 +191,12 @@ test('config/index exports CONCURRENCY from env', () => {
 
 test('config/index exports SCORING from env', () => {
   assert.strictEqual(typeof SCORING, 'object');
-  assert.ok('POINTS_PER_TAG' in SCORING);
+  assert.ok('POINTS_PER_IMPORTED_BY' in SCORING);
 });
 
 test('config/index exports OUTPUT from env', () => {
   assert.strictEqual(typeof OUTPUT, 'object');
   assert.ok('MAX_FILES_PER_SECTION' in OUTPUT);
-  assert.ok('MAX_DISPLAY_TAGS' in OUTPUT);
 });
 
 test('config/index exports TOKEN from env', () => {
@@ -206,7 +206,7 @@ test('config/index exports TOKEN from env', () => {
 
 test('config/index exports FILE from env', () => {
   assert.strictEqual(typeof FILE, 'object');
-  assert.ok('MAX_TAGS_PER_FILE' in FILE);
+  assert.ok('MAX_LINE_COUNT' in FILE);
 });
 
 test('config/index exports RATE_LIMIT from env', () => {

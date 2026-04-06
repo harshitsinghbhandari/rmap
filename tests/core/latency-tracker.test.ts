@@ -415,13 +415,13 @@ describe('LatencyTracker', () => {
 describe('extractTaskIdFromPurpose', () => {
   it('should extract file path from annotation purpose', () => {
     const purpose =
-      'File annotation - extracts purpose, tags, exports, and imports for: src/core/file.ts';
+      'File annotation - extracts purpose, exports, and imports for: src/core/file.ts';
     const taskId = extractTaskIdFromPurpose(purpose);
     assert.strictEqual(taskId, 'src/core/file.ts');
   });
 
   it('should extract file path from correction retry purpose', () => {
-    const purpose = 'Tag correction retry 1/2 for: src/query/engine.ts';
+    const purpose = 'Annotation correction retry 1/2 for: src/query/engine.ts';
     const taskId = extractTaskIdFromPurpose(purpose);
     assert.strictEqual(taskId, 'src/query/engine.ts');
   });

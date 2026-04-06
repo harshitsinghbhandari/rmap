@@ -10,7 +10,7 @@ import assert from 'node:assert';
 import { writeFile, mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { queryByTags } from '../../src/query/engine.js';
+import { queryByFile } from '../../src/query/engine.js';
 
 /**
  * Helper to create a temporary .repo_map directory with test files
@@ -18,7 +18,6 @@ import { queryByTags } from '../../src/query/engine.js';
 async function createTempRepoMap(
   meta: unknown,
   graph: unknown,
-  tags: unknown,
   annotations: unknown
 ): Promise<string> {
   const tempDir = join(tmpdir(), `rmap-validation-test-${Date.now()}`);
@@ -29,7 +28,6 @@ async function createTempRepoMap(
   await Promise.all([
     writeFile(join(repoMapDir, 'meta.json'), JSON.stringify(meta, null, 2)),
     writeFile(join(repoMapDir, 'graph.json'), JSON.stringify(graph, null, 2)),
-    writeFile(join(repoMapDir, 'tags.json'), JSON.stringify(tags, null, 2)),
     writeFile(join(repoMapDir, 'annotations.json'), JSON.stringify(annotations, null, 2)),
   ]);
 
@@ -65,14 +63,6 @@ const validGraph = {
   },
 };
 
-const validTags = {
-  taxonomy_version: '1.0',
-  aliases: {},
-  index: {
-    api_endpoint: ['src/index.ts'],
-  },
-};
-
 const validAnnotations = [
   {
     path: 'src/index.ts',
@@ -80,7 +70,6 @@ const validAnnotations = [
     size_bytes: 1024,
     line_count: 50,
     purpose: 'Main entry point',
-    tags: ['api_endpoint'],
     exports: ['main'],
     imports: [],
   },
@@ -90,13 +79,12 @@ test('JSON schema validation - valid data passes', async () => {
   const repoMapPath = await createTempRepoMap(
     validMeta,
     validGraph,
-    validTags,
     validAnnotations
   );
 
   try {
     // Should not throw
-    await queryByTags(['api_endpoint'], { repoMapPath });
+    await queryByFile('src/index.ts', { repoMapPath });
   } finally {
     await rm(repoMapPath, { recursive: true, force: true });
   }
@@ -109,13 +97,12 @@ test('JSON validation - malformed meta.json', async () => {
   const repoMapPath = await createTempRepoMap(
     invalidMeta,
     validGraph,
-    validTags,
     validAnnotations
   );
 
   try {
     await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath }),
+      async () => queryByFile('src/index.ts', { repoMapPath }),
       (error: Error) => {
         assert.match(error.message, /Invalid meta\.json schema/);
         assert.match(error.message, /schema_version/);
@@ -133,13 +120,12 @@ test('JSON validation - invalid map_version type', async () => {
   const repoMapPath = await createTempRepoMap(
     invalidMeta,
     validGraph,
-    validTags,
     validAnnotations
   );
 
   try {
     await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath }),
+      async () => queryByFile('src/index.ts', { repoMapPath }),
       (error: Error) => {
         assert.match(error.message, /Invalid meta\.json schema/);
         assert.match(error.message, /map_version/);
@@ -157,13 +143,12 @@ test('JSON validation - invalid update_type enum', async () => {
   const repoMapPath = await createTempRepoMap(
     invalidMeta,
     validGraph,
-    validTags,
     validAnnotations
   );
 
   try {
     await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath }),
+      async () => queryByFile('src/index.ts', { repoMapPath }),
       (error: Error) => {
         assert.match(error.message, /Invalid meta\.json schema/);
         assert.match(error.message, /update_type/);
@@ -186,71 +171,14 @@ test('JSON validation - malformed graph.json', async () => {
   const repoMapPath = await createTempRepoMap(
     validMeta,
     invalidGraph,
-    validTags,
     validAnnotations
   );
 
   try {
     await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath }),
+      async () => queryByFile('src/index.ts', { repoMapPath }),
       (error: Error) => {
         assert.match(error.message, /Invalid graph\.json schema/);
-        return true;
-      }
-    );
-  } finally {
-    await rm(repoMapPath, { recursive: true, force: true });
-  }
-});
-
-test('JSON validation - malformed tags.json', async () => {
-  const invalidTags = {
-    taxonomy_version: '1.0',
-    aliases: {},
-    // Missing required 'index' field
-  };
-
-  const repoMapPath = await createTempRepoMap(
-    validMeta,
-    validGraph,
-    invalidTags,
-    validAnnotations
-  );
-
-  try {
-    await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath }),
-      (error: Error) => {
-        assert.match(error.message, /Invalid tags\.json schema/);
-        assert.match(error.message, /index/);
-        return true;
-      }
-    );
-  } finally {
-    await rm(repoMapPath, { recursive: true, force: true });
-  }
-});
-
-test('JSON validation - invalid tag in annotations', async () => {
-  const invalidAnnotations = [
-    {
-      ...validAnnotations[0],
-      tags: ['invalid_tag_not_in_taxonomy'], // Tag not in TAG_TAXONOMY
-    },
-  ];
-
-  const repoMapPath = await createTempRepoMap(
-    validMeta,
-    validGraph,
-    validTags,
-    invalidAnnotations
-  );
-
-  try {
-    await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath }),
-      (error: Error) => {
-        assert.match(error.message, /Invalid annotations\.json schema/);
         return true;
       }
     );
@@ -265,13 +193,12 @@ test('JSON validation - annotations not an array', async () => {
   const repoMapPath = await createTempRepoMap(
     validMeta,
     validGraph,
-    validTags,
     invalidAnnotations
   );
 
   try {
     await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath }),
+      async () => queryByFile('src/index.ts', { repoMapPath }),
       (error: Error) => {
         assert.match(error.message, /Invalid annotations\.json schema/);
         return true;
@@ -286,20 +213,19 @@ test('JSON validation - missing required annotation fields', async () => {
   const invalidAnnotations = [
     {
       path: 'src/index.ts',
-      // Missing required fields: language, size_bytes, line_count, purpose, tags, exports, imports
+      // Missing required fields: language, size_bytes, line_count, purpose, exports, imports
     },
   ];
 
   const repoMapPath = await createTempRepoMap(
     validMeta,
     validGraph,
-    validTags,
     invalidAnnotations
   );
 
   try {
     await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath }),
+      async () => queryByFile('src/index.ts', { repoMapPath }),
       (error: Error) => {
         assert.match(error.message, /Invalid annotations\.json schema/);
         return true;
@@ -321,13 +247,12 @@ test('JSON validation - negative size_bytes', async () => {
   const repoMapPath = await createTempRepoMap(
     validMeta,
     validGraph,
-    validTags,
     invalidAnnotations
   );
 
   try {
     await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath }),
+      async () => queryByFile('src/index.ts', { repoMapPath }),
       (error: Error) => {
         assert.match(error.message, /Invalid annotations\.json schema/);
         assert.match(error.message, /size_bytes/);
@@ -349,13 +274,12 @@ test('JSON validation - helpful error message format', async () => {
   const repoMapPath = await createTempRepoMap(
     invalidMeta,
     validGraph,
-    validTags,
     validAnnotations
   );
 
   try {
     await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath }),
+      async () => queryByFile('src/index.ts', { repoMapPath }),
       (error: Error) => {
         // Should contain helpful error format with field paths
         assert.match(error.message, /Invalid meta\.json schema/);
@@ -379,13 +303,12 @@ test('JSON parsing - malformed JSON syntax', async () => {
   await Promise.all([
     writeFile(join(repoMapDir, 'meta.json'), '{invalid json}'),
     writeFile(join(repoMapDir, 'graph.json'), JSON.stringify(validGraph)),
-    writeFile(join(repoMapDir, 'tags.json'), JSON.stringify(validTags)),
     writeFile(join(repoMapDir, 'annotations.json'), JSON.stringify(validAnnotations)),
   ]);
 
   try {
     await assert.rejects(
-      async () => queryByTags(['api_endpoint'], { repoMapPath: repoMapDir }),
+      async () => queryByFile('src/index.ts', { repoMapPath: repoMapDir }),
       (error: Error) => {
         assert.match(error.message, /Failed to parse meta\.json/);
         return true;

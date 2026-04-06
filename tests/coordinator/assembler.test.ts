@@ -16,10 +16,9 @@ import type {
   MetaJson,
   StatsJson,
   ValidationJson,
-  TagsJson,
 } from '../../src/core/types.js';
 import { assembleMap, readExistingMeta } from '../../src/coordinator/assembler.js';
-import { SCHEMA_VERSION, TAG_TAXONOMY } from '../../src/core/constants.js';
+import { SCHEMA_VERSION } from '../../src/core/constants.js';
 
 // Helper to create temporary test directory
 function createTempDir(): string {
@@ -41,7 +40,6 @@ const mockAnnotations: FileAnnotation[] = [
     size_bytes: 1024,
     line_count: 50,
     purpose: 'Main entry point',
-    tags: ['entrypoint', 'initialization'],
     exports: ['main'],
     imports: ['src/auth.ts', 'src/utils.ts'],
   },
@@ -51,7 +49,6 @@ const mockAnnotations: FileAnnotation[] = [
     size_bytes: 2048,
     line_count: 80,
     purpose: 'Authentication logic',
-    tags: ['authentication', 'security'],
     exports: ['login', 'logout'],
     imports: ['src/utils.ts'],
   },
@@ -61,7 +58,6 @@ const mockAnnotations: FileAnnotation[] = [
     size_bytes: 512,
     line_count: 30,
     purpose: 'Utility functions',
-    tags: ['utility', 'helper'],
     exports: ['format', 'validate'],
     imports: [],
   },
@@ -71,7 +67,6 @@ const mockAnnotations: FileAnnotation[] = [
     size_bytes: 1024,
     line_count: 40,
     purpose: 'Auth tests',
-    tags: ['testing'],
     exports: [],
     imports: ['src/auth.ts'],
   },
@@ -206,39 +201,6 @@ test('assembleMap: creates valid graph.json', () => {
   }
 });
 
-// Test: tags.json creation
-test('assembleMap: creates valid tags.json', () => {
-  const tempDir = createTempDir();
-
-  try {
-    assembleMap(mockAnnotations, mockGraph, mockMeta, mockStats, mockValidation, {
-      repoRoot: tempDir,
-    });
-
-    const tagsPath = path.join(tempDir, '.repo_map', 'tags.json');
-    assert.ok(fs.existsSync(tagsPath));
-
-    const content = fs.readFileSync(tagsPath, 'utf8');
-    const tags = JSON.parse(content) as TagsJson;
-
-    // Validate structure
-    assert.ok(tags.taxonomy_version);
-    assert.ok(tags.aliases);
-    assert.ok(tags.index);
-
-    // Check that index has all taxonomy tags
-    for (const tag of TAG_TAXONOMY) {
-      assert.ok(Array.isArray(tags.index[tag]));
-    }
-
-    // Check that tags from annotations are in the index
-    assert.ok(tags.index['authentication'].includes('src/auth.ts'));
-    assert.ok(tags.index['utility'].includes('src/utils.ts'));
-  } finally {
-    cleanupTempDir(tempDir);
-  }
-});
-
 // Test: stats.json creation
 test('assembleMap: creates valid stats.json', () => {
   const tempDir = createTempDir();
@@ -290,7 +252,6 @@ test('assembleMap: creates valid annotations.json', () => {
     assert.strictEqual(firstAnnotation.purpose, 'Main entry point');
     assert.strictEqual(typeof firstAnnotation.line_count, 'number');
     assert.strictEqual(typeof firstAnnotation.size_bytes, 'number');
-    assert.ok(Array.isArray(firstAnnotation.tags));
     assert.ok(Array.isArray(firstAnnotation.exports));
     assert.ok(Array.isArray(firstAnnotation.imports));
   } finally {
@@ -385,8 +346,8 @@ test('assembleMap: handles root-level files correctly', () => {
       path: 'README.md',
       language: 'Markdown',
       size_bytes: 512,
+      line_count: 10,
       purpose: 'Documentation',
-      tags: ['documentation'],
       exports: [],
       imports: [],
     },
@@ -446,7 +407,6 @@ test('assembleMap: returns list of all written files', () => {
     assert.ok(filenames.includes('meta.json'));
     assert.ok(filenames.includes('annotations.json'));
     assert.ok(filenames.includes('graph.json'));
-    assert.ok(filenames.includes('tags.json'));
     assert.ok(filenames.includes('stats.json'));
     assert.ok(filenames.includes('validation.json'));
   } finally {
@@ -597,23 +557,49 @@ test('assembleMap: handles empty annotations array', () => {
   }
 });
 
-// Test: Tags index includes all taxonomy tags
-test('assembleMap: tags index includes all taxonomy tags', () => {
+// Test: Output path returned
+test('assembleMap: returns correct output path', () => {
   const tempDir = createTempDir();
 
   try {
-    assembleMap(mockAnnotations, mockGraph, mockMeta, mockStats, mockValidation, {
+    const result = assembleMap(mockAnnotations, mockGraph, mockMeta, mockStats, mockValidation, {
       repoRoot: tempDir,
+      outputDir: '.repo_map',
     });
 
-    const tagsPath = path.join(tempDir, '.repo_map', 'tags.json');
-    const tags = JSON.parse(fs.readFileSync(tagsPath, 'utf8')) as TagsJson;
+    const expectedPath = path.join(tempDir, '.repo_map');
+    assert.strictEqual(result.outputPath, expectedPath);
+  } finally {
+    cleanupTempDir(tempDir);
+  }
+});
 
-    // Every taxonomy tag should have an entry (even if empty)
-    for (const tag of TAG_TAXONOMY) {
-      assert.ok(tag in tags.index, `Tag "${tag}" should be in index`);
-      assert.ok(Array.isArray(tags.index[tag]));
-    }
+// Test: Large annotation set
+test('assembleMap: handles large annotation sets efficiently', () => {
+  const tempDir = createTempDir();
+
+  const largeAnnotations: FileAnnotation[] = Array.from({ length: 1000 }, (_, i) => ({
+    path: `src/file${i}.ts`,
+    language: 'TypeScript',
+    size_bytes: 512,
+    line_count: 100,
+    purpose: `File ${i}`,
+    exports: [`func${i}`],
+    imports: [],
+  }));
+
+  try {
+    const startTime = Date.now();
+    assembleMap(largeAnnotations, mockGraph, mockMeta, mockStats, mockValidation, {
+      repoRoot: tempDir,
+    });
+    const duration = Date.now() - startTime;
+
+    // Should complete in reasonable time
+    assert.ok(duration < 5000, `Assembly took ${duration}ms`);
+
+    // All files should exist
+    assert.ok(fs.existsSync(path.join(tempDir, '.repo_map', 'meta.json')));
   } finally {
     cleanupTempDir(tempDir);
   }
@@ -644,8 +630,8 @@ test('assembleMap: handles large annotation sets efficiently', () => {
     path: `src/file${i}.ts`,
     language: 'TypeScript',
     size_bytes: 512,
+    line_count: 100,
     purpose: `File ${i}`,
-    tags: ['utility'],
     exports: [`func${i}`],
     imports: [],
   }));
