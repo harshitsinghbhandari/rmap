@@ -29,6 +29,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Run Lint (Type-check)
         run: pnpm lint
+      - name: Run strict TypeScript typecheck
+        run: pnpm exec tsc --noEmit --strict
 
   test:
     name: Test (Node ${{ matrix.node-version }})
