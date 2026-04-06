@@ -16,8 +16,15 @@ program
   .name('rmap')
   .description('A semantic repository map builder for coding agents')
   .version(version)
-  .option('--log-prompts', 'Log all prompts sent to Claude API (can use significant disk space)')
-  .option('--log-response', 'Log all responses from Claude API (can use significant disk space)');
+  .option('--log-prompts', 'boolean  Log all prompts sent to Claude API (can use significant disk space)')
+  .option('--log-response', 'boolean  Log all responses from Claude API (can use significant disk space)')
+  .addHelpText('after', `
+Examples:
+  rmap map
+  rmap map --status
+  rmap get-context --file src/index.ts
+  rmap map --log-prompts --log-response
+`);
 
 // Register commands
 program.addCommand(mapCommand);
