@@ -21,11 +21,18 @@ interface GetContextOptions {
 }
 
 export const getContextCommand = new Command('get-context')
-  .description('Query repository context by file or path')
-  .option('--file <path>', 'Query context for a specific file')
-  .option('--path <dir>', 'Query context for a directory')
-  .option('--json', 'Output results in JSON format for machine consumption')
-  .option('--limit <n>', 'Maximum number of results to return (default: 10)')
+  .description('Query repository context by file or path from .repo_map/')
+  .option('--file <path>', 'string  Query context for a specific file')
+  .option('--path <dir>', 'string  Query context for a directory')
+  .option('--json', 'boolean  Output results in JSON format for machine consumption')
+  .option('--limit <n>', 'number  Maximum number of results to return (default: 10)')
+  .addHelpText('after', `
+Examples:
+  rmap get-context --file src/auth/jwt.ts
+  rmap get-context --path src/api/
+  rmap get-context --file src/index.ts --json
+  rmap get-context --path src/db/ --limit 20
+`)
   .action(async (options: GetContextOptions) => {
     try {
       const result = await computeGetContext(options);

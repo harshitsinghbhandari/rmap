@@ -53,12 +53,25 @@ interface MapOptions {
 }
 
 export const mapCommand = new Command('map')
-  .description('Build or update repository map')
-  .option('--full', 'Force full rebuild of the entire map')
-  .option('--status', 'Show current map status and staleness')
-  .option('--update', 'Update map based on git changes (delta update)')
-  .option('--resume', 'Explicitly resume from checkpoint (error if none exists)')
-  .option('--no-resume', 'Ignore checkpoint and start fresh')
+  .description('Build or update repository map (outputs to .repo_map/)')
+  .option('--full', 'boolean  Force full rebuild of the entire map (ignores existing map)')
+  .option('--status', 'boolean  Show current map status and staleness (no changes made)')
+  .option('--update', 'boolean  Update map based on git changes (delta update)')
+  .option('--resume', 'boolean  Explicitly resume from checkpoint (error if none exists)')
+  .option('--no-resume', 'boolean  Ignore checkpoint and start fresh')
+  .addHelpText('after', `
+Examples:
+  rmap map
+  rmap map --full
+  rmap map --status
+  rmap map --update
+  rmap map --resume
+  rmap map --no-resume
+
+Notes:
+  - This command creates or modifies files in the .repo_map/ directory.
+  - Automatically does a delta update if a map already exists.
+`)
   .action(async (options: MapOptions) => {
     try {
       // Determine which operation to perform
