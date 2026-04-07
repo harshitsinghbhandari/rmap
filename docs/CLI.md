@@ -48,6 +48,8 @@ The `map` command is the core of `rmap`. It analyzes your codebase and generates
 | `--full` | Force a complete rebuild, ignoring existing map |
 | `--update` | Explicit delta update (re-analyzes changed files only) |
 | `--status` | Show map status without building/updating |
+| `--resume` | Explicitly resume from checkpoint (error if none exists) |
+| `--no-resume` | Ignore checkpoint and start fresh |
 
 #### Examples
 
