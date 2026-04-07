@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — 2026-04-07
+
+### Features
+- Rmap CLI can now run parallelized context builds (`aa239e1`)
+- Rmap context builds now save incremental checkpoints and can resume after interruption (`9fbdffc`)
+- Rmap can now exclude files using a .rmapignore file (`99991e1`)
+- Rmap CLI displays interactive visual progress tracking in the terminal (`65bcb8e`)
+- Rmap users can now log prompts and responses sent to the AI via new CLI flags (`66a145f`)
+- Rmap users can configure Gemini as their language model provider (`18d2d32`)
+
+### Improved
+- Rmap context builds run significantly faster for large files (`e4a7bf0`)
+- Rmap context builds now use smarter rate limit retry logic with exponential backoff (`2dc1cc9`)
+- Rmap `get-context` output is now cleaner and easier to read (`5a94641`)
+- Rmap generated contexts now feature more precise and relevant file tags (`5fb611f`)
+
+### Fixed
+- Rmap CLI no longer crashes when processing projects with missing annotation files (`97e954c`)
+- Rmap dependency mapping is now more accurate by directly tracing raw imports (`554d833`)
+
 ## [Unreleased]
 
 ### Added
