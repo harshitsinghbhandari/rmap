@@ -16,8 +16,10 @@ Complete command-line reference for `rmap`.
 These options are available for all commands:
 
 ```bash
--h, --help     Display help for command
--V, --version  Output the version number
+-h, --help        Display help for command
+-V, --version     Output the version number
+--log-prompts     boolean  Log all prompts sent to Claude API (can use significant disk space)
+--log-response    boolean  Log all responses from Claude API (can use significant disk space)
 ```
 
 ## Commands
@@ -43,13 +45,13 @@ The `map` command is the core of `rmap`. It analyzes your codebase and generates
 
 #### Options
 
-| Option | Description |
-|--------|-------------|
-| `--full` | Force a complete rebuild, ignoring existing map |
-| `--update` | Explicit delta update (re-analyzes changed files only) |
-| `--status` | Show map status without building/updating |
-| `--resume` | Explicitly resume from checkpoint (error if none exists) |
-| `--no-resume` | Ignore checkpoint and start fresh |
+| Option | Type | Description |
+|--------|------|-------------|
+| `--full` | `boolean` | Force a complete rebuild, ignoring existing map |
+| `--update` | `boolean` | Explicit delta update (re-analyzes changed files only) |
+| `--status` | `boolean` | Show map status without building/updating |
+| `--resume` | `boolean` | Explicitly resume from checkpoint (error if none exists) |
+| `--no-resume` | `boolean` | Ignore checkpoint and start fresh |
 
 #### Examples
 
@@ -113,12 +115,12 @@ The `get-context` command is designed to provide compact, semantically relevant 
 
 #### Options
 
-| Option | Description |
-|--------|-------------|
-| `--file <path>` | Get context for a specific file |
-| `--path <dir>` | Get context for all files in a directory |
-| `--limit <n>` | Maximum number of files to return (default: 10) |
-| `--json` | Output in JSON format instead of human-readable |
+| Option | Type | Description |
+|--------|------|-------------|
+| `--file <path>` | `string` | Get context for a specific file |
+| `--path <dir>` | `string` | Get context for all files in a directory |
+| `--limit <n>` | `number` | Maximum number of files to return (default: 10) |
+| `--json` | `boolean` | Output in JSON format instead of human-readable |
 
 #### Examples
 
