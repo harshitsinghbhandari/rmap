@@ -16,8 +16,8 @@ program
   .name('rmap')
   .description('A semantic repository map builder for coding agents')
   .version(version)
-  .option('--log-prompts', 'boolean  Log all prompts sent to Claude API (can use significant disk space)')
-  .option('--log-response', 'boolean  Log all responses from Claude API (can use significant disk space)')
+  .option('--log-prompts', 'boolean  Log all prompts sent to LLM API (can use significant disk space)')
+  .option('--log-response', 'boolean  Log all responses from LLM API (can use significant disk space)')
   .addHelpText('after', `
 Examples:
   rmap map
