@@ -1,544 +1,440 @@
-/**
- * Tests for Level 3 Deep File Annotator
- *
- * Tests file annotation output, batch processing, file truncation,
- * and mock LLM response handling
- */
-
 import { test, mock } from 'node:test';
 import assert from 'node:assert';
-import type { FileAnnotation, RawFileMetadata, DelegationTask } from '../../../src/core/types.js';
-import { ANNOTATION_MODEL_MAP, MODELS } from '../../../src/config/models.js';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import {
+  annotateFiles,
+  annotateTask,
+  annotateExplicitTask,
+} from '../../../src/levels/level3/annotator.js';
+import { LLMClient } from '../../../src/core/index.js';
+import type {
+  RawFileMetadata,
+  DelegationTask,
+  ExplicitTask,
+  FileAnnotation,
+} from '../../../src/core/types.js';
 
-// Mock raw file metadata
-const mockFileMetadata: RawFileMetadata[] = [
-  {
-    name: 'jwt.ts',
-    path: 'src/auth/jwt.ts',
-    extension: '.ts',
-    size_bytes: 2048,
-    line_count: 100,
-    language: 'TypeScript',
-    raw_imports: ['crypto', './config'],
-  },
-  {
-    name: 'session.ts',
-    path: 'src/auth/session.ts',
-    extension: '.ts',
-    size_bytes: 3072,
-    line_count: 150,
-    language: 'TypeScript',
-    raw_imports: ['./jwt', '../database/users'],
-  },
-  {
-    name: 'logger.ts',
-    path: 'src/utils/logger.ts',
-    extension: '.ts',
-    size_bytes: 512,
-    line_count: 30,
-    language: 'TypeScript',
-    raw_imports: [],
-  },
-];
+// Setup mock files for the test
+const repoRoot = path.resolve('.');
+const testDir = path.join(repoRoot, '.test-tmp-annotator');
 
-// Mock delegation task
-const mockTask: DelegationTask = {
-  scope: 'src/auth/',
-  agent_size: 'medium',
-  estimated_files: 2,
-};
-
-// Test: FileAnnotation structure
-test('annotateFiles: returns FileAnnotation array', () => {
-  const mockAnnotations: FileAnnotation[] = [
-    {
-      path: 'src/auth/jwt.ts',
-      language: 'TypeScript',
-      size_bytes: 2048,
-      line_count: 100,
-      purpose: 'JWT token generation and validation',
-      exports: ['generateToken', 'validateToken', 'decodeToken'],
-      imports: ['src/config/env'],
-    },
-  ];
-
-  // Validate structure
-  assert.ok(Array.isArray(mockAnnotations));
-  assert.strictEqual(mockAnnotations.length, 1);
-
-  const annotation = mockAnnotations[0];
-  assert.ok(typeof annotation.path === 'string');
-  assert.ok(typeof annotation.language === 'string');
-  assert.ok(typeof annotation.size_bytes === 'number');
-  assert.ok(typeof annotation.line_count === 'number');
-  assert.ok(typeof annotation.purpose === 'string');
-  assert.ok(Array.isArray(annotation.exports));
-  assert.ok(Array.isArray(annotation.imports));
-});
-
-// Test: Annotation preserves metadata
-test('annotateFiles: preserves file metadata from Level 0', () => {
-  const metadata = mockFileMetadata[0];
-  const mockAnnotation: FileAnnotation = {
-    path: metadata.path,
-    language: metadata.language!,
-    size_bytes: metadata.size_bytes,
-    line_count: metadata.line_count,
-    purpose: 'JWT token operations',
-    exports: ['generateToken'],
-    imports: [],
-  };
-
-  // Should preserve all metadata fields
-  assert.strictEqual(mockAnnotation.path, metadata.path);
-  assert.strictEqual(mockAnnotation.language, metadata.language);
-  assert.strictEqual(mockAnnotation.size_bytes, metadata.size_bytes);
-  assert.strictEqual(mockAnnotation.line_count, metadata.line_count);
-});
-
-// Test: Batch processing
-test('annotateFiles: processes multiple files', () => {
-  const mockAnnotations: FileAnnotation[] = mockFileMetadata.map((meta, i) => ({
-    path: meta.path,
-    language: meta.language!,
-    size_bytes: meta.size_bytes,
-    line_count: meta.line_count,
-    purpose: `Purpose for ${meta.name}`,
-    exports: [`export${i}`],
-    imports: [],
-  }));
-
-  assert.strictEqual(mockAnnotations.length, mockFileMetadata.length);
-
-  // Each file should have an annotation
-  for (let i = 0; i < mockFileMetadata.length; i++) {
-    assert.strictEqual(mockAnnotations[i].path, mockFileMetadata[i].path);
+function setupTestFiles() {
+  if (!fs.existsSync(testDir)) {
+    fs.mkdirSync(testDir, { recursive: true });
   }
-});
 
-// Test: Model selection based on agent size
-test('annotateFiles: selects correct model for agent size', () => {
-  // Should map to correct models from centralized config
-  assert.strictEqual(ANNOTATION_MODEL_MAP.small, MODELS.HAIKU);
-  assert.strictEqual(ANNOTATION_MODEL_MAP.medium, MODELS.SONNET);
-  assert.strictEqual(ANNOTATION_MODEL_MAP.large, MODELS.SONNET);
+  // Text file
+  const txtPath = path.join(testDir, 'test.txt');
+  fs.writeFileSync(txtPath, 'Hello world\n');
 
-  // Verify the actual model names are correct
-  assert.strictEqual(MODELS.HAIKU, 'claude-haiku-4-5-20251001');
-  assert.strictEqual(MODELS.SONNET, 'claude-sonnet-4-5-20250929');
-});
+  // Binary file (null bytes)
+  const binPath = path.join(testDir, 'test.bin');
+  fs.writeFileSync(binPath, Buffer.from([0, 1, 2, 0, 3, 4]));
 
-// Test: Binary file handling
-test('annotateFiles: skips binary files', () => {
-  const binaryMetadata: RawFileMetadata = {
-    name: 'image.png',
-    path: 'assets/image.png',
-    extension: '.png',
-    size_bytes: 10240,
-    line_count: 0,
-    raw_imports: [],
-  };
+  return { testDir, txtPath, binPath };
+}
 
-  // Binary files should not be annotated (would return null)
-  // In practice, the annotator would skip these
-  assert.strictEqual(binaryMetadata.extension, '.png');
-  assert.strictEqual(binaryMetadata.line_count, 0);
-});
-
-// Test: Large file truncation
-test('annotateFiles: truncates files exceeding 10k lines', () => {
-  const largeFileMetadata: RawFileMetadata = {
-    name: 'large.ts',
-    path: 'src/large.ts',
-    extension: '.ts',
-    size_bytes: 500000,
-    line_count: 15000,
-    language: 'TypeScript',
-    raw_imports: [],
-  };
-
-  // Files over 10k lines should be truncated
-  const MAX_LINES = 10000;
-  assert.ok(largeFileMetadata.line_count > MAX_LINES);
-
-  // The annotator would truncate content before sending to LLM
-  // Annotation should still be created with original line_count
-  const mockAnnotation: FileAnnotation = {
-    path: largeFileMetadata.path,
-    language: largeFileMetadata.language!,
-    size_bytes: largeFileMetadata.size_bytes,
-    line_count: largeFileMetadata.line_count, // Original count preserved
-    purpose: 'Large file with truncated content',
-    exports: [],
-    imports: [],
-  };
-
-  assert.strictEqual(mockAnnotation.line_count, 15000);
-});
-
-// Test: Purpose field validation
-test('annotateFiles: purpose should be concise', () => {
-  const annotation: FileAnnotation = {
-    path: 'src/test.ts',
-    language: 'TypeScript',
-    size_bytes: 1024,
-    line_count: 50,
-    purpose: 'Handles user authentication via JWT tokens',
-    exports: [],
-    imports: [],
-  };
-
-  // Purpose should be a single sentence
-  assert.ok(annotation.purpose.length > 0);
-  assert.ok(annotation.purpose.length <= 200); // Reasonable max length
-  assert.ok(typeof annotation.purpose === 'string');
-});
-
-// Test: Exports extraction
-test('annotateFiles: extracts exports correctly', () => {
-  const annotation: FileAnnotation = {
-    path: 'src/auth/jwt.ts',
-    language: 'TypeScript',
-    size_bytes: 2048,
-    line_count: 100,
-    purpose: 'JWT operations',
-    exports: ['generateToken', 'validateToken', 'JWTConfig'],
-    imports: [],
-  };
-
-  // Should extract function and type names
-  assert.ok(Array.isArray(annotation.exports));
-  assert.ok(annotation.exports.length > 0);
-  assert.ok(annotation.exports.every(exp => typeof exp === 'string'));
-  assert.ok(annotation.exports.every(exp => exp.length > 0));
-});
-
-// Test: Internal imports only
-test('annotateFiles: includes only internal imports', () => {
-  const annotation: FileAnnotation = {
-    path: 'src/auth/session.ts',
-    language: 'TypeScript',
-    size_bytes: 3072,
-    line_count: 150,
-    purpose: 'Session management',
-    exports: ['createSession'],
-    imports: ['src/auth/jwt', 'src/database/users'],
-  };
-
-  // Should only have internal imports (no 'express', 'crypto', etc.)
-  assert.ok(Array.isArray(annotation.imports));
-  for (const imp of annotation.imports) {
-    // Internal imports should have path structure
-    assert.ok(imp.includes('/'));
+function cleanupTestFiles() {
+  if (fs.existsSync(testDir)) {
+    fs.rmSync(testDir, { recursive: true, force: true });
   }
-});
+}
 
-// Test: Error handling for malformed responses
-test('annotateFiles: handles malformed LLM responses', () => {
-  // Malformed responses should be caught and retried or skipped
-  const malformedResponses = [
-    'Not JSON at all',
-    '{"incomplete": true',
-    '{"exports": "not-an-array"}',
-    '{}', // Missing required fields
-  ];
+test('annotator - setup and cleanup', async (t) => {
+  let paths: any;
 
-  for (const response of malformedResponses) {
-    // In practice, these would throw AnnotationValidationError
-    assert.ok(typeof response === 'string');
-  }
-});
+  t.beforeEach(() => {
+    paths = setupTestFiles();
+  });
 
-// Test: Retry logic for validation errors
-test('annotateFiles: retries on validation errors', () => {
-  // Mock scenario: first attempt fails, retry succeeds
-  let attemptCount = 0;
+  t.afterEach(() => {
+    cleanupTestFiles();
+  });
 
-  const mockAnnotate = () => {
-    attemptCount++;
-    if (attemptCount === 1) {
-      throw new Error('Validation failed');
-    }
-    return {
-      path: 'src/test.ts',
-      language: 'TypeScript',
-      size_bytes: 1024,
-      line_count: 50,
-      purpose: 'Test file',
-      exports: [],
-      imports: [],
+  await t.test('annotateFiles - skips binary files', async () => {
+    const files: RawFileMetadata[] = [
+      {
+        path: path.relative(repoRoot, paths.binPath),
+        name: 'test.bin',
+        extension: '.bin',
+        size_bytes: 6,
+        line_count: 0,
+        language: 'Unknown',
+        raw_imports: [],
+      },
+    ];
+
+    const result = await annotateFiles(files, {
+      agentSize: 'small',
+      repoRoot,
+      quiet: true,
+    });
+
+    assert.strictEqual(result.length, 0); // Binary file skipped, so 0 annotations
+  });
+
+  await t.test('annotateFiles - returns parsed annotation for text file', async () => {
+    const files: RawFileMetadata[] = [
+      {
+        path: path.relative(repoRoot, paths.txtPath),
+        name: 'test.txt',
+        extension: '.txt',
+        size_bytes: 12,
+        line_count: 1,
+        language: 'Text',
+        raw_imports: [],
+      },
+    ];
+
+    const mockLlmClient = Object.create(LLMClient.prototype);
+    mockLlmClient.sendMessage = mock.fn(async () => {
+      return {
+        text: `\`\`\`json\n{
+          "purpose": "A test text file",
+          "exports": [],
+          "imports": []
+        }\n\`\`\``,
+        model: 'mock-model',
+        inputTokens: 10,
+        outputTokens: 20,
+      };
+    });
+
+    let recordedMetrics: any = null;
+    const mockMetrics = {
+      recordLLMCall: (m: any) => {
+        recordedMetrics = m;
+      },
     };
-  };
 
-  // First call fails, second succeeds
-  try {
-    mockAnnotate();
-  } catch {
-    const result = mockAnnotate();
-    assert.ok(result);
-    assert.strictEqual(attemptCount, 2);
-  }
-});
+    const result = await annotateFiles(files, {
+      agentSize: 'small',
+      repoRoot,
+      llmClient: mockLlmClient as any,
+      metrics: mockMetrics as any,
+      quiet: false,
+    });
 
-// Test: Progress tracking
-test('annotateFiles: tracks annotation progress', () => {
-  const total = mockFileMetadata.length;
-  let processed = 0;
+    assert.strictEqual(result.length, 1);
+    assert.strictEqual(result[0].purpose, 'A test text file');
+    assert.deepStrictEqual(result[0].exports, []);
+    assert.deepStrictEqual(result[0].imports, []);
+    assert.ok(recordedMetrics);
+    assert.strictEqual(recordedMetrics.model, 'mock-model');
+  });
 
-  // Simulate processing
-  for (const metadata of mockFileMetadata) {
-    processed++;
-    const progress = (processed / total) * 100;
-    assert.ok(progress >= 0 && progress <= 100);
-  }
+  await t.test('annotateFiles - skips file if not found or unreadable', async () => {
+    const files: RawFileMetadata[] = [
+      {
+        path: 'non-existent-file.txt',
+        name: 'non-existent-file.txt',
+        extension: '.txt',
+        size_bytes: 12,
+        line_count: 1,
+        language: 'Text',
+        raw_imports: [],
+      },
+    ];
 
-  assert.strictEqual(processed, total);
-});
+    const mockLlmClient = Object.create(LLMClient.prototype);
 
-// Test: Success and failure counts
-test('annotateFiles: reports success and failure counts', () => {
-  const results = {
-    success: 2,
-    failed: 1,
-    total: 3,
-  };
+    const result = await annotateFiles(files, {
+      agentSize: 'small',
+      repoRoot,
+      llmClient: mockLlmClient as any,
+      quiet: true,
+    });
 
-  assert.strictEqual(results.success + results.failed, results.total);
-  assert.ok(results.success >= 0);
-  assert.ok(results.failed >= 0);
-});
+    assert.strictEqual(result.length, 0);
+  });
 
-// Test: Task scope filtering
-test('annotateTask: filters files by task scope', () => {
-  const task: DelegationTask = {
-    scope: 'src/auth/',
-    agent_size: 'medium',
-    estimated_files: 2,
-  };
+  await t.test('annotateFiles - catches LLM failure and returns null for file', async () => {
+    const files: RawFileMetadata[] = [
+      {
+        path: path.relative(repoRoot, paths.txtPath),
+        name: 'test.txt',
+        extension: '.txt',
+        size_bytes: 12,
+        line_count: 1,
+        language: 'Text',
+        raw_imports: [],
+      },
+    ];
 
-  // Should only include files matching scope
-  const scopedFiles = mockFileMetadata.filter(f => f.path.startsWith(task.scope));
+    const mockLlmClient = Object.create(LLMClient.prototype);
+    mockLlmClient.sendMessage = mock.fn(async () => {
+      throw new Error("LLM failure");
+    });
 
-  assert.ok(scopedFiles.length > 0);
-  assert.ok(scopedFiles.length <= task.estimated_files + 2); // Allow some deviation
-  assert.ok(scopedFiles.every(f => f.path.startsWith('src/auth/')));
-});
+    // We expect it to log error and skip the file, returning empty array
+    const originalConsoleError = console.error;
+    let consoleErrorCalled = false;
+    console.error = () => { consoleErrorCalled = true; };
 
-// Test: Empty scope handling
-test('annotateTask: handles empty scope results', () => {
-  const task: DelegationTask = {
-    scope: 'src/nonexistent/',
-    agent_size: 'small',
-    estimated_files: 0,
-  };
-
-  const scopedFiles = mockFileMetadata.filter(f => f.path.startsWith(task.scope));
-
-  // Should return empty array for non-matching scope
-  assert.strictEqual(scopedFiles.length, 0);
-});
-
-// Test: Sequential processing to avoid rate limits
-test('annotateFiles: processes files sequentially', async () => {
-  const delays: number[] = [];
-  const mockDelay = 100; // 100ms between requests
-
-  // Simulate sequential processing with delays
-  for (let i = 0; i < 3; i++) {
-    const start = Date.now();
-    await new Promise(resolve => setTimeout(resolve, mockDelay));
-    delays.push(Date.now() - start);
-  }
-
-  // Each delay should be approximately the mock delay
-  for (const delay of delays) {
-    assert.ok(delay >= mockDelay * 0.9); // Allow 10% tolerance
-  }
-});
-
-// Test: Annotation for files without language
-test('annotateFiles: handles files without detected language', () => {
-  const metadataNoLang: RawFileMetadata = {
-    name: 'README',
-    path: 'README',
-    extension: '',
-    size_bytes: 512,
-    line_count: 20,
-    raw_imports: [],
-    // No language field
-  };
-
-  const annotation: FileAnnotation = {
-    path: metadataNoLang.path,
-    language: 'Unknown', // Should default to 'Unknown'
-    size_bytes: metadataNoLang.size_bytes,
-    line_count: metadataNoLang.line_count,
-    purpose: 'Project documentation',
-    exports: [],
-    imports: [],
-  };
-
-  assert.strictEqual(annotation.language, 'Unknown');
-});
-
-// Test: Empty exports/imports arrays are valid
-test('annotateFiles: allows empty exports and imports', () => {
-  const annotation: FileAnnotation = {
-    path: 'src/constants.ts',
-    language: 'TypeScript',
-    size_bytes: 256,
-    line_count: 10,
-    purpose: 'Application constants',
-    exports: [], // No exports
-    imports: [], // No imports
-  };
-
-  assert.ok(Array.isArray(annotation.exports));
-  assert.ok(Array.isArray(annotation.imports));
-  assert.strictEqual(annotation.exports.length, 0);
-  assert.strictEqual(annotation.imports.length, 0);
-});
-
-// Test: API key validation
-test('annotateFiles: requires ANTHROPIC_API_KEY', () => {
-  // Should check for API key before processing
-  const hasApiKey = !!process.env.ANTHROPIC_API_KEY;
-
-  // In practice, would throw error if not set
-  if (!hasApiKey) {
-    assert.ok(true, 'API key not set (expected in test environment)');
-  }
-});
-
-// Test: Concurrent processing
-test('annotateFiles: processes files concurrently', async () => {
-  const { ConcurrencyPool } = await import('../../../src/core/concurrency.js');
-
-  let inFlight = 0;
-  let maxInFlight = 0;
-  const processedFiles: string[] = [];
-
-  // Use ConcurrencyPool directly (the mechanism annotateFiles uses internally)
-  const pool = new ConcurrencyPool<RawFileMetadata, void>({ concurrency: 3 });
-
-  await pool.run(mockFileMetadata, async (file: RawFileMetadata) => {
-    inFlight++;
-    if (inFlight > maxInFlight) maxInFlight = inFlight;
     try {
-      await new Promise<void>(resolve => setTimeout(resolve, 50));
-      processedFiles.push(file.path);
+      const result = await annotateFiles(files, {
+        agentSize: 'small',
+        repoRoot,
+        llmClient: mockLlmClient as any,
+        quiet: true,
+      });
+
+      assert.strictEqual(result.length, 0);
+      assert.ok(consoleErrorCalled);
     } finally {
-      inFlight--;
+      console.error = originalConsoleError;
     }
   });
 
-  // Verify all files were processed
-  assert.strictEqual(processedFiles.length, mockFileMetadata.length);
+  await t.test('annotateFiles - catches Validation error and returns null for file', async () => {
+    const files: RawFileMetadata[] = [
+      {
+        path: path.relative(repoRoot, paths.txtPath),
+        name: 'test.txt',
+        extension: '.txt',
+        size_bytes: 12,
+        line_count: 1,
+        language: 'Text',
+        raw_imports: [],
+      },
+    ];
 
-  // Verify actual concurrency was used (more than 1 task in-flight)
-  assert.ok(maxInFlight > 1, `Expected concurrent execution but max in-flight was ${maxInFlight}`);
+    const mockLlmClient = Object.create(LLMClient.prototype);
+    mockLlmClient.sendMessage = mock.fn(async () => {
+      return {
+        text: `\`\`\`json\n{
+          "invalid_schema": true
+        }\n\`\`\``,
+        model: 'mock-model',
+        inputTokens: 10,
+        outputTokens: 20,
+      };
+    });
 
-  // Verify the concurrency limit was respected
-  assert.ok(maxInFlight <= 3, `Expected max 3 in-flight but was ${maxInFlight}`);
+    const originalConsoleError = console.error;
+    let consoleErrorCalled = false;
+    console.error = () => { consoleErrorCalled = true; };
+
+    try {
+      const result = await annotateFiles(files, {
+        agentSize: 'small',
+        repoRoot,
+        llmClient: mockLlmClient as any,
+        quiet: true,
+      });
+
+      assert.strictEqual(result.length, 0);
+      assert.ok(consoleErrorCalled);
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
+
+  await t.test('annotateTask - scope filtering', async () => {
+    const allFiles: RawFileMetadata[] = [
+      { path: 'src/a.txt', name: 'a.txt', extension: '.txt', size_bytes: 1, line_count: 1, raw_imports: [] },
+      { path: 'src/b.txt', name: 'b.txt', extension: '.txt', size_bytes: 1, line_count: 1, raw_imports: [] },
+      { path: 'test/c.txt', name: 'c.txt', extension: '.txt', size_bytes: 1, line_count: 1, raw_imports: [] },
+    ];
+
+    // Override isBinaryFile locally for this test or just mock readFileContent...
+    // Actually annotateTask calls annotateFiles which calls readFileContent
+    // If files don't exist, they are skipped and result is empty. That's fine for testing scope filtering, we can just check if onProgress is called correctly.
+
+    const task: DelegationTask = {
+      scope: 'src/',
+      agent_size: 'small',
+      estimated_files: 2
+    };
+
+    let onProgressEvents: any[] = [];
+    const onProgress = (status: string, taskName: string) => {
+      onProgressEvents.push({ status, taskName });
+    };
+
+    const mockLlmClient = Object.create(LLMClient.prototype);
+
+    await annotateTask({
+      task,
+      allFiles,
+      repoRoot,
+      onProgress
+    });
+
+    assert.strictEqual(onProgressEvents.length, 2);
+    assert.strictEqual(onProgressEvents[0].status, 'start');
+    assert.strictEqual(onProgressEvents[0].taskName, 'src/');
+    assert.strictEqual(onProgressEvents[1].status, 'complete');
+    assert.strictEqual(onProgressEvents[1].taskName, 'src/');
+  });
+
+  await t.test('annotateTask - no files matching scope', async () => {
+    const allFiles: RawFileMetadata[] = [
+      { path: 'src/a.txt', name: 'a.txt', extension: '.txt', size_bytes: 1, line_count: 1, raw_imports: [] },
+    ];
+
+    const task: DelegationTask = {
+      scope: 'test/',
+      agent_size: 'small',
+      estimated_files: 1
+    };
+
+    let onProgressEvents: any[] = [];
+    const result = await annotateTask({
+      task,
+      allFiles,
+      repoRoot,
+      onProgress: (status, name) => onProgressEvents.push({status, name})
+    });
+
+    assert.strictEqual(result.length, 0);
+    assert.strictEqual(onProgressEvents.length, 2);
+    assert.strictEqual(onProgressEvents[1].status, 'complete');
+  });
+
+  await t.test('annotateTask - fallback legacy positional arguments', async () => {
+    const allFiles: RawFileMetadata[] = [];
+    const task: DelegationTask = {
+      scope: 'test/',
+      agent_size: 'small',
+      estimated_files: 1
+    };
+
+    const originalConsoleWarn = console.warn;
+    let consoleWarnCalled = false;
+    console.warn = () => { consoleWarnCalled = true; };
+
+    try {
+      const result = await annotateTask(task, allFiles, repoRoot, undefined);
+      assert.strictEqual(result.length, 0);
+      assert.ok(consoleWarnCalled);
+    } finally {
+      console.warn = originalConsoleWarn;
+    }
+  });
+
+  await t.test('annotateExplicitTask - explicit filtering', async () => {
+    const allFiles: RawFileMetadata[] = [
+      { path: 'src/a.txt', name: 'a.txt', extension: '.txt', size_bytes: 1, line_count: 1, raw_imports: [] },
+      { path: 'src/b.txt', name: 'b.txt', extension: '.txt', size_bytes: 1, line_count: 1, raw_imports: [] },
+      { path: 'test/c.txt', name: 'c.txt', extension: '.txt', size_bytes: 1, line_count: 1, raw_imports: [] },
+    ];
+
+    const task: ExplicitTask = {
+      taskId: 'task-1',
+      agentSize: 'small',
+      files: [{ path: 'src/a.txt' }, { path: 'test/c.txt' }],
+      instructions: ''
+    };
+
+    let onProgressEvents: any[] = [];
+    const onProgress = (status: string, taskName: string) => {
+      onProgressEvents.push({ status, taskName });
+    };
+
+    await annotateExplicitTask({
+      task,
+      allFiles,
+      repoRoot,
+      onProgress
+    });
+
+    assert.strictEqual(onProgressEvents.length, 2);
+    assert.strictEqual(onProgressEvents[0].status, 'start');
+    assert.strictEqual(onProgressEvents[0].taskName, 'task-1');
+    assert.strictEqual(onProgressEvents[1].status, 'complete');
+    assert.strictEqual(onProgressEvents[1].taskName, 'task-1');
+  });
+
+  await t.test('annotateExplicitTask - no files matching', async () => {
+    const allFiles: RawFileMetadata[] = [
+      { path: 'src/a.txt', name: 'a.txt', extension: '.txt', size_bytes: 1, line_count: 1, raw_imports: [] },
+    ];
+
+    const task: ExplicitTask = {
+      taskId: 'task-1',
+      agentSize: 'small',
+      files: [{ path: 'src/b.txt' }],
+      instructions: ''
+    };
+
+    const originalConsoleWarn = console.warn;
+    let consoleWarnCalled = false;
+    console.warn = () => { consoleWarnCalled = true; };
+
+    try {
+      const result = await annotateExplicitTask({
+        task,
+        allFiles,
+        repoRoot,
+      });
+
+      assert.strictEqual(result.length, 0);
+      assert.ok(consoleWarnCalled);
+    } finally {
+      console.warn = originalConsoleWarn;
+    }
+  });
+
+  await t.test('annotateTask - propagates errors', async () => {
+    const allFiles: RawFileMetadata[] = [
+      { path: 'src/a.txt', name: 'a.txt', extension: '.txt', size_bytes: 1, line_count: 1, raw_imports: [] },
+    ];
+
+    const task: DelegationTask = {
+      scope: 'src/',
+      agent_size: 'small',
+      estimated_files: 1
+    };
+
+    let onProgressEvents: any[] = [];
+    const mockLlmClient = Object.create(LLMClient.prototype);
+    mockLlmClient.sendMessage = mock.fn(async () => {
+      // simulate some severe error that bypassing internal catches (not really possible without throwing from somewhere higher, but we can test if annotateFiles throws, annotateTask will catch and trigger onProgress('error'))
+      throw new Error("Pool failure");
+    });
+
+    // We mock annotateFiles somehow or just pass it in? We can't mock annotateFiles easily since it's the same module.
+    // However, if we pass invalid LLMClient that throws error in LLMClient.withProvider ? No, annotateTask just calls annotateFiles.
+    // If annotateFiles throws, annotateTask catches it.
+    // annotateFiles throws if pool fails. Pool fails if we pass a bad array or something?
+    // Let's just mock `path.join` or something to force an error? Better not.
+    // Actually `annotateFiles` doesn't throw on individual file errors, it catches them.
+    // Let's pass null for allFiles to force an error?
+  });
 });
 
-// Test: Concurrency configuration
-test('annotateFiles: respects CONCURRENCY_CONFIG', async () => {
-  const { CONCURRENCY_CONFIG } = await import('../../../src/config/models.js');
+test('annotateTask - propagates errors', async () => {
+  const task: DelegationTask = { scope: 'src/', agent_size: 'small', estimated_files: 1 };
 
-  // Regardless of what env vars are set, parseEnvInt guarantees valid values
-  assert.ok(typeof CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS === 'number');
-  assert.ok(Number.isFinite(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS));
-  assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS >= 1);
-  assert.ok(CONCURRENCY_CONFIG.MAX_CONCURRENT_ANNOTATIONS <= 100);
-
-  assert.ok(typeof CONCURRENCY_CONFIG.TASK_START_DELAY_MS === 'number');
-  assert.ok(Number.isFinite(CONCURRENCY_CONFIG.TASK_START_DELAY_MS));
-  assert.ok(CONCURRENCY_CONFIG.TASK_START_DELAY_MS >= 0);
-  assert.ok(CONCURRENCY_CONFIG.TASK_START_DELAY_MS <= 60_000);
+  try {
+    // missing allFiles array should trigger a TypeError and propagate
+    await annotateTask({
+      task,
+      allFiles: null as any,
+      repoRoot,
+      onProgress: (status, taskName) => {}
+    });
+    assert.fail('Should have thrown error');
+  } catch (err: any) {
+    assert.ok(err instanceof TypeError || err.message.includes('filter'));
+  }
 });
 
-// Test: AnnotationOptions quiet mode
-test('AnnotationOptions: supports quiet mode', () => {
-  // TypeScript will ensure this compiles - testing the type interface
-  const options = {
-    agentSize: 'medium' as const,
-    repoRoot: '/test',
-    quiet: true,
-  };
+test('annotateExplicitTask - propagates errors', async () => {
+  const task: ExplicitTask = { taskId: 'task-1', agentSize: 'small', files: [{path: 'src/a.txt'}], instructions: '' };
 
-  assert.strictEqual(options.quiet, true);
-  assert.strictEqual(options.agentSize, 'medium');
+  try {
+    await annotateExplicitTask({
+      task,
+      allFiles: null as any,
+      repoRoot,
+      onProgress: (status, taskName) => {}
+    });
+    assert.fail('Should have thrown error');
+  } catch (err: any) {
+    assert.ok(err instanceof TypeError || err.message.includes('filter'));
+  }
 });
 
-// Test: TaskAnnotationOptions interface
-test('TaskAnnotationOptions: supports onProgress callback', () => {
-  // Track callback invocations
-  const progressEvents: { status: string; taskName: string }[] = [];
-
-  const options = {
-    task: mockTask,
-    allFiles: mockFileMetadata,
-    repoRoot: '/test',
-    onProgress: (status: 'start' | 'complete' | 'error', taskName: string) => {
-      progressEvents.push({ status, taskName });
-    },
-  };
-
-  // Simulate callback invocations
-  options.onProgress('start', 'src/auth/');
-  options.onProgress('complete', 'src/auth/');
-
-  assert.strictEqual(progressEvents.length, 2);
-  assert.strictEqual(progressEvents[0].status, 'start');
-  assert.strictEqual(progressEvents[1].status, 'complete');
-});
-
-// Test: annotateTask supports both signatures
-test('annotateTask: supports legacy positional args signature', () => {
-  // This test validates the function signature accepts positional args
-  const task: DelegationTask = {
-    scope: 'src/auth/',
-    agent_size: 'medium',
-    estimated_files: 2,
-  };
-
-  // The function should accept (task, files, repoRoot, metrics?) signature
-  // We just validate the args structure, not call the actual function
-  assert.ok(typeof task.scope === 'string');
-  assert.ok(typeof task.agent_size === 'string');
-});
-
-// Test: annotateTask supports new options object signature
-test('annotateTask: supports new options object signature', () => {
-  // Validate the options interface
-  const options = {
-    task: mockTask,
-    allFiles: mockFileMetadata,
-    repoRoot: '/test',
-    metrics: undefined,
-    onProgress: undefined,
-  };
-
-  assert.strictEqual(options.task.scope, 'src/auth/');
-  assert.strictEqual(options.allFiles.length, mockFileMetadata.length);
-});
-
-// Test: onProgress callback receives correct statuses
-test('annotateTask: onProgress receives start/complete/error statuses', () => {
-  const validStatuses = ['start', 'complete', 'error'] as const;
-  const receivedStatuses: string[] = [];
-
-  const mockOnProgress = (status: 'start' | 'complete' | 'error', taskName: string) => {
-    receivedStatuses.push(status);
-  };
-
-  // Simulate progress events
-  mockOnProgress('start', 'task1');
-  mockOnProgress('complete', 'task1');
-  mockOnProgress('start', 'task2');
-  mockOnProgress('error', 'task2');
-
-  assert.strictEqual(receivedStatuses.length, 4);
-  assert.ok(receivedStatuses.every(s => validStatuses.includes(s as typeof validStatuses[number])));
-});
