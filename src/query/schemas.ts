@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { TAG_TAXONOMY } from '../core/constants.js';
 
 /**
  * Module schema for top-level modules/directories
@@ -55,6 +56,19 @@ const GraphNodeSchema = z.object({
  */
 export const GraphJsonSchema = z.record(z.string(), GraphNodeSchema);
 
+const TagSchema = z.enum([...TAG_TAXONOMY] as [string, ...string[]]);
+
+/**
+ * Schema for tags.json
+ *
+ * Tag taxonomy and index mapping tags to file paths
+ */
+export const TagsJsonSchema = z.object({
+  taxonomy_version: z.string(),
+  aliases: z.record(z.string(), z.array(z.string())),
+  index: z.record(z.string(), z.array(z.string())),
+});
+
 /**
  * Schema for a single file annotation
  * /Users/harshitsinghbhandari/Downloads/side-quests/rmap/src/query/schemas.ts:76
@@ -65,6 +79,7 @@ const FileAnnotationSchema = z.object({
   size_bytes: z.number().int().nonnegative(),
   line_count: z.number().int().nonnegative(),
   purpose: z.string(),
+  tags: z.array(TagSchema),
   exports: z.array(z.string()),
   imports: z.array(z.string()),
 });
