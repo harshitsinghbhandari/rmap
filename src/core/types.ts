@@ -5,6 +5,8 @@
  * and internal data structures used during map generation
  */
 
+import type { Tag } from './constants.js';
+
 /**
  * File annotation produced by Level 3 agents
  *
@@ -25,6 +27,9 @@ export interface FileAnnotation {
 
   /** One-line description of what this file does */
   purpose: string;
+
+  /** 1-3 tags from TAG_TAXONOMY describing the file's role (reduced for precision) */
+  tags: Tag[];
 
   /** Exported functions, classes, types, or constants */
   exports: string[];
