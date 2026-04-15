@@ -18,6 +18,7 @@ import {
   shouldIgnoreFile,
   type IgnoreStats,
 } from '../../core/ignore-patterns.js';
+import { getCurrentCommitSafe } from '../../core/index.js';
 
 /**
  * Directories to always skip
@@ -154,12 +155,7 @@ function countLines(content: string): number {
  */
 function getGitCommit(repoRoot: string): string {
   try {
-    const commit = execFileSync('git', ['rev-parse', 'HEAD'], {
-      cwd: repoRoot,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'ignore'],
-    }).trim();
-    return commit;
+    return getCurrentCommitSafe(repoRoot);
   } catch (error) {
     console.warn('Warning: Could not get git commit hash. Not a git repository?');
     return 'unknown';

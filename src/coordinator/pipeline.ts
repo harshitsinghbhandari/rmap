@@ -9,7 +9,6 @@
  * 5. Level 4: Consistency validator (script + optional LLM)
  */
 
-import { execSync } from 'node:child_process';
 import type {
   Level0Output,
   Level1Output,
@@ -38,6 +37,7 @@ import {
   printCompactSummary,
   printLatencyAnalysis,
   globalLatencyTracker,
+  getCurrentCommitSafe,
 } from '../core/index.js';
 import { TaskProgressTracker, printLevelHeader } from '../cli/progress-ui.js';
 import { ANNOTATION_MODEL_MAP, CONCURRENCY_CONFIG } from '../config/index.js';
@@ -93,12 +93,7 @@ export interface PipelineResult {
  */
 function getGitCommit(repoRoot: string): string {
   try {
-    const commit = execSync('git rev-parse HEAD', {
-      cwd: repoRoot,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'ignore'],
-    }).trim();
-    return commit;
+    return getCurrentCommitSafe(repoRoot);
   } catch (error) {
     console.warn('Warning: Could not get git commit hash. Not a git repository?');
     return 'unknown';
